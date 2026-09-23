@@ -6,16 +6,13 @@ import {
   Sparkles,
   Search,
   FolderLock,
-  GitCompare,
-  Download,
   Award,
-  Bell,
   Settings,
   LogOut,
-  ExternalLink,
   ChevronLeft,
   ChevronRight,
-  Database
+  Database,
+  User
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 
@@ -29,14 +26,23 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed }) => {
     { label: 'Register Work', path: '/register', icon: ShieldCheck, highlight: true },
     { label: 'Verify Image', path: '/verify', icon: Search, highlightAccent: true },
     { label: 'My Assets', path: '/assets', icon: FolderLock },
-    { label: 'Certificates', path: '/certificate/VF-CERT-2026-0814-8821', icon: Award },
-    { label: 'Notifications', path: '/notifications', icon: Bell, badge: '2' },
+    { label: 'Certificates', path: '/certificate/VF-CERT-2026-8821', icon: Award },
     { label: 'Profile & Settings', path: '/profile', icon: Settings }
   ];
 
   const handleLogout = async () => {
     await logout();
     navigate('/login');
+  };
+
+  const getInitials = (name) => {
+    if (!name) return 'AV';
+    return name
+      .split(' ')
+      .map((n) => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
   };
 
   return (
@@ -59,14 +65,14 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed }) => {
                 VeriFrame
               </span>
               <span className="text-[10px] text-cyan-400 font-mono tracking-wider uppercase">
-                Dual-Pipeline v2.4
+                Image Protection
               </span>
             </div>
           )}
         </NavLink>
         <button
           onClick={() => setIsCollapsed(!isCollapsed)}
-          className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800/60 transition-colors"
+          className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800/60 transition-colors cursor-pointer"
           title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
           {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
@@ -96,11 +102,6 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed }) => {
             >
               <Icon className="w-5 h-5 shrink-0 transition-transform group-hover:scale-110" />
               {!isCollapsed && <span className="truncate">{item.label}</span>}
-              {!isCollapsed && item.badge && (
-                <span className="ml-auto px-2 py-0.5 text-[10px] font-bold rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
-                  {item.badge}
-                </span>
-              )}
             </NavLink>
           );
         })}
@@ -112,7 +113,7 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed }) => {
           <div className="flex items-center justify-between text-xs text-slate-400">
             <span className="flex items-center gap-1.5 text-slate-300">
               <Database className="w-3.5 h-3.5 text-cyan-400" />
-              Enclave Storage
+              Storage Used
             </span>
             <span className="font-mono text-[11px] text-cyan-400">18.4%</span>
           </div>
@@ -121,19 +122,17 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed }) => {
           </div>
           <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between">
             <div className="flex items-center gap-2.5 min-w-0">
-              <img
-                src={user?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80'}
-                alt={user?.name || 'User'}
-                className="w-8 h-8 rounded-lg object-cover ring-1 ring-cyan-500/40 shrink-0"
-              />
+              <div className="w-8 h-8 rounded-lg bg-blue-600/30 border border-blue-500/40 text-cyan-300 font-bold text-xs flex items-center justify-center shrink-0">
+                {getInitials(user?.name)}
+              </div>
               <div className="min-w-0">
                 <p className="text-xs font-semibold text-white truncate">{user?.name || 'Alex Vance'}</p>
-                <p className="text-[10px] text-slate-400 truncate">Verified Creator</p>
+                <p className="text-[10px] text-slate-400 truncate">Creator Account</p>
               </div>
             </div>
             <button
               onClick={handleLogout}
-              className="text-slate-400 hover:text-rose-400 p-1.5 rounded-lg hover:bg-slate-800/60 transition-colors"
+              className="text-slate-400 hover:text-rose-400 p-1.5 rounded-lg hover:bg-slate-800/60 transition-colors cursor-pointer"
               title="Sign Out"
             >
               <LogOut className="w-4 h-4" />
@@ -144,7 +143,7 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed }) => {
         <div className="p-3 border-t border-slate-800/80 flex justify-center">
           <button
             onClick={handleLogout}
-            className="text-slate-400 hover:text-rose-400 p-2 rounded-xl hover:bg-slate-800 transition-colors"
+            className="text-slate-400 hover:text-rose-400 p-2 rounded-xl hover:bg-slate-800 transition-colors cursor-pointer"
             title="Sign Out"
           >
             <LogOut className="w-5 h-5" />

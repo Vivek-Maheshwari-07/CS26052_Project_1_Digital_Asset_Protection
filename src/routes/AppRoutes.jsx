@@ -16,7 +16,6 @@ import AssetDetails from '../pages/AssetDetails';
 import Verify from '../pages/Verify';
 import VerificationResults from '../pages/VerificationResults';
 import Certificate from '../pages/Certificate';
-import Notifications from '../pages/Notifications';
 import Profile from '../pages/Profile';
 import NotFound from '../pages/NotFound';
 
@@ -41,7 +40,6 @@ export const AppRoutes = () => {
         <Route path="/verify" element={<Verify />} />
         <Route path="/verify/results" element={<VerificationResults />} />
         <Route path="/certificate/:id" element={<Certificate />} />
-        <Route path="/notifications" element={<Notifications />} />
         <Route path="/profile" element={<Profile />} />
       </Route>
 
