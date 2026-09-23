@@ -22,3 +22,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Python and test images
+test1.jpg
+test2.jpg
+__pycache__/
+*.pyc
