@@ -58,7 +58,7 @@ export const assetService = {
       await mockDelay(600);
 
       // Step 6: Generating certificate
-      if (onProgress) onProgress(6, 'Minting VeriFrame Provenance Certificate...');
+      if (onProgress) onProgress(6, 'Creating VeriFrame Provenance Certificate...');
       await mockDelay(500);
 
       const newId = `ast_vf_${Math.random().toString(36).substr(2, 6)}`;
@@ -73,7 +73,6 @@ export const assetService = {
         creator: payload.creator || 'Alex Vance',
         ownerId: 'usr_vf_9942a',
         ownerName: payload.creator || 'Alex Vance',
-        ownerAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
         registeredAt: new Date().toISOString(),
         fileSize: payload.fileSize || '12.4 MB',
         dimensions: payload.dimensions || '6000 x 4000',

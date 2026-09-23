@@ -62,12 +62,8 @@ export const ImageCard = ({ asset, onClick }) => {
         </div>
 
         <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400">
-          <div className="flex items-center gap-2 min-w-0">
-            <img
-              src={asset.ownerAvatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80'}
-              alt={asset.creator}
-              className="w-5 h-5 rounded-full object-cover ring-1 ring-slate-700 shrink-0"
-            />
+          <div className="flex items-center gap-1.5 min-w-0">
+            <User className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
             <span className="truncate text-slate-300 font-medium">{asset.creator}</span>
           </div>
           <span className="font-mono text-[10px] text-slate-500 shrink-0">

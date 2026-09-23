@@ -41,11 +41,9 @@ const Navbar = ({ searchQuery, setSearchQuery }) => {
           {user ? (
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-2 text-xs font-semibold text-[#111111]">
-                <img
-                  src={user.avatar}
-                  alt={user.name}
-                  className="w-6 h-6 rounded-full object-cover border border-[#E5E5E5]"
-                />
+                <div className="w-6 h-6 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center text-[10px]">
+                  {user.name ? user.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : 'U'}
+                </div>
                 <span>{user.name}</span>
               </div>
 

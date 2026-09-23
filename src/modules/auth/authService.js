@@ -18,7 +18,6 @@ export const authService = {
       id: 'usr_' + Math.random().toString(36).substr(2, 9),
       name: formattedName || 'Verified User',
       email: email.toLowerCase(),
-      avatar: `https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80`,
       role: 'Creator / Verifier',
       createdAt: new Date().toISOString()
     };
@@ -32,7 +31,6 @@ export const authService = {
       id: 'usr_' + Math.random().toString(36).substr(2, 9),
       name: name.trim(),
       email: email.toLowerCase(),
-      avatar: `https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80`,
       role: 'Creator / Verifier',
       createdAt: new Date().toISOString()
     };
@@ -46,7 +44,6 @@ export const authService = {
       id: 'usr_google_' + Math.random().toString(36).substr(2, 9),
       name: 'Alex Rivera',
       email: 'alex.rivera@example.com',
-      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80',
       role: 'Creator / Verifier',
       createdAt: new Date().toISOString()
     };
