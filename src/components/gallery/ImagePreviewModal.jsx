@@ -117,20 +117,9 @@ export const ImagePreviewModal = ({ asset, isOpen, onClose, onRequestDownload })
 
           {/* Action CTAs */}
           <div className="flex flex-col gap-2 pt-2 border-t border-slate-800">
-            <Button
-              variant="glow"
-              icon={Download}
-              onClick={() => {
-                onClose();
-                onRequestDownload(asset);
-              }}
-              className="w-full"
-            >
-              Request Image Download
-            </Button>
             <div className="flex gap-2">
               <Link to={`/assets/${asset.id}`} className="flex-1">
-                <Button variant="outline" size="sm" icon={ExternalLink} className="w-full">
+                <Button variant="glow" size="sm" icon={ExternalLink} className="w-full">
                   Full Asset Details
                 </Button>
               </Link>
@@ -141,7 +130,7 @@ export const ImagePreviewModal = ({ asset, isOpen, onClose, onRequestDownload })
               </Link>
             </div>
             <p className="text-[10px] text-slate-500 text-center mt-1">
-              Public browsing enabled. Full resolution download requires creator approval.
+              Public browsing enabled • Cryptographically indexed provenance record
             </p>
           </div>
         </div>

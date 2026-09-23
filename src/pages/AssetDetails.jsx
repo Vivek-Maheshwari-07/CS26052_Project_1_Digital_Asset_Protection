@@ -69,8 +69,7 @@ export const AssetDetails = () => {
     { id: 'overview', label: 'Overview' },
     { id: 'fingerprint', label: 'Dual Fingerprints' },
     { id: 'provenance', label: 'Provenance Record' },
-    { id: 'matches', label: 'Potential Matches', count: asset.matchCount },
-    { id: 'permissions', label: 'Download Permissions' }
+    { id: 'matches', label: 'Potential Matches', count: asset.matchCount }
   ];
 
   return (
@@ -295,17 +294,24 @@ export const AssetDetails = () => {
                     </span>
                   </div>
 
-                  <Link to="/evidence/evi_vf_882190_01" className="block">
-                    <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 hover:border-cyan-500/40 transition-colors flex items-center justify-between">
-                      <div>
-                        <h5 className="font-bold text-white text-sm">Forensic Evidence #EVI-882190-01</h5>
-                        <p className="text-slate-400 text-xs">Cropped derivative with gamma curve boost</p>
-                      </div>
-                      <Button variant="primary" size="xs" icon={GitCompare}>
-                        Inspect Evidence
-                      </Button>
+                  <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-white text-sm">Match Alert #MAT-882190</span>
+                      <Badge variant="warning" size="xs">
+                        94.2% Similarity
+                      </Badge>
                     </div>
-                  </Link>
+                    <p className="text-slate-400 text-xs leading-relaxed">
+                      Derivative detected with spatial cropping (~14% margins removed) and WebP quantization artifacts.
+                    </p>
+                    <div className="pt-2 flex justify-end">
+                      <Link to={`/certificate/${asset.certificateId || 'VF-CERT-2026-0814-8821'}`}>
+                        <Button variant="outline" size="xs" icon={Award}>
+                          Verify Provenance Certificate
+                        </Button>
+                      </Link>
+                    </div>
+                  </div>
                 </div>
               ) : (
                 <div className="text-center py-6 text-slate-400 space-y-2">
@@ -316,27 +322,6 @@ export const AssetDetails = () => {
                   </p>
                 </div>
               )}
-            </div>
-          )}
-
-          {/* Tab Content 5: Permissions */}
-          {activeTab === 'permissions' && (
-            <div className="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-4 text-xs animate-in fade-in duration-200">
-              <div className="flex items-center justify-between p-3 rounded-xl bg-slate-950 border border-slate-800">
-                <div>
-                  <h5 className="font-bold text-white">Public Full-Resolution Downloads</h5>
-                  <p className="text-slate-400 text-xs">Require manual approval via dashboard</p>
-                </div>
-                <Badge variant="cyan" size="xs">
-                  Owner Gate Active
-                </Badge>
-              </div>
-
-              <Link to="/download-requests">
-                <Button variant="outline" size="sm" icon={Download} className="w-full">
-                  Manage Pending Download Requests
-                </Button>
-              </Link>
             </div>
           )}
         </div>

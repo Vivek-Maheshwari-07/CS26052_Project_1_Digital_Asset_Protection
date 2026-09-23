@@ -6,13 +6,11 @@ import {
   Filter,
   ArrowUpDown,
   ShieldCheck,
-  Download,
   Layers
 } from 'lucide-react';
 import assetService from '../services/assetService';
 import GalleryGrid from '../components/gallery/GalleryGrid';
 import ImagePreviewModal from '../components/gallery/ImagePreviewModal';
-import DownloadRequestModal from '../components/gallery/DownloadRequestModal';
 import Badge from '../components/ui/Badge';
 import Button from '../components/ui/Button';
 
@@ -27,7 +25,6 @@ export const Gallery = () => {
   const [sortOrder, setSortOrder] = useState('newest');
 
   const [previewAsset, setPreviewAsset] = useState(null);
-  const [downloadTargetAsset, setDownloadTargetAsset] = useState(null);
 
   const categories = [
     'All',
@@ -94,7 +91,7 @@ export const Gallery = () => {
 
         <div className="flex items-center gap-2 text-xs text-slate-400 font-mono bg-slate-900/80 p-2.5 rounded-xl border border-slate-800">
           <ShieldCheck className="w-4 h-4 text-emerald-400" />
-          <span>Public Browsing Enabled • Full-Res Protected</span>
+          <span>Public Browsing Enabled • Dual Fingerprints</span>
         </div>
       </div>
 
@@ -112,7 +109,7 @@ export const Gallery = () => {
           />
           <button
             type="submit"
-            className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs rounded-lg font-medium transition-colors"
+            className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs rounded-lg font-medium transition-colors cursor-pointer"
           >
             Search
           </button>
@@ -152,7 +149,6 @@ export const Gallery = () => {
         assets={assets}
         isLoading={isLoading}
         onSelectAsset={(asset) => setPreviewAsset(asset)}
-        onRequestDownload={(asset) => setDownloadTargetAsset(asset)}
         onResetFilters={handleResetFilters}
       />
 
@@ -161,17 +157,6 @@ export const Gallery = () => {
         asset={previewAsset}
         isOpen={!!previewAsset}
         onClose={() => setPreviewAsset(null)}
-        onRequestDownload={(asset) => {
-          setPreviewAsset(null);
-          setDownloadTargetAsset(asset);
-        }}
-      />
-
-      {/* Download Request Modal */}
-      <DownloadRequestModal
-        asset={downloadTargetAsset}
-        isOpen={!!downloadTargetAsset}
-        onClose={() => setDownloadTargetAsset(null)}
       />
     </div>
   );

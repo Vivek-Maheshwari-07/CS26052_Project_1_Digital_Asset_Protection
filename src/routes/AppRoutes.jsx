@@ -15,10 +15,8 @@ import Assets from '../pages/Assets';
 import AssetDetails from '../pages/AssetDetails';
 import Verify from '../pages/Verify';
 import VerificationResults from '../pages/VerificationResults';
-import Evidence from '../pages/Evidence';
 import Certificate from '../pages/Certificate';
 import Notifications from '../pages/Notifications';
-import DownloadRequests from '../pages/DownloadRequests';
 import Profile from '../pages/Profile';
 import NotFound from '../pages/NotFound';
 
@@ -42,10 +40,8 @@ export const AppRoutes = () => {
         <Route path="/assets/:id" element={<AssetDetails />} />
         <Route path="/verify" element={<Verify />} />
         <Route path="/verify/results" element={<VerificationResults />} />
-        <Route path="/evidence/:id" element={<Evidence />} />
         <Route path="/certificate/:id" element={<Certificate />} />
         <Route path="/notifications" element={<Notifications />} />
-        <Route path="/download-requests" element={<DownloadRequests />} />
         <Route path="/profile" element={<Profile />} />
       </Route>
 

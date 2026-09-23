@@ -135,11 +135,13 @@ export const MatchCard = ({ match, rank = 1 }) => {
         <span className="text-xs text-slate-500 font-mono">
           Certificate: {match.certificateId || 'VF-CERT-2026-0814'}
         </span>
-        <Link to={`/evidence/${match.evidenceId || 'evi_vf_882190_01'}`}>
-          <Button variant="primary" size="sm" icon={GitCompare}>
-            Inspect Full Evidence
-          </Button>
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link to={`/assets/${match.assetId}`}>
+            <Button variant="primary" size="sm" icon={ShieldCheck}>
+              Inspect Original Asset
+            </Button>
+          </Link>
+        </div>
       </div>
     </div>
   );

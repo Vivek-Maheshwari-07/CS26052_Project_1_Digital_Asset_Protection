@@ -237,8 +237,8 @@ export const Dashboard = () => {
                 <span className="text-[11px] font-mono text-slate-500">
                   {new Date(n.timestamp).toLocaleTimeString()}
                 </span>
-                {n.evidenceId && (
-                  <Link to={`/evidence/${n.evidenceId}`}>
+                {n.assetId && (
+                  <Link to={`/assets/${n.assetId}`}>
                     <Button variant="outline" size="xs">
                       Inspect
                     </Button>

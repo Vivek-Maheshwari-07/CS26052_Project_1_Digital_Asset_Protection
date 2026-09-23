@@ -29,8 +29,6 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed }) => {
     { label: 'Register Work', path: '/register', icon: ShieldCheck, highlight: true },
     { label: 'Verify Image', path: '/verify', icon: Search, highlightAccent: true },
     { label: 'My Assets', path: '/assets', icon: FolderLock },
-    { label: 'Evidence View', path: '/evidence/evi_vf_882190_01', icon: GitCompare },
-    { label: 'Download Requests', path: '/download-requests', icon: Download, badge: '1' },
     { label: 'Certificates', path: '/certificate/VF-CERT-2026-0814-8821', icon: Award },
     { label: 'Notifications', path: '/notifications', icon: Bell, badge: '2' },
     { label: 'Profile & Settings', path: '/profile', icon: Settings }

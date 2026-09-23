@@ -1,8 +1,8 @@
 import React from 'react';
-import { ShieldCheck, Eye, Download, Calendar, User } from 'lucide-react';
+import { ShieldCheck, Eye, Calendar, User } from 'lucide-react';
 import Badge from '../ui/Badge';
 
-export const ImageCard = ({ asset, onClick, onRequestDownload }) => {
+export const ImageCard = ({ asset, onClick }) => {
   return (
     <div
       onClick={() => onClick(asset)}
@@ -36,16 +36,6 @@ export const ImageCard = ({ asset, onClick, onRequestDownload }) => {
             title="Inspect Provenance"
           >
             <Eye className="w-3.5 h-3.5" />
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onRequestDownload(asset);
-            }}
-            className="p-1.5 rounded-lg bg-black/60 backdrop-blur-md text-white hover:bg-cyan-500 hover:text-black transition-colors"
-            title="Request Download"
-          >
-            <Download className="w-3.5 h-3.5" />
           </button>
         </div>
 

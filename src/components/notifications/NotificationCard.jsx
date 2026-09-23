@@ -69,18 +69,10 @@ export const NotificationCard = ({
       </div>
 
       <div className="flex items-center gap-2 w-full sm:w-auto justify-end pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-800">
-        {notification.evidenceId && (
-          <Link to={`/evidence/${notification.evidenceId}`}>
+        {notification.assetId && (
+          <Link to={`/assets/${notification.assetId}`}>
             <Button variant="glow" size="xs" icon={Eye}>
-              View Evidence
-            </Button>
-          </Link>
-        )}
-
-        {notification.requestId && (
-          <Link to="/download-requests">
-            <Button variant="primary" size="xs" icon={Download}>
-              Manage Request
+              Inspect Asset
             </Button>
           </Link>
         )}

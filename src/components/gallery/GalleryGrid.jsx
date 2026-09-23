@@ -8,7 +8,6 @@ export const GalleryGrid = ({
   assets = [],
   isLoading = false,
   onSelectAsset,
-  onRequestDownload,
   onResetFilters
 }) => {
   if (isLoading) {
@@ -47,7 +46,6 @@ export const GalleryGrid = ({
           key={asset.id}
           asset={asset}
           onClick={onSelectAsset}
-          onRequestDownload={onRequestDownload}
         />
       ))}
     </div>
