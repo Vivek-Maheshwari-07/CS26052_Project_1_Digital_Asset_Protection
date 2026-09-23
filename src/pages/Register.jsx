@@ -42,12 +42,12 @@ export const Register = () => {
   const [tags, setTags] = useState(['Generative', 'Digital Art']);
 
   const pipelineStages = [
-    { label: 'Uploading High-Resolution File', detail: 'Transmitting binary payload to secure enclave...' },
+    { label: 'Uploading High-Resolution File', detail: 'Uploading image to analysis pipeline...' },
     { label: 'Extracting Perceptual Hashes', detail: 'Computing pHash, aHash, dHash, and WHash matrices...' },
-    { label: 'Generating Semantic Embeddings', detail: 'Running CLIP ViT-B/32 & DINOv2 ViT-L/14 inference...' },
-    { label: 'Querying Registry Vector Store', detail: 'Checking pgvector index against 140,000+ records for collisions...' },
-    { label: 'Cryptographic Sealing & Timestamping', detail: 'Creating SHA-256 integrity digest and block timestamp...' },
-    { label: 'Minting Provenance Certificate', detail: 'Generating verifiable PDF certificate and digital seal...' }
+    { label: 'Generating Semantic Embeddings', detail: 'Extracting visual features with CLIP and DINOv2...' },
+    { label: 'Checking Registry Database', detail: 'Searching existing records for similar or duplicate images...' },
+    { label: 'Generating Timestamp & Hash Digest', detail: 'Creating SHA-256 integrity hash and timestamp...' },
+    { label: 'Creating Provenance Certificate', detail: 'Generating verifiable certificate and digital record...' }
   ];
 
   const handleAddTag = (e) => {
@@ -133,7 +133,7 @@ export const Register = () => {
       <div className="space-y-2 text-center sm:text-left">
         <div className="flex items-center justify-center sm:justify-start gap-2">
           <Badge variant="cyan" size="sm" icon={ShieldCheck}>
-            Registry Enclave
+            Asset Registry
           </Badge>
           <span className="text-xs text-slate-400 font-mono">Step {currentStep} of 3</span>
         </div>

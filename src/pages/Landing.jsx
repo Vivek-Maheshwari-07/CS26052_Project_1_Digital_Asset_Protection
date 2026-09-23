@@ -64,7 +64,7 @@ export const Landing = () => {
               <span className="w-3 h-3 rounded-full bg-rose-500/80" />
               <span className="w-3 h-3 rounded-full bg-amber-500/80" />
               <span className="w-3 h-3 rounded-full bg-emerald-500/80" />
-              <span className="ml-2 text-slate-300 font-bold">VeriFrame Forensic Enclave v2.4</span>
+              <span className="ml-2 text-slate-300 font-bold">VeriFrame Provenance Analysis Engine</span>
             </div>
             <div className="hidden sm:flex items-center gap-4 text-cyan-400">
               <span>pHash: 0x8f3c9e1a4b7d2f0e</span>

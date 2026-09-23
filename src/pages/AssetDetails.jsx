@@ -19,7 +19,6 @@ import {
   GitCompare
 } from 'lucide-react';
 import assetService from '../services/assetService';
-import { mockEvidenceRecords } from '../data/mockData';
 import Button from '../components/ui/Button';
 import Badge from '../components/ui/Badge';
 import Tabs from '../components/ui/Tabs';
@@ -154,12 +153,8 @@ export const AssetDetails = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <span className="text-slate-400 block mb-1">Creator / Owner</span>
-                  <div className="flex items-center gap-2">
-                    <img
-                      src={asset.ownerAvatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80'}
-                      alt={asset.creator}
-                      className="w-5 h-5 rounded-full object-cover ring-1 ring-slate-700"
-                    />
+                  <div className="flex items-center gap-1.5">
+                    <User className="w-4 h-4 text-cyan-400 shrink-0" />
                     <span className="font-semibold text-white">{asset.creator}</span>
                   </div>
                 </div>

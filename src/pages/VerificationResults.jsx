@@ -65,7 +65,7 @@ export const VerificationResults = () => {
 
         <div className="flex items-center gap-2">
           <Badge variant="cyan" size="sm" icon={CheckCircle2}>
-            Forensic Query Finished
+            Search Completed
           </Badge>
         </div>
       </div>
@@ -108,7 +108,7 @@ export const VerificationResults = () => {
           <p className="text-2xl font-bold font-mono text-slate-200">
             {results.searchDurationMs || 418}ms
           </p>
-          <span className="text-[11px] text-slate-400 font-mono">FastAPI Enclave</span>
+          <span className="text-[11px] text-slate-400 font-mono">FastAPI Engine</span>
         </div>
 
         <div className="space-y-1">

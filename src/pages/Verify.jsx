@@ -27,13 +27,13 @@ export const Verify = () => {
   const [pipelineStepIndex, setPipelineStepIndex] = useState(1);
 
   const verificationStages = [
-    { label: 'Transmitting Query Payload', detail: 'Uploading suspicious image to forensic analysis sandbox...' },
-    { label: 'Extracting Perceptual Hashes', detail: 'Generating DCT, gradient, and wavelet frequency matrices...' },
-    { label: 'Computing Dense Semantic Embeddings', detail: 'Executing CLIP ViT-B/32 & DINOv2 ViT-L/14 neural inference...' },
-    { label: 'Scanning 140,000+ Enclave Records', detail: 'Performing pgvector cosine and L2 similarity index search...' },
-    { label: 'Calculating Metric Divergence', detail: 'Computing bitwise Hamming distances & feature cosine alignment...' },
-    { label: 'Ranking Candidate Matches', detail: 'Applying weighted dual-pipeline fusion algorithm...' },
-    { label: 'Generating Forensic Evidence Report', detail: 'Detecting spatial cropping, transcode artifacts, and color shifts...' }
+    { label: 'Uploading Query Image', detail: 'Preparing image for similarity analysis...' },
+    { label: 'Extracting Perceptual Hashes', detail: 'Computing frequency and gradient hash fingerprints...' },
+    { label: 'Generating Semantic Embeddings', detail: 'Extracting high-level visual features with CLIP and DINOv2...' },
+    { label: 'Searching Image Registry', detail: 'Comparing embeddings against registered assets in the database...' },
+    { label: 'Analyzing Similarity Scores', detail: 'Calculating perceptual Hamming distance and cosine similarity...' },
+    { label: 'Ranking Potential Matches', detail: 'Applying weighted scoring to identify original source works...' },
+    { label: 'Generating Verification Summary', detail: 'Checking for potential cropping, compression, or alterations...' }
   ];
 
   const handleStartVerification = async () => {
@@ -78,7 +78,7 @@ export const Verify = () => {
       <div className="text-center sm:text-left space-y-2">
         <div className="flex items-center justify-center sm:justify-start gap-2">
           <Badge variant="cyan" size="sm" icon={Search}>
-            Forensic Inspector
+            Image Verification
           </Badge>
           <span className="text-xs text-slate-400 font-mono">Dual-Pipeline Verification</span>
         </div>

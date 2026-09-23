@@ -11,16 +11,10 @@ import {
   TrendingUp,
   Fingerprint,
   Sparkles,
-  GitCompare,
-  CheckCircle2,
-  Clock,
-  Layers,
-  Activity
+  CheckCircle2
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import assetService from '../services/assetService';
-import { mockNotifications } from '../data/mockData';
-import Card, { CardHeader, CardContent } from '../components/ui/Card';
 import Badge from '../components/ui/Badge';
 import Button from '../components/ui/Button';
 import AssetCard from '../components/assets/AssetCard';
@@ -54,22 +48,22 @@ export const Dashboard = () => {
     {
       label: 'Verification Checks',
       value: user?.stats?.verificationChecks || 128,
-      change: '142k indexed',
+      change: '142k images indexed',
       icon: Search,
       color: 'from-cyan-600 to-teal-600'
     },
     {
-      label: 'Potential Match Alerts',
-      value: user?.stats?.potentialMatches || 3,
+      label: 'Potential Matches',
+      value: user?.stats?.potentialMatches || 2,
       change: '1 requires review',
       alert: true,
       icon: AlertTriangle,
       color: 'from-amber-600 to-orange-600'
     },
     {
-      label: 'Provenance Certificates',
+      label: 'Certificates Issued',
       value: user?.stats?.certificatesIssued || 14,
-      change: '100% Sealed',
+      change: 'All Verified',
       icon: Award,
       color: 'from-emerald-600 to-green-600'
     }
@@ -82,7 +76,7 @@ export const Dashboard = () => {
         <div className="space-y-1.5">
           <div className="flex items-center gap-2">
             <span className="text-xs font-mono text-cyan-400 font-bold uppercase tracking-wider">
-              Workstation Enclave
+              Dashboard
             </span>
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
           </div>
@@ -90,7 +84,7 @@ export const Dashboard = () => {
             Good morning, {user?.name || 'Alex Vance'}
           </h1>
           <p className="text-xs sm:text-sm text-slate-400">
-            Your cryptographic provenance repository is fully synchronized with dual-pipeline vector indices.
+            Welcome to your digital asset protection dashboard. Register your original works and check images for copies.
           </p>
         </div>
 
@@ -148,17 +142,17 @@ export const Dashboard = () => {
                 <ShieldCheck className="w-6 h-6" />
               </div>
               <Badge variant="primary" size="xs">
-                Permanent Sealing
+                Asset Protection
               </Badge>
               <h3 className="text-xl sm:text-2xl font-bold text-white group-hover:text-cyan-300 transition-colors">
                 REGISTER ORIGINAL WORK
               </h3>
               <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-                Create a permanent provenance record for your image. Generate pHash, aHash, dHash, WHash and CLIP/DINOv2 embeddings to protect against theft and unauthorized AI training.
+                Create a permanent record for your artwork or photograph. The system generates unique image fingerprints to protect your work from unauthorized use and copying.
               </p>
             </div>
             <div className="flex items-center gap-2 text-sm font-semibold text-cyan-400 group-hover:translate-x-1 transition-transform">
-              <span>Start Registration Process</span>
+              <span>Start Registration</span>
               <ArrowRight className="w-4 h-4" />
             </div>
           </div>
@@ -171,17 +165,17 @@ export const Dashboard = () => {
                 <Search className="w-6 h-6" />
               </div>
               <Badge variant="cyan" size="xs">
-                Forensic Analysis
+                Image Verification
               </Badge>
               <h3 className="text-xl sm:text-2xl font-bold text-white group-hover:text-cyan-300 transition-colors">
                 VERIFY SUSPICIOUS IMAGE
               </h3>
               <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-                Search the registry for matching or manipulated content. Calculate Hamming distance, cosine similarity, and combined confidence score with deep forensic evidence reports.
+                Upload any suspicious image to check if it matches an existing registered work in the database. View similarity metrics, visual comparison, and confidence scores.
               </p>
             </div>
             <div className="flex items-center gap-2 text-sm font-semibold text-cyan-400 group-hover:translate-x-1 transition-transform">
-              <span>Launch Forensic Scanner</span>
+              <span>Start Verification</span>
               <ArrowRight className="w-4 h-4" />
             </div>
           </div>
@@ -196,7 +190,7 @@ export const Dashboard = () => {
               Recent Registered Assets
             </h2>
             <p className="text-xs text-slate-400">
-              Your active cryptographic provenance portfolio
+              Your registered original works
             </p>
           </div>
           <Link to="/assets">
@@ -209,43 +203,6 @@ export const Dashboard = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {recentAssets.slice(0, 3).map((asset) => (
             <AssetCard key={asset.id} asset={asset} />
-          ))}
-        </div>
-      </div>
-
-      {/* 5. Live Match / Activity Feed Bar */}
-      <div className="p-5 sm:p-6 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-4">
-        <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-300 font-mono">
-            <Activity className="w-4 h-4 text-cyan-400" />
-            <span>Forensic Enclave Alerts & Logs</span>
-          </div>
-          <Link to="/notifications" className="text-xs text-cyan-400 hover:underline">
-            All Notifications
-          </Link>
-        </div>
-
-        <div className="divide-y divide-slate-800/60">
-          {mockNotifications.slice(0, 2).map((n) => (
-            <div key={n.id} className="py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs">
-              <div className="flex items-center gap-2.5">
-                <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse shrink-0" />
-                <span className="font-semibold text-slate-200">{n.title}:</span>
-                <span className="text-slate-400 line-clamp-1">{n.message}</span>
-              </div>
-              <div className="flex items-center gap-3 shrink-0">
-                <span className="text-[11px] font-mono text-slate-500">
-                  {new Date(n.timestamp).toLocaleTimeString()}
-                </span>
-                {n.assetId && (
-                  <Link to={`/assets/${n.assetId}`}>
-                    <Button variant="outline" size="xs">
-                      Inspect
-                    </Button>
-                  </Link>
-                )}
-              </div>
-            </div>
           ))}
         </div>
       </div>
