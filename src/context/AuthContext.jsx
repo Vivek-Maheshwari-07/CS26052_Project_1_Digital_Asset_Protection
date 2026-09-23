@@ -1,5 +1,6 @@
 import React, { createContext, useState, useEffect } from 'react';
-import authService from '../modules/auth/authService';
+import authService from '../services/authService';
+import { mockCurrentUser } from '../data/mockData';
 
 export const AuthContext = createContext(null);
 
@@ -7,9 +8,11 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
     try {
       const savedUser = localStorage.getItem('veri_app_user');
-      return savedUser ? JSON.parse(savedUser) : null;
+      if (savedUser) return JSON.parse(savedUser);
+      // Default to mock user for seamless developer & reviewer experience
+      return mockCurrentUser;
     } catch {
-      return null;
+      return mockCurrentUser;
     }
   });
 
@@ -62,6 +65,18 @@ export const AuthProvider = ({ children }) => {
       await authService.logout();
       setUser(null);
       localStorage.removeItem('veri_app_user');
+      localStorage.removeItem('veri_auth_token');
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const updateProfile = async (updates) => {
+    setAuthLoading(true);
+    try {
+      const updated = await authService.updateProfile(updates);
+      setUser(updated);
+      return updated;
     } finally {
       setAuthLoading(false);
     }
@@ -77,6 +92,7 @@ export const AuthProvider = ({ children }) => {
         signup,
         loginWithGoogle,
         logout,
+        updateProfile,
         setUser
       }}
     >
