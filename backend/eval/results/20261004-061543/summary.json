@@ -1,0 +1,85 @@
+{
+  "originals": 40,
+  "edits": [
+    "jpeg_q30",
+    "jpeg_q10",
+    "resize_25pct",
+    "crop_10",
+    "crop_25",
+    "crop_40",
+    "crop_offset_30",
+    "rotate_5",
+    "rotate_15",
+    "hflip",
+    "blur_r3",
+    "brightness_+40",
+    "contrast_x1.6",
+    "saturation_x2",
+    "grayscale",
+    "noise_s20",
+    "text_overlay",
+    "letterbox",
+    "combo_crop_filter_jpeg",
+    "sim_ai_painterly",
+    "sim_ai_restyle"
+  ],
+  "queries": 840,
+  "fingerprint_seconds": 332.4534914493561,
+  "overall": {
+    "phash": {
+      "auc": 0.9032289668003953,
+      "tpr_at_1pct_fpr": 0.7285714285714285,
+      "tpr_at_0.1pct_fpr": 0.6571428571428571,
+      "threshold_at_1pct_fpr": 0.65625,
+      "top1": 0.7380952380952381,
+      "mean_pos": 0.8260416666666667,
+      "mean_neg": 0.5106026785714286,
+      "n_pos": 840,
+      "n_neg": 32760
+    },
+    "embedding": {
+      "auc": 0.9991000203500203,
+      "tpr_at_1pct_fpr": 0.9928571428571429,
+      "tpr_at_0.1pct_fpr": 0.9226190476190477,
+      "threshold_at_1pct_fpr": 0.6394789218902588,
+      "top1": 0.9952380952380953,
+      "mean_pos": 0.8923245668411255,
+      "mean_neg": 0.3723182678222656,
+      "n_pos": 840,
+      "n_neg": 32760
+    },
+    "heuristic_fusion": {
+      "auc": 0.9995557336182336,
+      "tpr_at_1pct_fpr": 0.9964285714285714,
+      "tpr_at_0.1pct_fpr": 0.9345238095238095,
+      "threshold_at_1pct_fpr": 0.7292400848865509,
+      "top1": 0.9964285714285714,
+      "mean_pos": 0.9591359165807565,
+      "mean_neg": 0.4766548285515517,
+      "n_pos": 840,
+      "n_neg": 32760
+    },
+    "logistic_fusion_cv": {
+      "auc": 0.9991810570381999,
+      "tpr_at_1pct_fpr": 0.9940476190476191,
+      "tpr_at_0.1pct_fpr": 0.8964285714285715,
+      "threshold_at_1pct_fpr": 0.27019545435905457,
+      "top1": 0.9976190476190476,
+      "mean_pos": 0.9884070754051208,
+      "mean_neg": 0.0100091602653265,
+      "n_pos": 840,
+      "n_neg": 32760
+    }
+  },
+  "recommended_settings": {
+    "FUSION_W_EMBEDDING": 27.887,
+    "FUSION_W_PHASH": 13.085,
+    "FUSION_BIAS": -25.773,
+    "MATCH_LIKELY": 0.996,
+    "MATCH_POSSIBLE": 0.27,
+    "tpr_likely": 0.8964285714285715,
+    "fpr_likely": 0.0010073260073260074,
+    "tpr_possible": 0.9940476190476191,
+    "fpr_possible": 0.010012210012210013
+  }
+}

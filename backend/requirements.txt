@@ -1,0 +1,19 @@
+fastapi
+uvicorn[standard]
+motor
+pydantic-settings
+python-multipart
+imagehash
+pillow
+open-clip-torch
+torch
+numpy
+fpdf2
+pytest
+PyJWT
+bcrypt
+mongomock-motor
+pytest-asyncio
+qrcode
+httpx
+matplotlib  # optional: charts in eval/evaluate.py
