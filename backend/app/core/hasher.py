@@ -11,7 +11,7 @@ HASH_PARAMS = {
     "phash": {"hash_size": 8},
     "dhash": {"hash_size": 8},
     "ahash": {"hash_size": 8},
-    "whash": {"hash_size": 8, "mode": "haar"},
+    "whash": {"hash_size": 8, "image_scale": 256, "mode": "haar"},
 }
 
 
@@ -47,7 +47,7 @@ def compute_hashes(img: Image.Image, cfg: AppConfig) -> Hashes:
         phash=str(imagehash.phash(g, hash_size=8)),
         dhash=str(imagehash.dhash(g, hash_size=8)),
         ahash=str(imagehash.average_hash(g, hash_size=8)),
-        whash=str(imagehash.whash(g, hash_size=8, mode="haar")),
+        whash=str(imagehash.whash(g, hash_size=8, image_scale=256, mode="haar")),
         low_detail=low_detail,
         grey_std=grey_std,
     )

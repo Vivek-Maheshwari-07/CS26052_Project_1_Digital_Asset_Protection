@@ -17,7 +17,17 @@ def test_hash_params_metadata():
     assert HASH_PARAMS["phash"] == {"hash_size": 8}
     assert HASH_PARAMS["dhash"] == {"hash_size": 8}
     assert HASH_PARAMS["ahash"] == {"hash_size": 8}
-    assert HASH_PARAMS["whash"] == {"hash_size": 8, "mode": "haar"}
+    assert HASH_PARAMS["whash"] == {"hash_size": 8, "image_scale": 256, "mode": "haar"}
+
+
+def test_whash_params():
+    cfg = get_config()
+    assert HASH_PARAMS["whash"]["image_scale"] == 256
+    for seed in range(5):
+        img = photo_like(seed)
+        h = compute_hashes(img, cfg)
+        expected_whash = str(imagehash.whash(img.convert("L"), hash_size=8, image_scale=256, mode="haar"))
+        assert h.whash == expected_whash, f"Seed {seed} failed whash check"
 
 
 def test_hash_format_and_determinism():
@@ -49,6 +59,7 @@ def test_jpeg_reencoding_robustness():
         img = photo_like(seed)
         raw_jpeg = to_bytes(img, "JPEG", quality=70)
         from app.core.ingest import ingest
+
         ingested = ingest(raw_jpeg, cfg.limits)
         h_orig = compute_hashes(img, cfg)
         h_jpeg = compute_hashes(ingested.image, cfg)
@@ -125,4 +136,20 @@ def test_speed():
         latencies_ms.append((t1 - t0) * 1000.0)
 
     median_latency = float(np.median(latencies_ms))
-    assert median_latency < 200.0, f"Median latency {median_latency:.2f}ms exceeds 200ms limit"
+    assert median_latency < 50.0, f"Median latency {median_latency:.2f}ms exceeds 50ms limit"
+
+
+@pytest.mark.slow
+def test_speed_large_input():
+    cfg = get_config()
+    img = photo_like(5678, size=(4032, 3024))
+
+    latencies_ms = []
+    for _ in range(5):
+        t0 = time.perf_counter()
+        compute_hashes(img, cfg)
+        t1 = time.perf_counter()
+        latencies_ms.append((t1 - t0) * 1000.0)
+
+    median_latency = float(np.median(latencies_ms))
+    assert median_latency < 150.0, f"Median latency {median_latency:.2f}ms exceeds 150ms limit"
