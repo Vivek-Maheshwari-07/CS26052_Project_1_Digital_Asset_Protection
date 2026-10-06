@@ -1,12 +1,19 @@
-version: '3.8'
-
 services:
-  mongo:
-    image: mongo:7
+  db:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: provnet
+      POSTGRES_PASSWORD: provnet
+      POSTGRES_DB: provnet
     ports:
-      - "27017:27017"
+      - "5432:5432"
     volumes:
-      - mongo_data:/data/db
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U provnet"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
 volumes:
-  mongo_data:
+  pgdata:

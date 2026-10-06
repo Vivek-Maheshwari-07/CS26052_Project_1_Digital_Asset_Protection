@@ -1,6 +1,13 @@
 .env
+backend/.venv/
 venv/
+backend/storage/
+backend/.hf_cache/
+storage/
+.hf_cache/
 __pycache__/
-uploads/
 .pytest_cache/
-backend/eval/data/
+legacy/mongo_dump/
+*.egg-info/
+dist/
+build/

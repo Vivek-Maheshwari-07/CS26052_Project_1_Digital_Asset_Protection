@@ -1,0 +1,56 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "provnet-backend"
+version = "0.1.0"
+description = "ProvNet Digital Asset Protection backend"
+requires-python = ">=3.11,<3.12"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.30",
+    "sqlalchemy[asyncio]>=2.0.30",
+    "asyncpg>=0.29",
+    "psycopg[binary]>=3.2",
+    "alembic>=1.13",
+    "pgvector>=0.3.6",
+    "pydantic>=2.7",
+    "pydantic-settings>=2.3",
+    "pyyaml>=6",
+    "python-multipart",
+    "pillow>=10.4",
+    "imagehash>=4.3.1",
+    "numpy>=1.26",
+    "torch>=2.3",
+    "transformers>=4.44",
+    "slowapi>=0.1.9",
+    "jinja2>=3.1",
+    "fpdf2>=2.7",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8",
+    "pytest-asyncio>=0.23",
+    "httpx>=0.27",
+    "ruff>=0.6",
+]
+bench = [
+    "pandas",
+    "scikit-learn",
+    "scipy",
+    "matplotlib",
+]
+migrate = [
+    "pymongo>=4.8",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["app*"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 110
+extend-exclude = ["legacy", ".venv", "alembic/versions"]
