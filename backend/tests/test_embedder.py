@@ -21,6 +21,7 @@ DATA_DIR = pathlib.Path(__file__).parent / "data"
 # Tests WITHOUT Models (Always run)
 # =========================================================================
 
+
 def test_pad_to_square():
     from app.core.embedder import GREY, pad_to_square
 
@@ -98,6 +99,7 @@ print('SUCCESS_NO_TRANSFORMERS')
 # =========================================================================
 # Tests WITH Models (@pytest.mark.models)
 # =========================================================================
+
 
 @pytest.mark.models
 def test_embed_shapes_dtypes_and_norms(embedder):
@@ -311,5 +313,7 @@ print('OFFLINE_SUCCESS')
         text=True,
         check=False,
     )
-    assert proc.returncode == 0, f"Offline Embedder test failed:\nstdout: {proc.stdout}\nstderr: {proc.stderr}"
+    assert proc.returncode == 0, (
+        f"Offline Embedder test failed:\nstdout: {proc.stdout}\nstderr: {proc.stderr}"
+    )
     assert "OFFLINE_SUCCESS" in proc.stdout

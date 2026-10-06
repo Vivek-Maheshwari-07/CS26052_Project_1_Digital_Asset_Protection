@@ -6,3 +6,7 @@
 ## Wavelet Hashing (WHash) Working Resolution
 - `imagehash`'s default `image_scale` depends on the input's shorter side ($2^{\lfloor\log_2(\text{min side})\rfloor}$), so the hash definition and computational cost varied with input size ($\approx 100\text{ ms}$ at 1024 px, and even higher for full-resolution phone photos).
 - `image_scale` is pinned to 256 (`hash_size=8, image_scale=256, mode="haar"`): provides a size-independent hash definition and reduces latency to $\approx 10\text{ ms}$. Measured on 30 synthetic 1600x1200 images vs 25% resized copies: mean distance 0.93 (default) vs 0.90 (256).
+
+## File Storage
+- `images.file_path` stores the path relative to `STORAGE_DIR` (`"<uuid>.png"`).
+

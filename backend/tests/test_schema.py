@@ -57,8 +57,12 @@ def test_column_types(db_conn, clean_db):
     for col in ("phash", "dhash", "ahash", "whash"):
         assert col_types.get(col) == "bit(64)", f"{col} has type {col_types.get(col)}, expected bit(64)"
 
-    assert col_types.get("clip_emb") == "vector(512)", f"clip_emb has type {col_types.get('clip_emb')}, expected vector(512)"
-    assert col_types.get("dino_emb") == "vector(768)", f"dino_emb has type {col_types.get('dino_emb')}, expected vector(768)"
+    assert col_types.get("clip_emb") == "vector(512)", (
+        f"clip_emb has type {col_types.get('clip_emb')}, expected vector(512)"
+    )
+    assert col_types.get("dino_emb") == "vector(768)", (
+        f"dino_emb has type {col_types.get('dino_emb')}, expected vector(768)"
+    )
 
 
 def test_index_definitions(db_conn, clean_db):
@@ -111,11 +115,43 @@ def test_hamming_distance_equivalence(db_conn, clean_db):
     with db_conn.cursor() as cur:
         cur.execute(
             insert_sql,
-            ("img1.jpg", "JPEG", "a" * 64, 100, 100, hash_zeros, hash_zeros, hash_zeros, hash_zeros, False, str(clip1), str(dino1), "clip", "dino", "1.0"),
+            (
+                "img1.jpg",
+                "JPEG",
+                "a" * 64,
+                100,
+                100,
+                hash_zeros,
+                hash_zeros,
+                hash_zeros,
+                hash_zeros,
+                False,
+                str(clip1),
+                str(dino1),
+                "clip",
+                "dino",
+                "1.0",
+            ),
         )
         cur.execute(
             insert_sql,
-            ("img2.jpg", "JPEG", "b" * 64, 100, 100, hash_8ones, hash_8ones, hash_8ones, hash_8ones, False, str(clip2), str(dino2), "clip", "dino", "1.0"),
+            (
+                "img2.jpg",
+                "JPEG",
+                "b" * 64,
+                100,
+                100,
+                hash_8ones,
+                hash_8ones,
+                hash_8ones,
+                hash_8ones,
+                False,
+                str(clip2),
+                str(dino2),
+                "clip",
+                "dino",
+                "1.0",
+            ),
         )
 
         # Test distance between row 1 (64 zeros) and query_hash (8 ones + 56 zeros)
@@ -157,7 +193,23 @@ def test_q2_and_q3_execution(db_conn, clean_db):
             dino_vecs.append(d)
             cur.execute(
                 insert_sql,
-                (f"img_{i}.jpg", "PNG", f"{i:064x}", 200, 200, h, h, h, h, False, str(c), str(d.tolist()), "clip", "dino", "1.0"),
+                (
+                    f"img_{i}.jpg",
+                    "PNG",
+                    f"{i:064x}",
+                    200,
+                    200,
+                    h,
+                    h,
+                    h,
+                    h,
+                    False,
+                    str(c),
+                    str(d.tolist()),
+                    "clip",
+                    "dino",
+                    "1.0",
+                ),
             )
 
         # Query Q2
@@ -216,7 +268,23 @@ def test_q4_conflict(db_conn, clean_db):
     with db_conn.cursor() as cur:
         cur.execute(
             insert_sql,
-            ("img_conflict.jpg", "JPEG", "1" * 64, 100, 100, "0" * 64, "0" * 64, "0" * 64, "0" * 64, False, str(clip1), str(dino1), "clip", "dino", "1.0"),
+            (
+                "img_conflict.jpg",
+                "JPEG",
+                "1" * 64,
+                100,
+                100,
+                "0" * 64,
+                "0" * 64,
+                "0" * 64,
+                "0" * 64,
+                False,
+                str(clip1),
+                str(dino1),
+                "clip",
+                "dino",
+                "1.0",
+            ),
         )
 
         dummy_dino = str((np.ones(768) / np.linalg.norm(np.ones(768))).tolist())
@@ -325,12 +393,44 @@ def test_duplicate_sha256_raises_unique_violation(db_conn, clean_db):
     with db_conn.cursor() as cur:
         cur.execute(
             insert_sql,
-            ("img_unique1.jpg", "JPEG", "d" * 64, 100, 100, "0" * 64, "0" * 64, "0" * 64, "0" * 64, False, str(clip), str(dino), "clip", "dino", "1.0"),
+            (
+                "img_unique1.jpg",
+                "JPEG",
+                "d" * 64,
+                100,
+                100,
+                "0" * 64,
+                "0" * 64,
+                "0" * 64,
+                "0" * 64,
+                False,
+                str(clip),
+                str(dino),
+                "clip",
+                "dino",
+                "1.0",
+            ),
         )
         with pytest.raises(UniqueViolation):
             cur.execute(
                 insert_sql,
-                ("img_unique2.jpg", "JPEG", "d" * 64, 100, 100, "0" * 64, "0" * 64, "0" * 64, "0" * 64, False, str(clip), str(dino), "clip", "dino", "1.0"),
+                (
+                    "img_unique2.jpg",
+                    "JPEG",
+                    "d" * 64,
+                    100,
+                    100,
+                    "0" * 64,
+                    "0" * 64,
+                    "0" * 64,
+                    "0" * 64,
+                    False,
+                    str(clip),
+                    str(dino),
+                    "clip",
+                    "dino",
+                    "1.0",
+                ),
             )
 
 
@@ -455,4 +555,3 @@ def test_guard_test_database_allows_local_and_override(monkeypatch):
 
     monkeypatch.setenv("PROVNET_ALLOW_REMOTE_TEST_DB", "1")
     guard_test_database("postgresql://user:pass@example.supabase.co:5432/postgres")
-

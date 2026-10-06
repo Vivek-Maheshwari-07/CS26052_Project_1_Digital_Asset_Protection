@@ -45,7 +45,9 @@ class UnsupportedFormat(ProvNetError):
 
 
 class Busy(ProvNetError):
-    def __init__(self, message: str = "Server is busy. Try again later.", extra: dict[str, Any] | None = None):
+    def __init__(
+        self, message: str = "Server is busy. Try again later.", extra: dict[str, Any] | None = None
+    ):
         super().__init__(message, status=503, code="busy", extra=extra)
 
 

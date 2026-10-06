@@ -104,10 +104,14 @@ def db_conn(migrated_db):
 @pytest.fixture
 def clean_db(db_conn):
     with db_conn.cursor() as cur:
-        cur.execute("TRUNCATE TABLE benchmark_metrics, benchmark_runs, verifications, images RESTART IDENTITY CASCADE;")
+        cur.execute(
+            "TRUNCATE TABLE benchmark_metrics, benchmark_runs, verifications, images RESTART IDENTITY CASCADE;"
+        )
     yield
     with db_conn.cursor() as cur:
-        cur.execute("TRUNCATE TABLE benchmark_metrics, benchmark_runs, verifications, images RESTART IDENTITY CASCADE;")
+        cur.execute(
+            "TRUNCATE TABLE benchmark_metrics, benchmark_runs, verifications, images RESTART IDENTITY CASCADE;"
+        )
 
 
 @pytest.fixture
@@ -128,3 +132,24 @@ def app_client(async_db_url, migrated_db, clean_db, tmp_path):
     app = create_app(settings)
     with TestClient(app) as client:
         yield client
+
+
+@pytest.fixture
+def register_client(async_db_url, migrated_db, clean_db, tmp_path):
+    from app.api.deps import get_embedder
+    from app.limiter import limiter
+    from tests.fakes import FakeEmbedder
+
+    settings = Settings(
+        database_url=async_db_url,
+        provnet_skip_models=True,
+        storage_dir=str(tmp_path),
+    )
+    app = create_app(settings)
+    app.dependency_overrides[get_embedder] = lambda: FakeEmbedder()
+    limiter.enabled = False
+    with TestClient(app, raise_server_exceptions=False) as client:
+        client.storage_dir = tmp_path
+        yield client
+    limiter.enabled = True
+    limiter.reset()

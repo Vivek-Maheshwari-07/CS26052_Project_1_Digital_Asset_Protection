@@ -9,8 +9,10 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.health import router as health_router
+from app.api.register import router as register_router
 from app.config import Settings, get_config, get_settings
 from app.core.sql import Q7_PGVECTOR_VERSION
+from app.core.storage import LocalStorage
 from app.db import make_engine, make_sessionmaker
 from app.errors import register_error_handlers
 from app.limiter import install_limiter
@@ -76,10 +78,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 app.state.device = "cpu"
 
         app.state.inference_gate = asyncio.Semaphore(app.state.config.limits.inference_concurrency)
-
-        storage_path = Path(settings.storage_dir)
-        storage_path.mkdir(parents=True, exist_ok=True)
-        (storage_path / "thumbs").mkdir(parents=True, exist_ok=True)
+        app.state.storage = LocalStorage(settings.storage_dir)
 
         yield
 
@@ -98,6 +97,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     register_error_handlers(app)
     install_limiter(app)
     app.include_router(health_router, prefix="/api")
+    app.include_router(register_router, prefix="/api")
 
     return app
 
