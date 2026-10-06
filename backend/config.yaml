@@ -12,8 +12,8 @@ low_detail:
 models:
   clip: openai/clip-vit-base-patch32
   dino: facebook/dinov2-base
-  clip_revision: main
-  dino_revision: main
+  clip_revision: 3d74acf9a28c67741b2f4f2ea7635f0aaf6f0268
+  dino_revision: f9e44c814b77203eaa57a6bdbbd535f21ede1415
   input_size: 224
   preprocessing: pad_to_square
   device: auto
