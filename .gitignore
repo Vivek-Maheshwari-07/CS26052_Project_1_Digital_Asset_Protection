@@ -11,3 +11,8 @@ legacy/mongo_dump/
 *.egg-info/
 dist/
 build/
+
+uploads/
+backend/uploads/
+legacy/backend/eval/data/
+node_modules/

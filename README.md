@@ -1,6 +1,6 @@
-# ProvNet
+﻿# ProvNet
 
-ProvNet is an open-source digital asset provenance and copyright protection system powered by multi-signal image fingerprinting and vector search. It enables creators to register original works, detect near-duplicate copies or derivations across transformations, and verify ownership claims with cryptographic provenance.
+ProvNet is an academic research platform that compares classical perceptual hashes (pHash, dHash, aHash, WHash) with deep embeddings (CLIP ViT-B/32, DINOv2-base) for image copy detection. Creators can register images and investigators can check suspected copies; a registration shows when an image was submitted, not who owns it.
 
 ## Local Setup
 
