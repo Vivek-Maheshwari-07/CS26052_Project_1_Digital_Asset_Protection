@@ -5,8 +5,12 @@ import urllib.parse
 import psycopg
 import pytest
 from alembic.config import Config
+from fastapi.testclient import TestClient
 
 from alembic import command
+from app.config import Settings
+from app.db import make_engine
+from app.main import create_app
 
 ALLOWED_TEST_HOSTS = {"localhost", "127.0.0.1", "db"}
 
@@ -24,6 +28,19 @@ def db_url():
     url = os.getenv("TEST_DATABASE_URL")
     if not url:
         url = "postgresql://provnet:provnet@localhost:5432/provnet"
+    return url
+
+
+@pytest.fixture(scope="session")
+def async_db_url(db_url):
+    guard_test_database(db_url)
+    url = db_url
+    if url.startswith("postgresql+psycopg://"):
+        url = url.replace("postgresql+psycopg://", "postgresql+asyncpg://", 1)
+    elif url.startswith("postgresql://"):
+        url = url.replace("postgresql://", "postgresql+asyncpg://", 1)
+    elif url.startswith("postgres://"):
+        url = url.replace("postgres://", "postgresql+asyncpg://", 1)
     return url
 
 
@@ -62,3 +79,23 @@ def clean_db(db_conn):
     yield
     with db_conn.cursor() as cur:
         cur.execute("TRUNCATE TABLE benchmark_metrics, benchmark_runs, verifications, images RESTART IDENTITY CASCADE;")
+
+
+@pytest.fixture
+async def async_engine(async_db_url, migrated_db):
+    settings = Settings(database_url=async_db_url)
+    engine = make_engine(settings)
+    yield engine
+    await engine.dispose()
+
+
+@pytest.fixture
+def app_client(async_db_url, migrated_db, clean_db, tmp_path):
+    settings = Settings(
+        database_url=async_db_url,
+        provnet_skip_models=True,
+        storage_dir=str(tmp_path),
+    )
+    app = create_app(settings)
+    with TestClient(app) as client:
+        yield client
