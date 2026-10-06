@@ -219,12 +219,12 @@ async def test_db_roundtrip_vectors(embedder, async_engine, clean_db):
         res = await session.execute(
             Q3_STAGE2,
             {
-                "phash": int(hashes.phash, 16).to_bytes(8, "big"),
-                "dhash": int(hashes.dhash, 16).to_bytes(8, "big"),
-                "ahash": int(hashes.ahash, 16).to_bytes(8, "big"),
-                "whash": int(hashes.whash, 16).to_bytes(8, "big"),
-                "dino": dino_vec.tolist(),
-                "clip": clip_vec.tolist(),
+                "phash": hashes.phash,
+                "dhash": hashes.dhash,
+                "ahash": hashes.ahash,
+                "whash": hashes.whash,
+                "dino": dino_vec,
+                "clip": clip_vec,
                 "k": 10,
             },
         )
@@ -232,10 +232,14 @@ async def test_db_roundtrip_vectors(embedder, async_engine, clean_db):
         cos_clip = float(row["cos_clip"])
         cos_dino = float(row["cos_dino"])
 
+        stored_img = await session.get(ImageModel, db_img.id)
+        stored_clip = np.asarray(stored_img.clip_emb, dtype=np.float32)
+        stored_dino = np.asarray(stored_img.dino_emb, dtype=np.float32)
+
         assert np.isclose(cos_clip, 1.0, atol=1e-5)
         assert np.isclose(cos_dino, 1.0, atol=1e-5)
-        assert np.isclose(cos_clip, float(np.dot(clip_vec, clip_vec)), atol=1e-5)
-        assert np.isclose(cos_dino, float(np.dot(dino_vec, dino_vec)), atol=1e-5)
+        assert np.isclose(cos_clip, float(np.dot(clip_vec, stored_clip)), atol=1e-5)
+        assert np.isclose(cos_dino, float(np.dot(dino_vec, stored_dino)), atol=1e-5)
 
 
 @pytest.mark.models

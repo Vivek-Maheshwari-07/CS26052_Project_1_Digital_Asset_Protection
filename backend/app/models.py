@@ -24,6 +24,8 @@ from app.types import Hash64
 
 
 class Vector(_BaseVector):
+    cache_ok = True
+
     def bind_processor(self, dialect):
         if dialect and dialect.driver == "asyncpg":
             return lambda value: value if value is None else (value if isinstance(value, (list, tuple)) else list(value))
