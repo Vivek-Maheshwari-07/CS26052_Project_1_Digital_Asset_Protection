@@ -15,6 +15,35 @@ from app.main import create_app
 ALLOWED_TEST_HOSTS = {"localhost", "127.0.0.1", "db"}
 
 
+def pytest_collection_modifyitems(config, items):
+    if os.environ.get("RUN_MODEL_TESTS") != "1":
+        skip_models = pytest.mark.skip(reason="set RUN_MODEL_TESTS=1")
+        for item in items:
+            if "models" in item.keywords:
+                item.add_marker(skip_models)
+
+
+@pytest.fixture(scope="session")
+def embedder():
+    from app.config import get_config, get_settings
+
+    settings = get_settings()
+    cfg = get_config()
+    hf_path = pathlib.Path(settings.hf_home)
+    if not hf_path.is_absolute():
+        backend_dir = pathlib.Path(__file__).resolve().parent.parent
+        hf_path = backend_dir / hf_path
+    hf_path.mkdir(parents=True, exist_ok=True)
+    os.environ["HF_HOME"] = str(hf_path)
+
+    from app.core.embedder import Embedder, resolve_device
+
+    device = resolve_device(cfg.models.device)
+    emb = Embedder(cfg.models, device)
+    emb.warm_up()
+    return emb
+
+
 def guard_test_database(url_str: str) -> None:
     """Ensure tests with destructive downgrade/truncate run only on safe local test databases."""
     parsed = urllib.parse.urlparse(url_str)

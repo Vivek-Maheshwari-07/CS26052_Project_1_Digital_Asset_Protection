@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import os
 import time
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -46,20 +47,32 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         except Exception as e:  # noqa: BLE001
             logger.warning("Database unreachable during startup: %s", e)
 
-        app.state.models_loaded = {"clip": False, "dino": False}
+        hf_path = Path(settings.hf_home)
+        if not hf_path.is_absolute():
+            backend_dir = Path(__file__).resolve().parent.parent
+            hf_path = backend_dir / hf_path
+        hf_path.mkdir(parents=True, exist_ok=True)
+        os.environ["HF_HOME"] = str(hf_path)
 
         if settings.provnet_skip_models:
+            app.state.embedder = None
+            app.state.models_loaded = {"clip": False, "dino": False}
             app.state.device = "cpu"
         else:
             try:
-                import torch
+                from app.core.embedder import Embedder, resolve_device
 
-                device_cfg = app.state.config.models.device
-                if device_cfg == "auto":
-                    app.state.device = "cuda" if torch.cuda.is_available() else "cpu"
-                else:
-                    app.state.device = device_cfg
-            except Exception:  # noqa: BLE001
+                device_setting = app.state.config.models.device
+                device = resolve_device(device_setting)
+                app.state.device = device
+
+                app.state.embedder = await asyncio.to_thread(Embedder, app.state.config.models, device)
+                await asyncio.to_thread(app.state.embedder.warm_up)
+                app.state.models_loaded = {"clip": True, "dino": True}
+            except Exception as e:  # noqa: BLE001
+                logger.warning("Failed to load models during startup: %s", e)
+                app.state.embedder = None
+                app.state.models_loaded = {"clip": False, "dino": False}
                 app.state.device = "cpu"
 
         app.state.inference_gate = asyncio.Semaphore(app.state.config.limits.inference_concurrency)
