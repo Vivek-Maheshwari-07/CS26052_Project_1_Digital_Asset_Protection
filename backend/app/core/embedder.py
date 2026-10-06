@@ -4,7 +4,6 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 from PIL import Image
-from transformers import AutoImageProcessor, AutoModel, CLIPImageProcessor, CLIPVisionModelWithProjection
 
 from app.config import ModelsCfg
 from app.errors import Busy
@@ -34,27 +33,30 @@ class Embedder:
     """Deep embedding generator using CLIP ViT-B/32 and DINOv2-base."""
 
     def __init__(self, cfg: ModelsCfg, device: str):
+        from transformers import (
+            AutoImageProcessor,
+            AutoModel,
+            CLIPImageProcessor,
+            CLIPVisionModelWithProjection,
+        )
+
         self.clip_id = cfg.clip
         self.dino_id = cfg.dino
         self.clip_revision = cfg.clip_revision
         self.dino_revision = cfg.dino_revision
         self.device = device
 
-        self.clip = CLIPVisionModelWithProjection.from_pretrained(
-            cfg.clip, revision=cfg.clip_revision
-        ).to(device).eval()
-        self.clip_proc = CLIPImageProcessor.from_pretrained(
-            cfg.clip, revision=cfg.clip_revision
+        self.clip = (
+            CLIPVisionModelWithProjection.from_pretrained(cfg.clip, revision=cfg.clip_revision)
+            .to(device)
+            .eval()
         )
+        self.clip_proc = CLIPImageProcessor.from_pretrained(cfg.clip, revision=cfg.clip_revision)
 
-        self.dino = AutoModel.from_pretrained(
-            cfg.dino, revision=cfg.dino_revision
-        ).to(device).eval()
-        self.dino_proc = AutoImageProcessor.from_pretrained(
-            cfg.dino, revision=cfg.dino_revision
-        )
+        self.dino = AutoModel.from_pretrained(cfg.dino, revision=cfg.dino_revision).to(device).eval()
+        self.dino_proc = AutoImageProcessor.from_pretrained(cfg.dino, revision=cfg.dino_revision)
 
-        self.square = (cfg.preprocessing == "pad_to_square")
+        self.square = cfg.preprocessing == "pad_to_square"
         self.proc_kw = {
             "size": {"shortest_edge": cfg.input_size},
             "do_center_crop": not self.square,

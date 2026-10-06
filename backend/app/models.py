@@ -28,7 +28,9 @@ class Vector(_BaseVector):
 
     def bind_processor(self, dialect):
         if dialect and dialect.driver == "asyncpg":
-            return lambda value: value if value is None else (value if isinstance(value, (list, tuple)) else list(value))
+            return lambda value: (
+                value if value is None else (value if isinstance(value, (list, tuple)) else list(value))
+            )
         return super().bind_processor(dialect)
 
 
@@ -128,7 +130,9 @@ class Verification(Base):
     )
 
     __table_args__ = (
-        CheckConstraint("decided_by IN ('sha256','hash','embedding','none')", name="verifications_decided_by_check"),
+        CheckConstraint(
+            "decided_by IN ('sha256','hash','embedding','none')", name="verifications_decided_by_check"
+        ),
         CheckConstraint("latency_ms >= 0", name="verifications_latency_ms_check"),
         Index("verifications_created_at", "created_at"),
         Index("verifications_top_match", "top_match"),
@@ -158,13 +162,21 @@ class BenchmarkRun(Base):
     )
 
     __table_args__ = (
-        UniqueConstraint("run_id", "query_file", "original_id", "method", name="benchmark_runs_run_id_query_file_original_id_method_key"),
+        UniqueConstraint(
+            "run_id",
+            "query_file",
+            "original_id",
+            "method",
+            name="benchmark_runs_run_id_query_file_original_id_method_key",
+        ),
         CheckConstraint("split IN ('tune','test')", name="benchmark_runs_split_check"),
         CheckConstraint(
             "method IN ('phash','dhash','ahash','whash','clip','dino','noise_residual','cascade')",
             name="benchmark_runs_method_check",
         ),
-        CheckConstraint("score_kind IN ('hamming','cosine','ratio','decision')", name="benchmark_runs_score_kind_check"),
+        CheckConstraint(
+            "score_kind IN ('hamming','cosine','ratio','decision')", name="benchmark_runs_score_kind_check"
+        ),
         Index("benchmark_runs_lookup", "run_id", "method", "category"),
     )
 
