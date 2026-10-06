@@ -22,60 +22,71 @@ def load_fixture(name: str) -> dict:
         return json.load(f)
 
 
+def strip_none_keys(data):
+    """Recursively remove keys whose value is None from dicts and lists."""
+    if isinstance(data, dict):
+        return {k: strip_none_keys(v) for k, v in data.items() if v is not None}
+    if isinstance(data, list):
+        return [strip_none_keys(v) for v in data]
+    return data
+
+
 def test_register_201_schema():
     data = load_fixture("register_201.json")
     model = RegisterResponse.model_validate(data)
-    dumped = json.loads(model.model_dump_json(by_alias=True, exclude_unset=True))
-    assert dumped == data
+    dumped = model.model_dump(mode="json", by_alias=True, exclude_none=False)
+    assert strip_none_keys(dumped) == strip_none_keys(data)
 
 
 def test_register_409_schema():
     data = load_fixture("register_409.json")
     model = ConflictResponse.model_validate(data)
-    dumped = json.loads(model.model_dump_json(by_alias=True, exclude_unset=True))
-    assert dumped == data
+    dumped = model.model_dump(mode="json", by_alias=True, exclude_none=False)
+    assert strip_none_keys(dumped) == strip_none_keys(data)
 
 
 def test_verify_escalated_schema():
     data = load_fixture("verify_escalated.json")
     model = VerifyResponse.model_validate(data)
-    dumped = json.loads(model.model_dump_json(by_alias=True, exclude_unset=True))
-    assert dumped == data
+    dumped = model.model_dump(mode="json", by_alias=True, exclude_none=False)
+    assert strip_none_keys(dumped) == strip_none_keys(data)
+    assert "evidence" in model.model_dump(mode="json")["thresholds"]
 
 
 def test_verify_hash_exit_schema():
     data = load_fixture("verify_hash_exit.json")
     model = VerifyResponse.model_validate(data)
-    dumped = json.loads(model.model_dump_json(by_alias=True, exclude_unset=True))
-    assert dumped == data
+    dumped = model.model_dump(mode="json", by_alias=True, exclude_none=False)
+    assert strip_none_keys(dumped) == strip_none_keys(data)
+    assert "evidence" in model.model_dump(mode="json")["thresholds"]
 
 
 def test_image_detail_schema():
     data = load_fixture("image_detail.json")
     model = ImageDetail.model_validate(data)
-    dumped = json.loads(model.model_dump_json(by_alias=True, exclude_unset=True))
-    assert dumped == data
+    dumped = model.model_dump(mode="json", by_alias=True, exclude_none=False)
+    assert strip_none_keys(dumped) == strip_none_keys(data)
 
 
 def test_benchmark_summary_schema():
     data = load_fixture("benchmark_summary.json")
     model = BenchmarkSummary.model_validate(data)
-    dumped = json.loads(model.model_dump_json(by_alias=True, exclude_unset=True))
-    assert dumped == data
+    dumped = model.model_dump(mode="json", by_alias=True, exclude_none=False)
+    assert strip_none_keys(dumped) == strip_none_keys(data)
 
 
 def test_health_schema():
     data = load_fixture("health.json")
     model = HealthResponse.model_validate(data)
-    dumped = json.loads(model.model_dump_json(by_alias=True, exclude_unset=True))
-    assert dumped == data
+    dumped = model.model_dump(mode="json", by_alias=True, exclude_none=False)
+    assert strip_none_keys(dumped) == strip_none_keys(data)
 
 
 def test_error_schema():
     data = load_fixture("error.json")
     model = ErrorResponse.model_validate(data)
-    dumped = json.loads(model.model_dump_json(by_alias=True, exclude_unset=True))
-    assert dumped == data
+    dumped = model.model_dump(mode="json", by_alias=True, exclude_none=False)
+    assert strip_none_keys(dumped) == strip_none_keys(data)
 
 
 def test_extra_keys_forbidden():

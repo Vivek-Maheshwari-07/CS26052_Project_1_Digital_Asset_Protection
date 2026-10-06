@@ -4,7 +4,8 @@ from typing import Any
 
 from fastapi import Request
 from pgvector.asyncpg import register_vector
-from sqlalchemy import event
+from pgvector.psycopg import register_vector as register_vector_psycopg
+from sqlalchemy import Engine, create_engine, event
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 
 from app.config import Settings
@@ -32,6 +33,26 @@ def make_engine(settings: Settings) -> AsyncEngine:
             dbapi_conn.run_async(lambda c: register_vector(c, schema=settings.vector_schema))
         else:
             dbapi_conn.run_async(lambda c: register_vector(c))
+
+    return engine
+
+
+def make_sync_engine(url: str, vector_schema: str = "public") -> Engine:
+    connect_args: dict[str, Any] = {}
+    if vector_schema != "public":
+        connect_args["options"] = f"-c search_path=public,{vector_schema}"
+
+    engine = create_engine(
+        url,
+        pool_size=5,
+        max_overflow=5,
+        pool_pre_ping=True,
+        connect_args=connect_args,
+    )
+
+    @event.listens_for(engine, "connect")
+    def _reg_sync(dbapi_conn, _):
+        register_vector_psycopg(dbapi_conn)
 
     return engine
 

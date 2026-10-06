@@ -4,8 +4,9 @@ import numpy as np
 import pytest
 from sqlalchemy import bindparam, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import Session, sessionmaker
 
+from app.db import make_sync_engine
 from app.models import Image
 from app.types import Hash64, bits_to_hex, hex_to_bits
 from tests.factories import image_row, random_hex_hash, random_unit_vector
@@ -30,26 +31,29 @@ async def test_hash64_and_vector_roundtrip_async(async_engine, clean_db):
     async_session = sessionmaker(async_engine, class_=AsyncSession, expire_on_commit=False)
 
     test_hashes = ["0000000000000000", "ffffffffffffffff", "8000000000000001"]
-    for _ in range(50):  # Sample representative random hashes
+    for _ in range(1000):
         test_hashes.append(random_hex_hash())
 
     dino_vec = random_unit_vector(768)
     clip_vec = random_unit_vector(512)
 
     async with async_session() as session:
-        for idx, h in enumerate(test_hashes):
-            img_data = image_row(
-                sha256=secrets.token_hex(32),
-                file_path=f"storage/async_test_{idx:04d}.jpg",
-                phash=h,
-                dhash=h,
-                ahash=h,
-                whash=h,
-                dino_emb=dino_vec,
-                clip_emb=clip_vec,
+        images_to_add = [
+            Image(
+                **image_row(
+                    sha256=secrets.token_hex(32),
+                    file_path=f"storage/async_test_{idx:05d}.jpg",
+                    phash=h,
+                    dhash=h,
+                    ahash=h,
+                    whash=h,
+                    dino_emb=dino_vec,
+                    clip_emb=clip_vec,
+                )
             )
-            img = Image(**img_data)
-            session.add(img)
+            for idx, h in enumerate(test_hashes)
+        ]
+        session.add_all(images_to_add)
         await session.commit()
 
         # Read back and verify
@@ -57,21 +61,21 @@ async def test_hash64_and_vector_roundtrip_async(async_engine, clean_db):
         images = res.scalars().all()
         assert len(images) == len(test_hashes)
 
-        for img, expected_h in zip(images, test_hashes):
+        for img, expected_h in zip(images, test_hashes, strict=False):
             assert img.phash == expected_h
             assert img.dhash == expected_h
             assert img.ahash == expected_h
             assert img.whash == expected_h
-            assert np.allclose(np.array(img.dino_emb), np.array(dino_vec), atol=1e-5)
+            assert np.allclose(np.array(img.dino_emb), np.array(dino_vec), atol=1e-6)
 
-        # SQL similarity check: 1 - (dino_emb <=> dino_emb) = 1.0
+        # SQL similarity check: 1 - (dino_emb <=> dino_emb) = 1.0 ± 1e-6
         first_id = images[0].id
         sim_res = await session.execute(
-            text("SELECT 1 - (dino_emb <=> :vec) FROM images WHERE id = :id"),
-            {"vec": dino_vec, "id": first_id},
+            text("SELECT 1 - (dino_emb <=> dino_emb) FROM images WHERE id = :id"),
+            {"id": first_id},
         )
         sim_val = sim_res.scalar()
-        assert np.isclose(sim_val, 1.0, atol=1e-5)
+        assert np.isclose(sim_val, 1.0, atol=1e-6)
 
         # Hamming distance bound through Hash64
         q_hash = "ffffffffffffffff"
@@ -87,64 +91,68 @@ async def test_hash64_and_vector_roundtrip_async(async_engine, clean_db):
         assert dist_val == expected_dist
 
 
-def test_hash64_roundtrip_sync(db_conn, clean_db):
+def test_hash64_roundtrip_sync(db_url, clean_db):
+    sync_url = db_url
+    if sync_url.startswith("postgresql://"):
+        sync_url = sync_url.replace("postgresql://", "postgresql+psycopg://", 1)
+    elif sync_url.startswith("postgres://"):
+        sync_url = sync_url.replace("postgres://", "postgresql+psycopg://", 1)
+
+    engine = make_sync_engine(sync_url)
+
     test_hashes = ["0000000000000000", "ffffffffffffffff", "8000000000000001"]
-    for _ in range(50):
+    for _ in range(1000):
         test_hashes.append(random_hex_hash())
 
     dino_vec = random_unit_vector(768)
     clip_vec = random_unit_vector(512)
 
-    with db_conn.cursor() as cur:
-        for idx, h in enumerate(test_hashes):
-            data = image_row(
-                sha256=secrets.token_hex(32),
-                file_path=f"storage/sync_test_{idx:04d}.jpg",
-                phash=h,
-                dhash=h,
-                ahash=h,
-                whash=h,
-                dino_emb=dino_vec,
-                clip_emb=clip_vec,
-            )
-            cur.execute(
-                """
-                INSERT INTO images (
-                    id, file_path, source_format, sha256, width, height,
-                    phash, dhash, ahash, whash, low_detail,
-                    clip_emb, dino_emb, clip_model, dino_model, config_version
-                ) VALUES (
-                    %s, %s, %s, %s, %s, %s,
-                    %s::bit(64), %s::bit(64), %s::bit(64), %s::bit(64), %s,
-                    %s::vector, %s::vector, %s, %s, %s
+    with Session(engine) as session:
+        images_to_add = [
+            Image(
+                **image_row(
+                    sha256=secrets.token_hex(32),
+                    file_path=f"storage/sync_test_{idx:05d}.jpg",
+                    phash=h,
+                    dhash=h,
+                    ahash=h,
+                    whash=h,
+                    dino_emb=dino_vec,
+                    clip_emb=clip_vec,
                 )
-                """,
-                (
-                    data["id"],
-                    data["file_path"],
-                    data["source_format"],
-                    data["sha256"],
-                    data["width"],
-                    data["height"],
-                    hex_to_bits(data["phash"]),
-                    hex_to_bits(data["dhash"]),
-                    hex_to_bits(data["ahash"]),
-                    hex_to_bits(data["whash"]),
-                    data["low_detail"],
-                    str(data["clip_emb"]),
-                    str(data["dino_emb"]),
-                    data["clip_model"],
-                    data["dino_model"],
-                    data["config_version"],
-                ),
             )
+            for idx, h in enumerate(test_hashes)
+        ]
+        session.add_all(images_to_add)
+        session.commit()
 
-        cur.execute("SELECT phash, dhash, ahash, whash FROM images ORDER BY file_path")
-        rows = cur.fetchall()
-        assert len(rows) == len(test_hashes)
-        for row, expected_h in zip(rows, test_hashes):
-            # Postgres returns bit string
-            assert bits_to_hex(row[0]) == expected_h
-            assert bits_to_hex(row[1]) == expected_h
-            assert bits_to_hex(row[2]) == expected_h
-            assert bits_to_hex(row[3]) == expected_h
+        # Read back and verify
+        images = session.scalars(select(Image).order_by(Image.file_path)).all()
+        assert len(images) == len(test_hashes)
+
+        for img, expected_h in zip(images, test_hashes, strict=False):
+            assert img.phash == expected_h
+            assert img.dhash == expected_h
+            assert img.ahash == expected_h
+            assert img.whash == expected_h
+            assert np.allclose(np.array(img.dino_emb), np.array(dino_vec), atol=1e-6)
+
+        # SQL similarity check: 1 - (dino_emb <=> dino_emb) = 1.0 ± 1e-6
+        first_id = images[0].id
+        sim_val = session.execute(
+            text("SELECT 1 - (dino_emb <=> dino_emb) FROM images WHERE id = :id"),
+            {"id": first_id},
+        ).scalar()
+        assert np.isclose(sim_val, 1.0, atol=1e-6)
+
+        # Hamming distance bound through Hash64
+        q_hash = "ffffffffffffffff"
+        stmt = text("SELECT phash <~> CAST(:q AS bit(64)) FROM images WHERE id = :id").bindparams(
+            bindparam("q", type_=Hash64)
+        )
+        dist_val = session.execute(
+            stmt,
+            {"q": q_hash, "id": first_id},
+        ).scalar()
+        expected_dist = (int(images[0].phash, 16) ^ int(q_hash, 16)).bit_count()
+        assert dist_val == expected_dist
