@@ -1,4 +1,6 @@
 from sqlalchemy import Boolean, Float, Integer, String, bindparam, text
+from sqlalchemy.dialects.postgresql import ARRAY
+from sqlalchemy.dialects.postgresql import UUID as PGUUID
 
 from app.models import Vector
 from app.types import Hash64
@@ -92,6 +94,34 @@ SELECT extversion FROM pg_extension WHERE extname = 'vector'
 Q7_IMAGE_COUNT = text("""
 SELECT count(*) FROM images
 """)
+
+Q9_HAMMING_BY_ID = text("""
+SELECT id, owner_name, registered_at, low_detail,
+       phash <~> CAST(:phash AS bit(64)) AS d_phash,
+       dhash <~> CAST(:dhash AS bit(64)) AS d_dhash,
+       ahash <~> CAST(:ahash AS bit(64)) AS d_ahash,
+       whash <~> CAST(:whash AS bit(64)) AS d_whash
+FROM images
+WHERE id = :id
+""").bindparams(
+    bindparam("phash", type_=Hash64),
+    bindparam("dhash", type_=Hash64),
+    bindparam("ahash", type_=Hash64),
+    bindparam("whash", type_=Hash64),
+    bindparam("id", type_=PGUUID(as_uuid=True)),
+)
+
+Q10_COSINE_FOR_IDS = text("""
+SELECT id,
+       1 - (dino_emb <=> CAST(:dino AS vector(768))) AS cos_dino,
+       1 - (clip_emb <=> CAST(:clip AS vector(512))) AS cos_clip
+FROM images
+WHERE id = ANY(:ids)
+""").bindparams(
+    bindparam("dino", type_=Vector(768)),
+    bindparam("clip", type_=Vector(512)),
+    bindparam("ids", type_=ARRAY(PGUUID(as_uuid=True))),
+)
 
 Q8_BENCHMARK_METRICS = text("""
 SELECT * FROM benchmark_metrics
