@@ -119,24 +119,31 @@ def apply_text_overlay(img: Image.Image, strength: str, rng: np.random.Generator
     draw = ImageDraw.Draw(out)
     w, h = out.size
 
+    # Font size relative to image width: 4% (weak), 8% (medium), 14% (strong)
+    size_frac_map = {"weak": 0.04, "medium": 0.08, "strong": 0.14}
+    size_frac = size_frac_map.get(strength, 0.08)
+    font_size = max(10, round(w * size_frac))
+    stroke_width = max(1, font_size // 10)
+
     try:
-        font = ImageFont.load_default()
+        font = ImageFont.load_default(size=font_size)
     except Exception:  # noqa: BLE001
-        font = None
+        font = ImageFont.load_default()
 
     text = "PROVNET CERTIFIED ASSET"
-    # Position: top, center, bottom based on strength
-    if strength == "weak":
-        pos = (int(w * 0.05), int(h * 0.05))
-        fill_color = (255, 255, 0)
-    elif strength == "medium":
-        pos = (int(w * 0.05), int(h * 0.85))
-        fill_color = (255, 50, 50)
-    else:  # strong
-        pos = (int(w * 0.10), int(h * 0.45))
-        fill_color = (0, 255, 255)
+    # Centred horizontally at 85% height, white text with black outline
+    pos_x = w // 2
+    pos_y = round(h * 0.85)
 
-    draw.text(pos, text, fill=fill_color, font=font)
+    draw.text(
+        (pos_x, pos_y),
+        text,
+        fill=(255, 255, 255),
+        font=font,
+        anchor="mm",
+        stroke_width=stroke_width,
+        stroke_fill=(0, 0, 0),
+    )
     return out
 
 
