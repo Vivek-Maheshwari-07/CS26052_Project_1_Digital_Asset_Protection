@@ -1,64 +1,60 @@
-import React, { useEffect, useState, useMemo, useRef } from "react";
-import { useParams, useSearchParams, useNavigate } from "react-router-dom";
-import { useQueryImage } from "../context/useQueryImage";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useParams, useSearchParams, Link } from "react-router-dom";
+import { useQueryImage } from "../context/QueryImageContext";
 import { verifyImageDeep } from "../api/client";
-import type { Candidate, DeepVerifyResponse, CosineScores } from "../api/types";
-import { Card } from "../components/ui/Card";
-import { Button } from "../components/ui/Button";
-import { SegmentedControl } from "../components/ui/SegmentedControl";
-import { InsetGroupedList } from "../components/ui/InsetGroupedList";
-import { StatusPill } from "../components/ui/StatusPill";
-import { DecidedByBadge } from "../components/ui/DecidedByBadge";
+import type { DeepVerifyResponse, Candidate } from "../api/types";
+import { Kicker } from "../components/ui/Kicker";
+import { Sticker } from "../components/ui/Sticker";
+import { Stamp } from "../components/ui/Stamp";
+import { BackgroundCircle } from "../components/ui/BackgroundCircle";
+import { TicketStub } from "../components/ui/TicketStub";
+import { FramedImage } from "../components/ui/FramedImage";
 import { HammingPanel } from "../components/ui/HammingPanel";
 import { CosinePanel } from "../components/ui/CosinePanel";
-import {
-  AlertTriangle,
-  FileText,
-  RotateCcw,
-  Sliders,
-  Sparkles,
-} from "lucide-react";
+import { InsetGroupedList } from "../components/ui/InsetGroupedList";
+import { PillButton } from "../components/ui/PillButton";
+import { Marquee } from "../components/ui/Marquee";
+import { RecordModal } from "../components/RecordModal";
+import { ArrowLeft, Split, FileText } from "lucide-react";
+import { playTick } from "../utils/sound";
 
 export const EvidencePage: React.FC = () => {
-  const { verificationId } = useParams<{ verificationId?: string }>();
+  const { verificationId } = useParams<{ verificationId: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
-  const navigate = useNavigate();
-  const { queryFile, verifyResponse } = useQueryImage();
-
-  // Selected candidate ID from URL query params
   const candidateParam = searchParams.get("candidate");
 
-  // Deep verification state
+  const { queryFile, verifyResponse } = useQueryImage();
+
+  const [deepResponse, setDeepResponse] = useState<DeepVerifyResponse | null>(null);
   const [deepLoading, setDeepLoading] = useState<boolean>(false);
   const [deepError, setDeepError] = useState<string | null>(null);
-  const [deepResponse, setDeepResponse] = useState<DeepVerifyResponse | null>(null);
-  const deepFetchedRef = useRef<boolean>(false);
+  const deepFetchedRef = useRef(false);
 
-  // Comparison slider position (0 - 100%)
+  // Swipe slider position (0 to 100 percentage)
   const [sliderPos, setSliderPos] = useState<number>(50);
+  const [isSliderActive, setIsSliderActive] = useState<boolean>(false);
+  const [recordModalOpen, setRecordModalOpen] = useState(false);
 
-  // Validate session context
+  // Check session validity
   const isSessionValid =
-    queryFile &&
-    verifyResponse &&
-    (!verificationId || verifyResponse.verification_id === verificationId);
+    queryFile !== null &&
+    verifyResponse !== null &&
+    verificationId === verifyResponse.verification_id;
 
-  // Candidates list
-  const candidates: Candidate[] = useMemo(() => {
-    return verifyResponse?.candidates || [];
-  }, [verifyResponse]);
+  const candidates = useMemo<Candidate[]>(
+    () => verifyResponse?.candidates ?? [],
+    [verifyResponse?.candidates]
+  );
 
-  // Selected candidate object (default rank 1)
+  // Selected candidate based on query param or default to candidate rank 1
   const selectedCandidate = useMemo(() => {
-    if (!candidates.length) return null;
-    if (candidateParam) {
-      const match = candidates.find((c) => c.image_id === candidateParam);
-      if (match) return match;
-    }
-    return candidates[0];
+    if (!candidates || candidates.length === 0) return null;
+    if (!candidateParam) return candidates[0];
+    const found = candidates.find((c) => c.image_id === candidateParam);
+    return found || candidates[0];
   }, [candidates, candidateParam]);
 
-  // Update candidate param in URL if none specified
+  // Sync search params if candidate is missing
   useEffect(() => {
     if (isSessionValid && candidates.length > 0 && !candidateParam) {
       setSearchParams({ candidate: candidates[0].image_id }, { replace: true });
@@ -105,305 +101,389 @@ export const EvidencePage: React.FC = () => {
     return URL.createObjectURL(queryFile);
   }, [queryFile]);
 
-  useEffect(() => {
-    return () => {
-      if (queryImageUrl) URL.revokeObjectURL(queryImageUrl);
-    };
-  }, [queryImageUrl]);
+  // Selected candidate image URL
+  const candidateFullImageUrl = useMemo(() => {
+    if (!selectedCandidate) return null;
+    return `/api/images/${selectedCandidate.image_id}/file?size=full`;
+  }, [selectedCandidate]);
 
-  // If session expired / invalid, render Apple-style empty state
+  // Merged cosine scores for the selected candidate
+  const effectiveCosineScores = useMemo(() => {
+    if (!selectedCandidate) return { dino: null, clip: null };
+    if (deepResponse) {
+      const deepCand = deepResponse.candidates.find(
+        (c) => c.image_id === selectedCandidate.image_id
+      );
+      if (deepCand) {
+        return deepCand.cosine;
+      }
+    }
+    return selectedCandidate.cosine;
+  }, [selectedCandidate, deepResponse]);
+
+  // Handle swipe comparison slider
+  const handleSliderMove = (e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
+    const offset = clientX - rect.left;
+    const pct = Math.max(0, Math.min(100, (offset / rect.width) * 100));
+    setSliderPos(pct);
+  };
+
+  // If session expired / invalid reload
   if (!isSessionValid) {
     return (
-      <div className="max-w-[1080px] mx-auto px-4 sm:px-6 py-20 animate-fadeIn">
-        <Card className="max-w-md mx-auto text-center py-12 space-y-6">
-          <div className="w-16 h-16 rounded-full bg-[var(--apple-warning-subtle)] text-[var(--apple-warning)] mx-auto flex items-center justify-center">
-            <AlertTriangle className="w-8 h-8 stroke-[1.75]" />
-          </div>
-          <div className="space-y-2">
-            <h2 className="text-title-2 font-bold text-[var(--apple-label)]">
-              Evidence session expired
-            </h2>
-            <p className="text-subheadline text-[var(--apple-secondary-label)]">
-              Verification sessions are memory-safe and require the original query image file to compute on-demand deep similarity evidence.
-            </p>
-          </div>
-          <div>
-            <Button
-              variant="primary"
-              size="lg"
-              onClick={() => navigate("/verify")}
-              icon={<RotateCcw className="w-4 h-4 stroke-[1.75]" />}
-            >
-              Re-run verification
-            </Button>
-          </div>
-        </Card>
+      <div className="relative min-w-0 max-w-[1080px] mx-auto px-4 pt-28 pb-16 flex flex-col items-center justify-center min-h-[70vh] text-center gap-6 z-10">
+        <BackgroundCircle />
+        <Kicker>SESSION EXPIRED</Kicker>
+        <h1 className="font-display text-[48px] md:text-[64px] font-normal text-(--ink) m-0">
+          Evidence session <span className="italic text-(--cobalt)">expired</span>.
+        </h1>
+        <p className="text-[17px] text-(--ink-soft) max-w-[40ch] m-0">
+          Evidence inspection requires query image context in memory. Please re-run
+          verification to inspect distance matrices and visual overlaps.
+        </p>
+        <Link to="/verify" onClick={() => playTick()}>
+          <PillButton>Re-run verification</PillButton>
+        </Link>
       </div>
     );
   }
 
-  // Active candidate cosine scores (from VerifyResponse or DeepResponse)
-  const currentCosineScores: CosineScores = (() => {
-    if (!selectedCandidate) return { dino: null, clip: null };
-
-    if (deepResponse) {
-      const deepMatch = deepResponse.candidates.find(
-        (c) => c.image_id === selectedCandidate.image_id
-      );
-      if (deepMatch) {
-        return deepMatch.cosine;
-      }
-    }
-    return selectedCandidate.cosine;
-  })();
-
-  const isComputedOnDemand =
-    Boolean(deepResponse) || (selectedCandidate?.cosine.dino === null && !deepLoading);
-
-  const evidenceThresholds = verifyResponse?.thresholds?.evidence || {
-    phash: 8,
-    dhash: 8,
-    ahash: 8,
-    whash: 8,
-    dino: 0.9,
-    clip: 0.9,
-  };
-
-  const candidateImageUrl = selectedCandidate
-    ? `/api/images/${encodeURIComponent(selectedCandidate.image_id)}/file?size=full`
-    : "";
-
   return (
-    <div className="max-w-[1080px] mx-auto px-4 sm:px-6 py-10 space-y-8 animate-fadeIn">
-      {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-large-title text-[var(--apple-label)] tracking-tight">
-            Evidence & Deep Inspection
-          </h1>
-          <p className="text-subheadline text-[var(--apple-secondary-label)] mt-1">
-            Visual overlay, perceptual hashes, and on-demand deep representation comparisons.
-          </p>
-        </div>
+    <div className="relative min-w-0 max-w-[1080px] mx-auto px-4 pt-24 pb-16 flex flex-col gap-10 z-10">
+      <BackgroundCircle />
 
-        <div className="flex items-center space-x-3">
-          <DecidedByBadge
-            decidedBy={verifyResponse.decided_by}
-            verdict={verifyResponse.verdict}
-          />
-          <StatusPill
-            status={verifyResponse.verdict === "match" ? "success" : "neutral"}
-            label={verifyResponse.verdict === "match" ? "Match" : "No match"}
-            size="md"
-          />
+      {/* Top Breadcrumb & Kicker */}
+      <div className="flex items-center justify-between gap-4 flex-wrap">
+        <Link
+          to="/verify"
+          onClick={() => playTick()}
+          className="inline-flex items-center gap-1.5 font-mono text-[13px] font-bold uppercase text-(--ink-soft) hover:text-(--ink) transition-colors no-underline"
+        >
+          <ArrowLeft size={16} />
+          <span>Back to Verify</span>
+        </Link>
+
+        <div className="flex items-center gap-3">
+          <Kicker>● EVIDENCE INSPECTION SUITE</Kicker>
+          <Sticker variant="cobalt" rotate={-1}>
+            ID: {verifyResponse.verification_id.slice(0, 8)}...
+          </Sticker>
         </div>
       </div>
 
-      {/* Candidate Switcher Segmented Control */}
+      {/* Hero Title */}
+      <div className="flex flex-col gap-2">
+        <h1 className="font-display text-[clamp(40px,7vw,84px)] leading-[0.95] tracking-[-0.02em] text-(--ink) m-0 font-normal">
+          The <span className="italic text-(--cobalt)">evidence</span>.
+        </h1>
+        <p className="text-[17px] text-(--ink-soft) max-w-[44ch] m-0">
+          Multi-spectral inspection: side-by-side comparison, interactive swipe
+          overlay, classical Hamming distances, and deep cosine embeddings.
+        </p>
+      </div>
+
+      {/* Cascade Timeline Stubs */}
+      {(() => {
+        const stagesArray = Array.isArray(verifyResponse.stages) ? verifyResponse.stages : [];
+        const stagesObj = !Array.isArray(verifyResponse.stages)
+          ? (verifyResponse.stages as Record<string, any>)
+          : undefined;
+
+        const shaStage =
+          (stagesArray.find((s) => s.stage === "sha256") as any) ?? stagesObj?.sha256;
+        const hashStage =
+          (stagesArray.find((s) => s.stage === "hash") as any) ?? stagesObj?.hash;
+        const embeddingStage =
+          (stagesArray.find((s) => s.stage === "embedding") as any) ?? stagesObj?.embedding;
+
+        const isShaMatch = Boolean(shaStage?.hit || shaStage?.matched);
+        const isHashSkipped = !hashStage || hashStage?.status === "skipped";
+        const isHashMatch = !isHashSkipped && Boolean(hashStage?.confident || hashStage?.matched);
+        const isEmbeddingSkipped =
+          !embeddingStage || embeddingStage?.status === "skipped";
+        const isEmbeddingMatch =
+          !isEmbeddingSkipped && Boolean(embeddingStage?.passed || embeddingStage?.matched);
+
+        return (
+          <div className="flex flex-col gap-3">
+            <span className="font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-(--ink-soft)">
+              CASCADE VERDICT TIMELINE
+            </span>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <TicketStub
+                number="01"
+                name="SHA-256 Digest"
+                status={isShaMatch ? "match" : "no_match"}
+                latencyMs={shaStage?.latency_ms}
+                detail={isShaMatch ? "Exact SHA-256 copy" : "No exact match"}
+              />
+              <TicketStub
+                number="02"
+                name="Perceptual Hashes"
+                status={
+                  isHashSkipped
+                    ? "skipped"
+                    : isHashMatch
+                    ? "match"
+                    : "no_match"
+                }
+                latencyMs={hashStage?.latency_ms}
+                detail={
+                  isHashSkipped
+                    ? undefined
+                    : hashStage?.best_phash_hamming != null
+                    ? `best d_H=${hashStage.best_phash_hamming}`
+                    : `${hashStage?.candidates_evaluated ?? 1} candidates evaluated`
+                }
+              />
+              <TicketStub
+                number="03"
+                name="Deep Embeddings"
+                status={
+                  isEmbeddingSkipped
+                    ? "skipped"
+                    : isEmbeddingMatch
+                    ? "match"
+                    : "no_match"
+                }
+                latencyMs={embeddingStage?.latency_ms}
+                detail={
+                  isEmbeddingSkipped
+                    ? undefined
+                    : embeddingStage?.best_dino_cosine != null
+                    ? `cosine=${embeddingStage.best_dino_cosine.toFixed(4)}`
+                    : "DINOv2 + CLIP"
+                }
+              />
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* Candidate Switcher Stickers */}
       {candidates.length > 1 && (
-        <div className="space-y-2">
-          <label className="text-footnote font-semibold uppercase tracking-wider text-[var(--apple-secondary-label)]">
-            Select Matched Candidate
-          </label>
-          <SegmentedControl
-            options={candidates.map((c) => ({
-              value: c.image_id,
-              label: `Rank #${c.rank} (${c.owner_name || "Anonymous"})`,
-            }))}
-            value={selectedCandidate?.image_id || candidates[0].image_id}
-            onChange={(val) => setSearchParams({ candidate: val })}
-          />
+        <div className="flex flex-col gap-2">
+          <span className="font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-(--ink-soft)">
+            SELECT CANDIDATE ({candidates.length} FOUND)
+          </span>
+          <div className="flex items-center gap-2 flex-wrap">
+            {candidates.map((cand) => {
+              const isSelected = selectedCandidate?.image_id === cand.image_id;
+              return (
+                <button
+                  key={cand.image_id}
+                  type="button"
+                  onClick={() => {
+                    playTick();
+                    setSearchParams({ candidate: cand.image_id });
+                  }}
+                  className={`px-4 py-2 rounded-full font-mono text-[12px] font-bold uppercase tracking-wider transition-all select-none ${
+                    isSelected
+                      ? "bg-(--ink) text-(--paper) shadow-hard-sm scale-105"
+                      : "bg-(--paper-2) text-(--ink-soft) border border-(--rule) hover:text-(--ink)"
+                  }`}
+                >
+                  Candidate #{cand.rank} ({cand.image_id.slice(0, 8)}...)
+                </button>
+              );
+            })}
+          </div>
         </div>
       )}
 
-      {/* Hero Visual Comparison: Side-by-Side & Swipe Overlay */}
-      <Card className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h3 className="text-title-3 font-semibold text-[var(--apple-label)]">
-            Visual Alignment & Verification
-          </h3>
-          <span className="text-caption text-[var(--apple-secondary-label)]">
-            Original Query vs. Registered Candidate
-          </span>
-        </div>
-
-        {/* Side-by-Side Images */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Query Image Frame */}
-          <div className="bg-[var(--apple-grouped-background)] p-4 rounded-[14px] border border-[var(--apple-separator)] flex flex-col items-center justify-center space-y-3">
-            <div className="h-64 sm:h-80 w-full flex items-center justify-center overflow-hidden rounded-[10px] bg-[var(--apple-card)]">
-              {queryImageUrl && (
-                <img
-                  src={queryImageUrl}
-                  alt="Query upload"
-                  className="max-h-full max-w-full object-contain"
-                />
-              )}
-            </div>
-            <span className="text-footnote font-semibold text-[var(--apple-label)]">
-              Query Image (Uploaded)
-            </span>
-          </div>
-
-          {/* Registered Candidate Frame */}
-          <div className="bg-[var(--apple-grouped-background)] p-4 rounded-[14px] border border-[var(--apple-separator)] flex flex-col items-center justify-center space-y-3">
-            <div className="h-64 sm:h-80 w-full flex items-center justify-center overflow-hidden rounded-[10px] bg-[var(--apple-card)]">
-              {candidateImageUrl && (
-                <img
-                  src={candidateImageUrl}
-                  alt="Registered database asset"
-                  className="max-h-full max-w-full object-contain"
-                />
-              )}
-            </div>
-            <span className="text-footnote font-semibold text-[var(--apple-label)]">
-              Registered Asset #{selectedCandidate?.rank}
-            </span>
-          </div>
-        </div>
-
-        {/* Interactive Comparison Swipe Slider */}
-        <div className="space-y-2 pt-2 hairline-t">
-          <div className="flex items-center justify-between text-caption text-[var(--apple-secondary-label)]">
-            <span className="flex items-center gap-1 font-medium">
-              <Sliders className="w-3.5 h-3.5 stroke-[1.75]" />
-              Overlay Comparison Slider ({sliderPos}%)
-            </span>
-            <span>Slide left/right to reveal differences</span>
-          </div>
-
-          <div className="relative h-64 sm:h-80 w-full rounded-[14px] overflow-hidden bg-[var(--apple-grouped-background)] border border-[var(--apple-separator)] select-none">
-            {/* Background Registered Candidate */}
-            {candidateImageUrl && (
-              <img
-                src={candidateImageUrl}
-                alt="Registered overlay background"
-                className="absolute inset-0 w-full h-full object-contain pointer-events-none"
+      {/* Visual Comparison: Side-by-Side & Swipe Overlay */}
+      {selectedCandidate && queryImageUrl && candidateFullImageUrl && (
+        <section className="flex flex-col gap-6 bg-(--paper-2) border-2 border-(--ink) rounded-[24px] p-6 md:p-8 shadow-hard">
+          <div className="flex items-center justify-between border-b border-(--rule) pb-4 flex-wrap gap-4">
+            <div className="flex items-center gap-3">
+              <Stamp
+                verdict={
+                  verifyResponse.verdict === "match"
+                    ? "match"
+                    : "no_match"
+                }
+                size={80}
               />
-            )}
+              <div>
+                <span className="font-mono text-[11px] font-bold uppercase text-(--cobalt)">
+                  VISUAL INSPECTION
+                </span>
+                <h3 className="font-display text-[24px] text-(--ink) m-0">
+                  Query vs. Candidate #{selectedCandidate.rank}
+                </h3>
+              </div>
+            </div>
 
-            {/* Clipped Query Image */}
-            {queryImageUrl && (
-              <div
-                className="absolute inset-0 overflow-hidden"
-                style={{ clipPath: `inset(0 ${100 - sliderPos}% 0 0)` }}
-              >
-                <img
+            <button
+              type="button"
+              onClick={() => {
+                playTick();
+                setIsSliderActive(!isSliderActive);
+              }}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-(--paper) border border-(--rule) font-mono text-[12px] font-bold uppercase text-(--ink) hover:bg-(--ink) hover:text-(--paper) transition-colors"
+            >
+              <Split size={15} />
+              <span>{isSliderActive ? "Side-by-side view" : "Swipe overlay view"}</span>
+            </button>
+          </div>
+
+          {!isSliderActive ? (
+            /* Side by Side FramedImages */
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center py-4">
+              <div className="flex flex-col items-center gap-3">
+                <span className="font-mono text-[12px] font-bold uppercase tracking-wider text-(--ink-soft)">
+                  QUERY IMAGE (UNREGISTERED)
+                </span>
+                <FramedImage
                   src={queryImageUrl}
-                  alt="Query overlay foreground"
+                  alt="Query Image"
+                  className="max-h-72"
+                  offset={12}
+                />
+              </div>
+
+              <div className="flex flex-col items-center gap-3">
+                <span className="font-mono text-[12px] font-bold uppercase tracking-wider text-(--ink-soft)">
+                  REGISTERED CANDIDATE #{selectedCandidate.rank}
+                </span>
+                <FramedImage
+                  src={candidateFullImageUrl}
+                  alt={`Candidate ${selectedCandidate.image_id}`}
+                  className="max-h-72"
+                  offset={12}
+                />
+              </div>
+            </div>
+          ) : (
+            /* Interactive Swipe Slider Overlay */
+            <div className="flex flex-col items-center gap-3 py-4">
+              <span className="font-mono text-[12px] font-bold uppercase tracking-wider text-(--ink-soft)">
+                DRAG SLIDER TO REVEAL OVERLAY (QUERY ↔ REGISTERED)
+              </span>
+
+              <div
+                className="relative w-full max-w-2xl h-80 sm:h-96 border-2 border-(--ink) bg-(--paper) overflow-hidden cursor-ew-resize select-none shadow-hard-sm"
+                onMouseMove={handleSliderMove}
+                onTouchMove={handleSliderMove}
+              >
+                {/* Registered Candidate (Background) */}
+                <img
+                  src={candidateFullImageUrl}
+                  alt="Candidate Background"
                   className="absolute inset-0 w-full h-full object-contain pointer-events-none"
                 />
-              </div>
-            )}
 
-            {/* Dividing Line & Grab Handle */}
-            <div
-              className="absolute top-0 bottom-0 w-0.5 bg-[var(--apple-accent)] shadow-md pointer-events-none"
-              style={{ left: `${sliderPos}%` }}
-            >
-              <div className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-7 h-7 rounded-full bg-[var(--apple-card)] border-2 border-[var(--apple-accent)] shadow-lg flex items-center justify-center text-[var(--apple-accent)]">
-                <Sliders className="w-3.5 h-3.5 stroke-[1.75]" />
+                {/* Query Image (Clipped Foreground) */}
+                <div
+                  className="absolute inset-y-0 left-0 overflow-hidden"
+                  style={{ width: `${sliderPos}%` }}
+                >
+                  <img
+                    src={queryImageUrl}
+                    alt="Query Overlay"
+                    className="absolute inset-0 w-full h-full object-contain pointer-events-none max-w-none"
+                    style={{ width: "100%", height: "100%" }}
+                  />
+                </div>
+
+                {/* Slider Divider Line */}
+                <div
+                  className="absolute inset-y-0 w-1 bg-(--ink) shadow-md pointer-events-none"
+                  style={{ left: `${sliderPos}%` }}
+                >
+                  <div className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-(--ink) text-(--paper) flex items-center justify-center shadow-md">
+                    <Split size={14} />
+                  </div>
+                </div>
               </div>
             </div>
+          )}
+        </section>
+      )}
 
-            {/* Transparent Slider Input Control */}
-            <input
-              type="range"
-              min="0"
-              max="100"
-              value={sliderPos}
-              onChange={(e) => setSliderPos(Number(e.target.value))}
-              className="absolute inset-0 opacity-0 cursor-ew-resize w-full h-full"
-              aria-label="Comparison slider"
-            />
-          </div>
-        </div>
-      </Card>
-
-      {/* Similarity Metrics Comparison Panels */}
+      {/* Two Separate Metric Panels Side by Side */}
       {selectedCandidate && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <HammingPanel
             scores={selectedCandidate.hamming}
-            thresholds={evidenceThresholds}
-            title="Classical Hashes (Hamming /64)"
+            thresholds={verifyResponse.thresholds?.evidence ?? undefined}
           />
-
           <CosinePanel
-            scores={currentCosineScores}
-            thresholds={evidenceThresholds}
-            title="Deep Embeddings (Cosine)"
-            loading={deepLoading}
+            scores={effectiveCosineScores}
+            thresholds={verifyResponse.thresholds?.evidence ?? undefined}
+            isLoading={deepLoading}
             error={deepError}
-            computedOnDemand={isComputedOnDemand}
+            isOnDemand={
+              selectedCandidate.cosine.dino === null ||
+              selectedCandidate.cosine.clip === null
+            }
           />
         </div>
       )}
 
-      {/* Cascade Execution Status Timeline */}
-      <Card className="space-y-4">
-        <h3 className="text-footnote font-semibold uppercase tracking-wider text-[var(--apple-secondary-label)]">
-          Cascade Execution Stages & Latency Breakdown
-        </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          {verifyResponse.stages.map((st) => (
-            <div
-              key={st.stage}
-              className="p-4 rounded-[12px] bg-[var(--apple-grouped-background)] border border-[var(--apple-separator)] flex flex-col justify-between"
-            >
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-subheadline font-semibold text-[var(--apple-label)] capitalize">
-                  {st.stage} Stage
-                </span>
-                <span className="font-mono text-caption text-[var(--apple-secondary-label)] tabular-nums">
-                  {st.latency_ms}ms
-                </span>
-              </div>
-              <div className="text-footnote text-[var(--apple-secondary-label)] mt-1">
-                {st.stage === "sha256" && (st.hit ? "Exact match hit" : "Miss")}
-                {st.stage === "hash" &&
-                  (st.confident ? "Confident threshold match" : "Escalated to embedding")}
-                {st.stage === "embedding" && (st.passed ? "Cosine similarity pass" : "No match")}
-              </div>
-            </div>
-          ))}
-        </div>
-      </Card>
-
-      {/* Metadata Inset Grouped List */}
+      {/* Candidate Metadata & Provenance Inset List */}
       {selectedCandidate && (
-        <Card className="space-y-4">
+        <section className="flex flex-col gap-4 bg-(--paper-2) border border-(--rule) rounded-[24px] p-6 shadow-sm">
+          <div className="flex items-center justify-between border-b border-(--rule) pb-3">
+            <h3 className="font-display text-[22px] text-(--ink) m-0">
+              Registration Metadata
+            </h3>
+            <button
+              type="button"
+              onClick={() => {
+                playTick();
+                setRecordModalOpen(true);
+              }}
+              className="inline-flex items-center gap-1.5 font-mono text-[12px] font-bold uppercase text-(--cobalt) hover:underline"
+            >
+              <FileText size={14} />
+              <span>Inspect Full Record Sheet</span>
+            </button>
+          </div>
+
           <InsetGroupedList
-            header="Registered Candidate Metadata"
             items={[
-              { label: "Owner Name", value: selectedCandidate.owner_name || "Anonymous (Unverified)" },
-              { label: "Registration Timestamp", value: new Date(selectedCandidate.registered_at).toLocaleString() },
-              { label: "Asset ID", value: selectedCandidate.image_id, isMono: true },
+              { label: "Candidate Rank", value: `#${selectedCandidate.rank}` },
+              { label: "Image ID", value: selectedCandidate.image_id },
+              {
+                label: "Owner Name",
+                value: selectedCandidate.owner_name,
+                mono: false,
+              },
+              {
+                label: "Registered At",
+                value: new Date(selectedCandidate.registered_at).toLocaleString(),
+                mono: false,
+              },
+              {
+                label: "Decided By Stage",
+                value: verifyResponse.decided_by.toUpperCase(),
+              },
+              {
+                label: "Cascade Latency",
+                value: `${verifyResponse.latency_ms.toFixed(1)} ms`,
+              },
             ]}
           />
 
-          <div className="flex items-center justify-between pt-2">
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() =>
-                window.open(`/api/images/${encodeURIComponent(selectedCandidate.image_id)}/record`, "_blank")
-              }
-              icon={<FileText className="w-3.5 h-3.5 stroke-[1.75]" />}
-            >
-              View Registration Record JSON
-            </Button>
-            <span className="text-caption text-[var(--apple-secondary-label)] flex items-center gap-1">
-              <Sparkles className="w-3.5 h-3.5 stroke-[1.75]" />
-              Cryptographically verified fingerprint
-            </span>
+          <div className="p-3 bg-(--paper) border border-(--rule) rounded-xl font-mono text-[11px] text-(--ink-soft)">
+            Footnote: A registration record establishes an immutable timestamp and
+            fingerprints in the index; it is not proof of copyright or legal ownership.
           </div>
-
-          <div className="p-3.5 rounded-[12px] bg-[var(--apple-grouped-background)] border border-[var(--apple-separator)] text-footnote text-[var(--apple-secondary-label)] text-center">
-            A registration record confirms submission time and fingerprint, not proof of ownership or copyright.
-          </div>
-        </Card>
+        </section>
       )}
+
+      {/* Marquee */}
+      <Marquee />
+
+      {/* Record Inspection Modal */}
+      <RecordModal
+        isOpen={recordModalOpen}
+        imageId={selectedCandidate?.image_id || null}
+        onClose={() => setRecordModalOpen(false)}
+      />
     </div>
   );
 };

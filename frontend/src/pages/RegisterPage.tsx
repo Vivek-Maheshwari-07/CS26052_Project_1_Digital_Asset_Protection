@@ -1,262 +1,334 @@
 import React, { useState } from "react";
-import { formatErrorMessage, registerImage } from "../api/client";
-import type { ConflictResponse, RegisterResponse } from "../api/types";
-import { ConflictModal } from "../components/ConflictModal";
+import { registerImage } from "../api/client";
+import type { RegisterResponse, ConflictResponse } from "../api/types";
+import { ApiError } from "../api/client";
 import { ImageDropzone } from "../components/ImageDropzone";
+import { ConflictModal } from "../components/ConflictModal";
 import { RecordModal } from "../components/RecordModal";
-import { Button } from "../components/ui/Button";
-import { Card } from "../components/ui/Card";
+import { PillButton } from "../components/ui/PillButton";
+import { Kicker } from "../components/ui/Kicker";
+import { Sticker } from "../components/ui/Sticker";
+import { Seal } from "../components/ui/Seal";
+import { Marquee } from "../components/ui/Marquee";
+import { BackgroundCircle } from "../components/ui/BackgroundCircle";
+import { BitGrid } from "../components/ui/BitGrid";
 import { InsetGroupedList } from "../components/ui/InsetGroupedList";
-import { StatusPill } from "../components/ui/StatusPill";
-import { Copy, Download, FileText, Check, AlertCircle, Sparkles } from "lucide-react";
+import { CheckCircle2, AlertCircle, Copy, Check, FileText, PlusCircle } from "lucide-react";
+import { playTick, playMatchChime } from "../utils/sound";
 
 export const RegisterPage: React.FC = () => {
+  const [ownerName, setOwnerName] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [ownerName, setOwnerName] = useState<string>("");
-  const [loading, setLoading] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-
-  const [registerResult, setRegisterResult] = useState<RegisterResponse | null>(null);
-  const [conflictResult, setConflictResult] = useState<ConflictResponse | null>(null);
-
-  const [isRecordModalOpen, setIsRecordModalOpen] = useState<boolean>(false);
-  const [isConflictModalOpen, setIsConflictModalOpen] = useState<boolean>(false);
-  const [shaCopied, setShaCopied] = useState<boolean>(false);
+  const [successData, setSuccessData] = useState<RegisterResponse | null>(null);
+  const [conflictData, setConflictData] = useState<ConflictResponse | null>(null);
+  const [recordModalOpen, setRecordModalOpen] = useState(false);
+  const [copiedSha, setCopiedSha] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedFile) return;
+    if (!selectedFile) {
+      setErrorMsg("Please select an image file to register.");
+      return;
+    }
+    if (!ownerName.trim()) {
+      setErrorMsg("Owner name is required.");
+      return;
+    }
 
-    setLoading(true);
+    setIsLoading(true);
     setErrorMsg(null);
-    setRegisterResult(null);
-    setConflictResult(null);
+    setSuccessData(null);
+    setConflictData(null);
 
     try {
-      const res = await registerImage(selectedFile, ownerName);
-      setRegisterResult(res);
+      const response = await registerImage(selectedFile, ownerName.trim());
+      setSuccessData(response);
+      playMatchChime();
     } catch (err: unknown) {
-      if (err && typeof err === "object" && "status" in err && (err as { status: number }).status === 409) {
-        const conflictData = (err as { conflictData?: ConflictResponse }).conflictData;
-        if (conflictData) {
-          setConflictResult(conflictData);
-          setIsConflictModalOpen(true);
-        } else {
-          setErrorMsg(formatErrorMessage(err));
-        }
+      const apiErr = err as ApiError;
+      if (apiErr?.status === 409 && (apiErr.conflictData || (apiErr as { data?: unknown }).data)) {
+        setConflictData((apiErr.conflictData || (apiErr as { data?: unknown }).data) as ConflictResponse);
+      } else if (err instanceof Error) {
+        setErrorMsg(err.message);
       } else {
-        setErrorMsg(formatErrorMessage(err));
+        setErrorMsg("An unexpected error occurred during registration.");
       }
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
-  const copySha256 = () => {
-    if (!registerResult) return;
-    navigator.clipboard.writeText(registerResult.sha256);
-    setShaCopied(true);
-    setTimeout(() => setShaCopied(false), 2000);
+  const handleReset = () => {
+    playTick();
+    setSuccessData(null);
+    setConflictData(null);
+    setSelectedFile(null);
+    setOwnerName("");
+    setErrorMsg(null);
+  };
+
+  const handleCopySha = (sha: string) => {
+    playTick();
+    navigator.clipboard.writeText(sha);
+    setCopiedSha(true);
+    setTimeout(() => setCopiedSha(false), 2000);
   };
 
   return (
-    <div className="max-w-[1080px] mx-auto px-4 sm:px-6 py-10 space-y-8 animate-fadeIn">
-      {/* Page Header */}
-      <div>
-        <h1 className="text-large-title text-[var(--apple-label)] tracking-tight">
-          Register Digital Asset
-        </h1>
-        <p className="text-subheadline text-[var(--apple-secondary-label)] mt-1">
-          Compute cryptographic SHA-256 and perceptual fingerprints for immutable registration records.
-        </p>
-      </div>
+    <div className="relative min-w-0 max-w-[1080px] mx-auto px-4 pt-24 pb-16 flex flex-col gap-12 z-10">
+      <BackgroundCircle />
 
-      {/* Error Alert */}
-      {errorMsg && (
-        <div
-          role="alert"
-          aria-live="polite"
-          className="p-4 rounded-[14px] bg-[var(--apple-danger-subtle)] border border-[var(--apple-danger)]/20 flex items-center gap-3 text-body text-[var(--apple-danger)]"
-        >
-          <AlertCircle className="w-5 h-5 shrink-0 stroke-[1.75]" />
-          <span>{errorMsg}</span>
+      {/* Editorial HERO */}
+      <section className="relative flex flex-col gap-6 pt-4 pb-8 min-h-[50vh] justify-center">
+        <div className="flex items-center gap-3 flex-wrap">
+          <Kicker>● AN EMPIRICAL STUDY IN IMAGE PROVENANCE</Kicker>
+          <Sticker variant="cobalt" rotate={-2}>
+            CEUP 301 / CHARUSAT
+          </Sticker>
         </div>
-      )}
 
-      {/* Main Registration Form */}
-      <Card>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-2">
-            <label className="text-headline text-[var(--apple-label)] block">
-              Asset Image File
+        <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="flex flex-col gap-3 max-w-2xl">
+            <h1 className="font-display text-[clamp(44px,8vw,96px)] leading-[0.95] tracking-[-0.02em] text-(--ink) m-0 font-normal">
+              Register your <span className="italic text-(--cobalt)">work</span>.
+            </h1>
+            <p className="text-[18px] text-(--ink-soft) max-w-[34ch] leading-relaxed m-0">
+              Register images into the multi-stage provenance index with SHA-256 and multi-modal embeddings.
+            </p>
+          </div>
+
+          {/* Overlapping Rotating Seal */}
+          <div className="hidden md:block self-center lg:-ml-12">
+            <Seal size={140} />
+          </div>
+        </div>
+      </section>
+
+      {/* Main Content Area */}
+      {!successData ? (
+        <form
+          onSubmit={handleSubmit}
+          className="flex flex-col gap-8 bg-(--paper-2) border border-(--rule) rounded-[24px] p-6 md:p-10 shadow-hard relative z-10"
+        >
+          {/* Image Dropzone */}
+          <div className="flex flex-col gap-2">
+            <label className="font-mono text-[12px] font-bold uppercase tracking-[0.12em] text-(--ink-soft)">
+              1. IMAGE FILE
             </label>
             <ImageDropzone
               selectedFile={selectedFile}
-              onFileSelected={setSelectedFile}
-              maxUploadMb={10}
+              onFileSelect={setSelectedFile}
+              disabled={isLoading}
             />
           </div>
 
-          <div className="space-y-2">
+          {/* Owner Name Input */}
+          <div className="flex flex-col gap-2">
             <label
               htmlFor="owner-name-input"
-              className="text-headline text-[var(--apple-label)] block"
+              className="font-mono text-[12px] font-bold uppercase tracking-[0.12em] text-(--ink-soft)"
             >
-              Owner Name <span className="text-footnote text-[var(--apple-secondary-label)] font-normal">(Optional)</span>
+              2. CLAIMANT / OWNER NAME
             </label>
             <input
               id="owner-name-input"
               type="text"
-              maxLength={100}
               value={ownerName}
               onChange={(e) => setOwnerName(e.target.value)}
-              placeholder="e.g. Satoshi Nakamoto / Studio ProvNet"
-              className="w-full h-11 px-4 rounded-[12px] bg-[var(--apple-grouped-background)] text-[var(--apple-label)] border border-[var(--apple-separator)] apple-focus text-body placeholder:text-[var(--apple-secondary-label)]"
+              placeholder="e.g. Studio Alice, Photographer Bob"
+              disabled={isLoading}
+              required
+              className="h-14 px-5 bg-(--paper) border border-(--rule) rounded-xl font-mono text-[15px] text-(--ink) placeholder:text-(--ink-soft)/60 focus:border-(--cobalt) transition-colors"
             />
-            <p className="text-caption text-[var(--apple-secondary-label)]">
-              Maximum 100 characters. Owner names are unverified and self-declared.
-            </p>
           </div>
 
-          <div className="pt-2 flex justify-end">
-            <Button
-              type="submit"
-              variant="primary"
-              size="lg"
-              disabled={!selectedFile || loading}
-              loading={loading}
-              icon={<Sparkles className="w-4 h-4 stroke-[1.75]" />}
+          {/* Error Message */}
+          {errorMsg && (
+            <div
+              className="p-4 bg-(--vermilion)/10 border border-(--vermilion)/30 rounded-xl text-(--vermilion) font-mono text-[13px] flex items-center gap-2"
+              role="alert"
             >
-              Submit for Registration
-            </Button>
+              <AlertCircle size={18} className="shrink-0" />
+              <span>{errorMsg}</span>
+            </div>
+          )}
+
+          {/* Submit Button */}
+          <div className="flex items-center justify-between pt-2 border-t border-(--rule)">
+            <span className="font-mono text-[12px] text-(--ink-soft) hidden sm:inline">
+              Establishes an immutable timestamped index record.
+            </span>
+            <PillButton
+              type="submit"
+              disabled={isLoading || !selectedFile || !ownerName.trim()}
+              className="w-full sm:w-auto"
+            >
+              {isLoading ? "Indexing work..." : "Register work"}
+            </PillButton>
           </div>
         </form>
-      </Card>
-
-      {/* Success Registration Result Card */}
-      {registerResult && (
-        <Card className="space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 hairline-b pb-4">
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-title-2 font-bold text-[var(--apple-label)]">
-                  Asset Successfully Registered
+      ) : (
+        /* Printed Ticket Success Receipt */
+        <section
+          className="relative bg-(--paper-2) border-2 border-(--ink) rounded-[24px] p-6 md:p-10 shadow-hard-lg flex flex-col gap-8 animate-in fade-in zoom-in-95 duration-200"
+          aria-live="polite"
+        >
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b-2 border-dashed border-(--ink)">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-full bg-(--sage) text-(--paper) flex items-center justify-center shrink-0">
+                <CheckCircle2 size={24} strokeWidth={2.5} />
+              </div>
+              <div>
+                <Sticker variant="sage" rotate={-1}>
+                  INDEXED #201
+                </Sticker>
+                <h2 className="font-display text-[28px] md:text-[34px] font-normal text-(--ink) m-0">
+                  Registration Complete.
                 </h2>
-                {registerResult.low_detail && (
-                  <StatusPill status="warning" label="Low Detail Asset" size="sm" />
-                )}
               </div>
-              <p className="text-footnote text-[var(--apple-secondary-label)] mt-1">
-                Registered on {new Date(registerResult.registered_at).toLocaleString()}
-              </p>
             </div>
 
-            <div className="flex items-center space-x-2">
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => setIsRecordModalOpen(true)}
-                icon={<FileText className="w-3.5 h-3.5 stroke-[1.75]" />}
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setRecordModalOpen(true)}
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-(--paper) border border-(--rule) rounded-full font-mono text-[12px] font-bold uppercase text-(--ink) hover:bg-(--paper)/80 transition-colors"
               >
-                View record
-              </Button>
-              <a
-                href={`/api/images/${encodeURIComponent(registerResult.image_id)}/record?download=true`}
-                target="_blank"
-                rel="noreferrer"
-                role="link"
-                className="inline-flex items-center justify-center font-medium transition-all select-none btn-press apple-focus min-h-[36px] px-3 py-1.5 rounded-[10px] text-subheadline bg-[var(--apple-accent)] text-white hover:brightness-105 shadow-sm"
+                <FileText size={15} />
+                <span>View Record</span>
+              </button>
+              <button
+                type="button"
+                onClick={handleReset}
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-(--ink) text-(--paper) rounded-full font-mono text-[12px] font-bold uppercase hover:bg-(--ink)/90 transition-colors"
               >
-                <Download className="w-3.5 h-3.5 mr-2 stroke-[1.75]" />
-                <span>Download record</span>
-              </a>
+                <PlusCircle size={15} />
+                <span>Register Another</span>
+              </button>
             </div>
           </div>
 
-          {/* Cryptographic Identifiers */}
-          <div className="space-y-4">
-            <h3 className="text-footnote font-semibold uppercase tracking-wider text-[var(--apple-secondary-label)]">
-              Cryptographic & Perceptual Identifiers
-            </h3>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* SHA-256 Box */}
-              <div className="p-4 rounded-[12px] bg-[var(--apple-grouped-background)] border border-[var(--apple-separator)] flex items-center justify-between">
-                <div>
-                  <span className="text-caption text-[var(--apple-secondary-label)] block">
-                    SHA-256 Checksum
-                  </span>
-                  <span className="font-mono text-footnote font-semibold text-[var(--apple-label)] select-all tabular-nums">
-                    {registerResult.sha256.slice(0, 16)}...{registerResult.sha256.slice(-8)}
-                  </span>
-                </div>
-                <Button
-                  variant="tertiary"
-                  size="sm"
-                  onClick={copySha256}
-                  icon={shaCopied ? <Check className="w-3.5 h-3.5 stroke-[1.75]" /> : <Copy className="w-3.5 h-3.5 stroke-[1.75]" />}
-                >
-                  {shaCopied ? "Copied" : "Copy"}
-                </Button>
-              </div>
-
-              {/* Dimensions */}
-              <div className="p-4 rounded-[12px] bg-[var(--apple-grouped-background)] border border-[var(--apple-separator)] flex items-center justify-between">
-                <div>
-                  <span className="text-caption text-[var(--apple-secondary-label)] block">
-                    Asset Dimensions
-                  </span>
-                  <span className="font-mono text-footnote font-semibold text-[var(--apple-label)] tabular-nums">
-                    {registerResult.width} × {registerResult.height} px
-                  </span>
-                </div>
-                <StatusPill status="success" label="Ingested" size="sm" />
-              </div>
-            </div>
-
-            {/* Inset Grouped Fingerprints List */}
+          {/* Inset Grouped Metadata */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <InsetGroupedList
-              header="Perceptual Hashes (16-char Hexadecimal)"
               items={[
-                { label: "pHash (Discrete Cosine Transform)", value: registerResult.fingerprints.phash, isMono: true },
-                { label: "dHash (Gradient Difference)", value: registerResult.fingerprints.dhash, isMono: true },
-                { label: "aHash (Average Luminance)", value: registerResult.fingerprints.ahash, isMono: true },
-                { label: "wHash (Haar Wavelet)", value: registerResult.fingerprints.whash, isMono: true },
+                {
+                  label: "Image ID",
+                  value: successData.image_id || (successData as unknown as { id: string }).id,
+                },
+                { label: "Owner Name", value: successData.owner_name, mono: false },
+                {
+                  label: "Timestamp",
+                  value: new Date(
+                    successData.registered_at ||
+                      (successData as unknown as { created_at: string }).created_at
+                  ).toLocaleString(),
+                  mono: false,
+                },
+                {
+                  label: "SHA-256 Digest",
+                  value: (
+                    <div className="flex items-center gap-2 justify-end">
+                      <span className="truncate max-w-[140px]" title={successData.sha256}>
+                        {successData.sha256.slice(0, 12)}...
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleCopySha(successData.sha256)}
+                        className="p-1 rounded-sm hover:bg-(--paper) text-(--cobalt)"
+                        title="Copy SHA-256"
+                      >
+                        {copiedSha ? <Check size={13} /> : <Copy size={13} />}
+                      </button>
+                    </div>
+                  ),
+                },
               ]}
             />
 
-            {/* Model Metadata List */}
             <InsetGroupedList
-              header="Embedding Model Versions"
               items={[
-                { label: "Config Version", value: registerResult.models.config_version, isMono: true },
-                { label: "CLIP Vision Backbone", value: registerResult.models.clip, isMono: true },
-                { label: "DINOv2 Feature Extractor", value: registerResult.models.dino, isMono: true },
+                {
+                  label: "Config Version",
+                  value:
+                    successData.models?.config_version ||
+                    (successData as unknown as { config_version: string }).config_version ||
+                    "1.0.0",
+                },
+                { label: "Models Active", value: "DINOv2-Base + CLIP ViT-B/32" },
+                { label: "Hash Methods", value: "pHash, dHash, aHash, wHash (64-bit)" },
+                { label: "Indexing Status", value: "HNSW + Bitwise Active" },
               ]}
             />
           </div>
 
-          {/* Mandatory Verbatim Disclaimer Notice */}
-          <div className="p-4 rounded-[12px] bg-[var(--apple-grouped-background)] border border-[var(--apple-separator)] text-footnote text-[var(--apple-secondary-label)] text-center">
-            "This is a Registration Record, not proof of ownership or copyright."
+          {/* 8x8 Bit Grids for Hashes */}
+          <div>
+            <div className="font-mono text-[12px] font-bold uppercase tracking-[0.12em] text-(--ink-soft) mb-3">
+              Perceptual Fingerprints (8×8 Bit Matrix Reveal)
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <BitGrid
+                hashHex={
+                  successData.fingerprints?.phash ||
+                  (successData as unknown as { phash: string }).phash ||
+                  "0000000000000000"
+                }
+                name="pHash"
+              />
+              <BitGrid
+                hashHex={
+                  successData.fingerprints?.dhash ||
+                  (successData as unknown as { dhash: string }).dhash ||
+                  "0000000000000000"
+                }
+                name="dHash"
+              />
+              <BitGrid
+                hashHex={
+                  successData.fingerprints?.ahash ||
+                  (successData as unknown as { ahash: string }).ahash ||
+                  "0000000000000000"
+                }
+                name="aHash"
+              />
+              <BitGrid
+                hashHex={
+                  successData.fingerprints?.whash ||
+                  (successData as unknown as { whash: string }).whash ||
+                  "0000000000000000"
+                }
+                name="wHash"
+              />
+            </div>
           </div>
-        </Card>
+
+          {/* Footnote Disclaimer */}
+          <div className="p-4 bg-(--paper) border border-(--rule) rounded-xl font-mono text-[12px] text-(--ink-soft) leading-relaxed">
+            Note: Registration establishes indexing timestamp and perceptual
+            fingerprint records; it is not proof of ownership or copyright.
+          </div>
+        </section>
       )}
 
-      {/* Record Pretty-Print Modal */}
-      {registerResult && (
-        <RecordModal
-          imageId={registerResult.image_id}
-          isOpen={isRecordModalOpen}
-          onClose={() => setIsRecordModalOpen(false)}
-        />
-      )}
+      {/* Marquee */}
+      <Marquee />
 
       {/* 409 Conflict Modal */}
       <ConflictModal
-        conflict={conflictResult}
-        isOpen={isConflictModalOpen}
-        onClose={() => setIsConflictModalOpen(false)}
+        isOpen={Boolean(conflictData)}
+        conflictData={conflictData}
+        onClose={() => setConflictData(null)}
+      />
+
+      {/* Record Inspection Modal */}
+      <RecordModal
+        isOpen={recordModalOpen}
+        imageId={successData?.image_id || null}
+        onClose={() => setRecordModalOpen(false)}
       />
     </div>
   );

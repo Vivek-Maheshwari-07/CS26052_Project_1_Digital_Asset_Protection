@@ -2,27 +2,21 @@ import { describe, it, expect } from 'vitest';
 import fs from 'fs';
 import path from 'path';
 
-describe('Apple HIG Design Tokens & Color Audit', () => {
+describe('Editorial Print-Studio Design Tokens & Color Audit', () => {
   const tokensPath = path.resolve(__dirname, '../design/tokens.css');
   const tokensContent = fs.readFileSync(tokensPath, 'utf-8');
 
   const requiredVariables = [
-    '--apple-label',
-    '--apple-secondary-label',
-    '--apple-background',
-    '--apple-grouped-background',
-    '--apple-card',
-    '--apple-separator',
-    '--apple-accent',
-    '--apple-accent-subtle',
-    '--apple-success',
-    '--apple-success-subtle',
-    '--apple-warning',
-    '--apple-warning-subtle',
-    '--apple-danger',
-    '--apple-danger-subtle',
-    '--apple-neutral',
-    '--apple-neutral-subtle',
+    '--paper',
+    '--paper-2',
+    '--ink',
+    '--ink-soft',
+    '--cobalt',
+    '--ochre',
+    '--vermilion',
+    '--sage',
+    '--peach',
+    '--rule',
   ];
 
   it('defines every required semantic color variable in tokens.css', () => {

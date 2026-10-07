@@ -4,6 +4,7 @@
  */
 
 export interface CsvRow {
+  run_id?: string;
   split: string;
   category: string;
   original_id: string;
@@ -12,9 +13,10 @@ export interface CsvRow {
   strength: string;
   is_true_copy: boolean;
   method: string;
-  score_value: number;
-  score_type: string;
+  score: number;
+  score_kind: string;
   latency_ms: number;
+  created_at?: string;
 }
 
 export interface CurvePoint {
@@ -37,8 +39,13 @@ export interface RocPrResult {
 }
 
 export function parseResultsCsv(csvText: string): CsvRow[] {
+  if (!csvText || !csvText.trim()) {
+    throw new Error("CSV contains no data rows.");
+  }
   const lines = csvText.trim().split(/\r?\n/);
-  if (lines.length < 2) return [];
+  if (lines.length < 2) {
+    throw new Error("Zero usable benchmark rows found in CSV.");
+  }
 
   const headers = lines[0].split(",").map((h) => h.trim());
   const rows: CsvRow[] = [];
@@ -57,11 +64,20 @@ export function parseResultsCsv(csvText: string): CsvRow[] {
       rowObj.is_true_copy?.toLowerCase() === "true" ||
       rowObj.is_true_copy === "1";
 
-    const scoreVal = parseFloat(rowObj.score_value);
+    // Read score with score_value fallback
+    const rawScore = rowObj.score !== undefined && rowObj.score !== "" 
+      ? rowObj.score 
+      : rowObj.score_value;
+    const scoreVal = parseFloat(rawScore);
+
+    // Read score_kind with score_type fallback
+    const scoreKind = rowObj.score_kind || rowObj.score_type || "";
+
     const latencyVal = parseFloat(rowObj.latency_ms);
 
     if (!isNaN(scoreVal)) {
       rows.push({
+        run_id: rowObj.run_id || "",
         split: rowObj.split || "test",
         category: rowObj.category || "identity",
         original_id: rowObj.original_id || "",
@@ -70,11 +86,16 @@ export function parseResultsCsv(csvText: string): CsvRow[] {
         strength: rowObj.strength || "none",
         is_true_copy: isTrueCopy,
         method: rowObj.method || "",
-        score_value: scoreVal,
-        score_type: rowObj.score_type || "",
+        score: scoreVal,
+        score_kind: scoreKind,
         latency_ms: isNaN(latencyVal) ? 0 : latencyVal,
+        created_at: rowObj.created_at || "",
       });
     }
+  }
+
+  if (rows.length === 0) {
+    throw new Error("Zero usable benchmark rows found in CSV.");
   }
 
   return rows;
@@ -140,7 +161,7 @@ export function computeMethodRocPr(
   rawRoc.push({ fpr: finalFpr, tpr: finalTpr });
   rawPr.push({ recall: finalTpr, precision: tp / (tp + fp) });
 
-  // Compute PR AUC via average precision
+  // Compute PR AUC via average precision trapezoids
   let prAuc = 0;
   for (let i = 1; i < rawPr.length; i++) {
     const deltaRecall = rawPr[i].recall - rawPr[i - 1].recall;
@@ -158,6 +179,10 @@ export function computeMethodRocPr(
 }
 
 export function computeFullBenchmarkCurves(rows: CsvRow[]): RocPrResult {
+  if (rows.length === 0) {
+    throw new Error("No benchmark rows to compute curves.");
+  }
+
   const testRows = rows.filter(
     (r) => (r.split.toLowerCase() === "test" || !r.split) && r.method.toLowerCase() !== "cascade"
   );
@@ -172,9 +197,10 @@ export function computeFullBenchmarkCurves(rows: CsvRow[]): RocPrResult {
   testRows.forEach((r) => {
     const m = r.method.toLowerCase();
     if (methodMap[m]) {
-      // Hash methods: score is negative hamming (lower distance = higher similarity)
-      // Deep methods: score is cosine similarity directly
-      const normalizedScore = m.includes("hash") ? -r.score_value : r.score_value;
+      // Hash methods: score is distance (lower = higher similarity) -> invert with negative score
+      // Deep methods: score is cosine similarity directly (higher = higher similarity)
+      const isHash = m.includes("hash") || r.score_kind.toLowerCase().includes("distance");
+      const normalizedScore = isHash ? -r.score : r.score;
       methodMap[m].push({
         label: r.is_true_copy ? 1 : 0,
         score: normalizedScore,
@@ -233,9 +259,26 @@ export function computeFullBenchmarkCurves(rows: CsvRow[]): RocPrResult {
     prCurve.push(prRow);
   }
 
+  // Check cascade single operating point
+  const cascadeRows = rows.filter((r) => r.method.toLowerCase() === "cascade");
+  let cascadePoint: RocPrResult["cascadePoint"] = undefined;
+  if (cascadeRows.length > 0) {
+    const P = cascadeRows.filter((r) => r.is_true_copy).length;
+    const N = cascadeRows.length - P;
+    const tp = cascadeRows.filter((r) => r.is_true_copy && r.score >= 0.5).length;
+    const fp = cascadeRows.filter((r) => !r.is_true_copy && r.score >= 0.5).length;
+    cascadePoint = {
+      tpr: P > 0 ? Number((tp / P).toFixed(4)) : 0,
+      fpr: N > 0 ? Number((fp / N).toFixed(4)) : 0,
+      precision: tp + fp > 0 ? Number((tp / (tp + fp)).toFixed(4)) : 1,
+      recall: P > 0 ? Number((tp / P).toFixed(4)) : 0,
+    };
+  }
+
   return {
     rocCurve,
     prCurve,
     aucByMethod,
+    cascadePoint,
   };
 }

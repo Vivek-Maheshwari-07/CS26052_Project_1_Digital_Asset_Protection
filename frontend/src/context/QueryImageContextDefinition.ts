@@ -5,6 +5,7 @@ export interface QueryImageContextType {
   queryFile: File | null;
   verifyResponse: VerifyResponse | null;
   setQueryData: (file: File | null, res: VerifyResponse | null) => void;
+  setVerificationData?: (file: File | null, res: VerifyResponse | null) => void;
   clearQueryData: () => void;
 }
 

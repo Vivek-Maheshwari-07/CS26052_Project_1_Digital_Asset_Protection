@@ -1,114 +1,93 @@
 import React from "react";
-import type { ConflictResponse } from "../api/types";
 import { Sheet } from "./ui/Sheet";
-import { Button } from "./ui/Button";
 import { HammingPanel } from "./ui/HammingPanel";
 import { CosinePanel } from "./ui/CosinePanel";
-import { AlertCircle, Calendar, Fingerprint } from "lucide-react";
+import { InsetGroupedList } from "./ui/InsetGroupedList";
+import { FramedImage } from "./ui/FramedImage";
+import type { ConflictResponse } from "../api/types";
+import { AlertTriangle } from "lucide-react";
 
-interface ConflictModalProps {
-  conflict: ConflictResponse | null;
+export interface ConflictModalProps {
   isOpen: boolean;
   onClose: () => void;
+  conflictData: ConflictResponse | null;
 }
 
 export const ConflictModal: React.FC<ConflictModalProps> = ({
-  conflict,
   isOpen,
   onClose,
+  conflictData,
 }) => {
-  if (!conflict) return null;
+  if (!conflictData) return null;
 
-  const getReasonText = (reason: string) => {
-    switch (reason) {
-      case "sha256":
-        return "Exact byte-for-byte SHA-256 duplicate match";
-      case "hash":
-        return "Near-duplicate match detected via perceptual hash distance threshold";
-      case "dino_cosine":
-        return "Deep visual feature collision exceeding DINOv2 cosine similarity threshold";
-      default:
-        return conflict.message || "Near-duplicate collision detected";
-    }
-  };
+  const { existing, message } = conflictData;
+  const existingId = existing?.image_id || "";
+  const existingImageUrl = `/api/images/${existingId}/file?size=thumb`;
 
-  const registeredDateStr = new Date(conflict.existing.registered_at).toLocaleString();
+  const hammingScores =
+    existing?.hamming || { phash: 0, dhash: 0, ahash: 0, whash: 0 };
+  const cosineScores =
+    existing?.cosine || { dino: null, clip: null };
 
   return (
     <Sheet
       isOpen={isOpen}
       onClose={onClose}
       title="Registration Conflict (409)"
-      subtitle="Registration rejected: this image matches an existing registered asset."
-      maxWidth="xl"
-      footer={
-        <Button variant="secondary" size="md" onClick={onClose}>
-          Dismiss
-        </Button>
-      }
+      size="large"
     >
-      <div className="space-y-6">
-        {/* Banner */}
-        <div className="p-4 rounded-[12px] bg-[var(--apple-warning-subtle)] border border-[var(--apple-warning)]/20 flex items-start gap-3">
-          <AlertCircle className="w-5 h-5 text-[var(--apple-warning)] shrink-0 mt-0.5 stroke-[1.75]" />
-          <div>
-            <h4 className="text-subheadline font-semibold text-[var(--apple-label)]">
-              Conflict Reason: {conflict.reason}
-            </h4>
-            <p className="text-footnote text-[var(--apple-secondary-label)] mt-0.5">
-              {getReasonText(conflict.reason)}
-            </p>
+      <div className="flex flex-col gap-6">
+        {/* Warning Banner */}
+        <div className="p-4 bg-(--ochre)/20 border-2 border-(--ochre) rounded-xl flex items-start gap-3">
+          <AlertTriangle size={22} className="text-(--ink) shrink-0 mt-0.5" />
+          <div className="flex flex-col gap-1">
+            <span className="font-mono text-[13px] font-bold uppercase text-(--ink)">
+              Duplicate / Near-Duplicate Detected
+            </span>
+            <span className="text-[14px] text-(--ink-soft)">{message}</span>
           </div>
         </div>
 
-        {/* Existing Registered Asset Details */}
-        <div className="bg-[var(--apple-grouped-background)] p-4 rounded-[14px] border border-[var(--apple-separator)] flex flex-col sm:flex-row items-center gap-4">
-          <img
-            src={conflict.existing.thumbnail_url}
-            alt="Existing registered asset"
-            className="w-24 h-24 object-cover rounded-[10px] border border-[var(--apple-separator)] bg-[var(--apple-card)] shadow-sm"
-          />
-          <div className="space-y-1.5 flex-1 text-center sm:text-left">
-            <div className="flex items-center justify-center sm:justify-start gap-1.5 text-footnote text-[var(--apple-secondary-label)]">
-              <Fingerprint className="w-4 h-4 stroke-[1.75]" />
-              <span>Existing Image ID:</span>
-              <span className="font-mono text-[var(--apple-label)] select-all font-medium">
-                {conflict.existing.image_id}
-              </span>
-            </div>
-            <div className="flex items-center justify-center sm:justify-start gap-1.5 text-footnote text-[var(--apple-secondary-label)]">
-              <Calendar className="w-4 h-4 stroke-[1.75]" />
-              <span>Registered on:</span>
-              <span className="font-medium text-[var(--apple-label)]">
-                {registeredDateStr}
-              </span>
-            </div>
+        {/* Existing Registered Work */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-center p-4 bg-(--paper-2) border border-(--rule) rounded-2xl">
+          <div className="flex justify-center">
+            <FramedImage
+              src={existingImageUrl}
+              alt={`Existing image ${existingId}`}
+              className="max-h-36"
+              offset={10}
+            />
+          </div>
+          <div className="sm:col-span-2">
+            <InsetGroupedList
+              items={[
+                { label: "Existing ID", value: existingId },
+                {
+                  label: "Owner Name",
+                  value: (existing as any)?.owner_name || "Registered Claimant",
+                  mono: false,
+                },
+                {
+                  label: "Registered At",
+                  value: existing?.registered_at
+                    ? new Date(existing.registered_at).toLocaleString()
+                    : "—",
+                  mono: false,
+                },
+              ]}
+            />
           </div>
         </div>
 
-        {/* Side-by-Side Comparison Panels */}
+        {/* Two Separate Panels Side-by-Side */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Panel 1: Classical Hashes */}
-          <HammingPanel
-            scores={conflict.existing.hamming}
-            thresholds={{
-              phash: conflict.thresholds.hamming_conflict_max,
-              dhash: conflict.thresholds.hamming_conflict_max,
-              ahash: conflict.thresholds.hamming_conflict_max,
-              whash: conflict.thresholds.hamming_conflict_max,
-            }}
-            title="Classical hashes (Hamming /64)"
-          />
+          <HammingPanel scores={hammingScores} />
+          <CosinePanel scores={cosineScores} />
+        </div>
 
-          {/* Panel 2: Deep Embeddings */}
-          <CosinePanel
-            scores={conflict.existing.cosine}
-            thresholds={{
-              dino: conflict.thresholds.dino_cosine_conflict_min,
-              clip: 0.9,
-            }}
-            title="Deep embeddings (cosine)"
-          />
+        <div className="p-3 bg-(--paper-2) border border-(--rule) rounded-xl font-mono text-[11px] text-(--ink-soft)">
+          Note: An image with matching exact hash or near-threshold perceptual
+          similarity cannot be re-registered as a new original.
         </div>
       </div>
     </Sheet>

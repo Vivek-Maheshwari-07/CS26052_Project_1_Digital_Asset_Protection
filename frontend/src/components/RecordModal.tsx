@@ -1,109 +1,125 @@
 import React, { useEffect, useState } from "react";
-import { getRegistrationRecord } from "../api/client";
-import type { RegistrationRecord } from "../api/types";
 import { Sheet } from "./ui/Sheet";
-import { Button } from "./ui/Button";
-import { Copy, Download, Check } from "lucide-react";
+import { BitGrid } from "./ui/BitGrid";
+import { InsetGroupedList } from "./ui/InsetGroupedList";
+import { getImageRecord } from "../api/client";
+import type { RegistrationRecord } from "../api/types";
+import { AlertCircle, Copy, Check } from "lucide-react";
+import { playTick } from "../utils/sound";
 
-interface RecordModalProps {
-  imageId: string;
+export interface RecordModalProps {
   isOpen: boolean;
+  imageId: string | null;
   onClose: () => void;
 }
 
 export const RecordModal: React.FC<RecordModalProps> = ({
-  imageId,
   isOpen,
+  imageId,
   onClose,
 }) => {
   const [record, setRecord] = useState<RegistrationRecord | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [copiedSha, setCopiedSha] = useState(false);
 
   useEffect(() => {
-    let mounted = true;
-    if (isOpen && imageId) {
-      Promise.resolve().then(() => {
-        if (mounted) setLoading(true);
+    if (!isOpen || !imageId) return;
+    setIsLoading(true);
+    setError(null);
+
+    getImageRecord(imageId)
+      .then((rec) => {
+        setRecord(rec);
+      })
+      .catch((err: unknown) => {
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Failed to fetch registration record."
+        );
+      })
+      .finally(() => {
+        setIsLoading(false);
       });
-
-      getRegistrationRecord(imageId)
-        .then((data) => {
-          if (mounted) {
-            setRecord(data);
-            setLoading(false);
-          }
-        })
-        .catch((err) => {
-          console.error("Failed to load registration record:", err);
-          if (mounted) {
-            setLoading(false);
-          }
-        });
-    }
-
-    return () => {
-      mounted = false;
-    };
   }, [isOpen, imageId]);
 
-  const jsonString = record ? JSON.stringify(record, null, 2) : "";
-
-  const handleCopy = () => {
-    if (!jsonString) return;
-    navigator.clipboard.writeText(jsonString);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
-  const handleDownload = () => {
-    window.open(`/api/images/${encodeURIComponent(imageId)}/record?download=true`, "_blank");
+  const handleCopySha = (sha: string) => {
+    playTick();
+    navigator.clipboard.writeText(sha);
+    setCopiedSha(true);
+    setTimeout(() => setCopiedSha(false), 2000);
   };
 
   return (
     <Sheet
       isOpen={isOpen}
       onClose={onClose}
-      title="Registration Record"
-      subtitle={`Image ID: ${imageId}`}
-      maxWidth="lg"
-      footer={
-        <div className="flex items-center justify-between w-full">
-          <span className="text-caption text-[var(--apple-secondary-label)]">
-            Cryptographic fingerprint receipt
-          </span>
-          <div className="flex items-center space-x-2">
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={handleCopy}
-              disabled={loading || !record}
-              icon={copied ? <Check className="w-3.5 h-3.5 stroke-[1.75]" /> : <Copy className="w-3.5 h-3.5 stroke-[1.75]" />}
-            >
-              {copied ? "Copied" : "Copy JSON"}
-            </Button>
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={handleDownload}
-              disabled={loading || !record}
-              icon={<Download className="w-3.5 h-3.5 stroke-[1.75]" />}
-            >
-              Download Record
-            </Button>
+      title="Image Registration Record"
+      size="large"
+    >
+      {isLoading ? (
+        <div className="py-12 text-center font-mono text-[14px] text-(--ink-soft) animate-pulse">
+          Retrieving registration record from index...
+        </div>
+      ) : error ? (
+        <div className="p-4 bg-(--vermilion)/10 border border-(--vermilion)/30 rounded-xl text-(--vermilion) font-mono text-[13px] flex items-center gap-2">
+          <AlertCircle size={18} className="shrink-0" />
+          <span>{error}</span>
+        </div>
+      ) : record ? (
+        <div className="flex flex-col gap-6">
+          {/* Metadata */}
+          <InsetGroupedList
+            items={[
+              { label: "Image ID", value: record.image_id },
+              { label: "Owner Name", value: record.owner_name, mono: false },
+              {
+                label: "Registered At",
+                value: new Date(record.registered_at).toLocaleString(),
+                mono: false,
+              },
+              {
+                label: "SHA-256 Digest",
+                value: (
+                  <div className="flex items-center gap-2 justify-end">
+                    <span className="truncate max-w-[200px]" title={record.sha256}>
+                      {record.sha256.slice(0, 16)}...
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleCopySha(record.sha256)}
+                      className="p-1 rounded-sm hover:bg-(--paper) text-(--cobalt)"
+                      title="Copy SHA-256"
+                    >
+                      {copiedSha ? <Check size={14} /> : <Copy size={14} />}
+                    </button>
+                  </div>
+                ),
+              },
+              { label: "Config Version", value: record.models.config_version },
+            ]}
+          />
+
+          {/* 8x8 Bit Grids for Hashes */}
+          <div>
+            <div className="font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-(--ink-soft) mb-3">
+              Perceptual Hash Bit-Grids (64-bit)
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <BitGrid hashHex={record.fingerprints.phash} name="pHash" />
+              <BitGrid hashHex={record.fingerprints.dhash} name="dHash" />
+              <BitGrid hashHex={record.fingerprints.ahash} name="aHash" />
+              <BitGrid hashHex={record.fingerprints.whash} name="wHash" />
+            </div>
+          </div>
+
+          <div className="p-3 bg-(--paper-2) border border-(--rule) rounded-xl font-mono text-[11px] text-(--ink-soft) leading-relaxed">
+            Note: Registration establishes indexing timestamp and perceptual
+            fingerprint records; it is not proof of ownership or copyright.
           </div>
         </div>
-      }
-    >
-      <div className="font-mono text-footnote bg-[var(--apple-grouped-background)] p-4 rounded-[12px] border border-[var(--apple-separator)] text-[var(--apple-label)] max-h-96 overflow-y-auto">
-        {loading ? (
-          <div className="flex items-center justify-center py-12 text-[var(--apple-secondary-label)] space-x-2">
-            <span className="text-subheadline">Loading Registration Record...</span>
-          </div>
-        ) : (
-          <pre className="whitespace-pre-wrap break-all tabular-nums">{jsonString}</pre>
-        )}
-      </div>
+      ) : null}
     </Sheet>
   );
 };

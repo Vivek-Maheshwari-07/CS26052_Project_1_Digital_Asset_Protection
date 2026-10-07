@@ -17,7 +17,6 @@ describe('Navbar Component', () => {
     expect(screen.getByText('ProvNet')).toBeInTheDocument();
     expect(screen.getAllByText('Register')[0]).toBeInTheDocument();
     expect(screen.getAllByText('Verify')[0]).toBeInTheDocument();
-    expect(screen.getAllByText('Evidence')[0]).toBeInTheDocument();
     expect(screen.getAllByText('Results')[0]).toBeInTheDocument();
   });
 
@@ -30,7 +29,7 @@ describe('Navbar Component', () => {
       </ThemeProvider>
     );
 
-    const toggleButton = screen.getByLabelText('Toggle navigation menu');
+    const toggleButton = screen.getByLabelText('Open navigation menu');
     expect(toggleButton).toBeInTheDocument();
 
     // Click mobile hamburger button

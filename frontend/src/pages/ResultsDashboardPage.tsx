@@ -2,26 +2,25 @@ import React, { useEffect, useState, useMemo } from "react";
 import {
   getBenchmarkRuns,
   getBenchmarkSummary,
-  getBenchmarkResultsCsv,
+  getBenchmarkResultsCsvUrl,
+  fetchBenchmarkResultsCsv,
 } from "../api/client";
-import type {
-  BenchmarkRunInfo,
-  BenchmarkSummary,
-} from "../api/types";
-import { Card } from "../components/ui/Card";
-import { Button } from "../components/ui/Button";
-import { MetricNumber } from "../components/ui/MetricNumber";
-import { SegmentedControl } from "../components/ui/SegmentedControl";
+import type { BenchmarkSummary } from "../api/types";
 import { processCsvInWorker } from "../utils/rocWorker";
-import type { RocPrResult } from "../utils/rocCalculator";
+import { type RocPrResult } from "../utils/rocCalculator";
+import { Kicker } from "../components/ui/Kicker";
+import { Sticker } from "../components/ui/Sticker";
+import { PaperCard } from "../components/ui/PaperCard";
+import { MetricNumber } from "../components/ui/MetricNumber";
+import { BackgroundCircle } from "../components/ui/BackgroundCircle";
+import { Marquee } from "../components/ui/Marquee";
 import {
   Download,
+  BarChart3,
   Terminal,
   Activity,
-  Layers,
-  LineChart as LineChartIcon,
-  BarChart3,
-  Flame,
+  Zap,
+  TrendingUp,
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -31,676 +30,716 @@ import {
   YAxis,
   Tooltip,
   Legend,
-  CartesianGrid,
   BarChart,
   Bar,
+  Scatter,
+  ComposedChart,
 } from "recharts";
+import { playTick } from "../utils/sound";
+
+// Single-hue sequential scale function from --paper-2 (0%) to --cobalt (100%)
+export function getHeatmapCellColor(recall: number): { bg: string; text: string } {
+  const clamped = Math.max(0, Math.min(1, recall));
+  // In CSS: background rgba of cobalt (35, 80, 216) with alpha based on recall
+  const alpha = 0.08 + clamped * 0.92;
+  const bg = `rgba(35, 80, 216, ${alpha.toFixed(3)})`;
+  // Switch text to white/paper on dark cells
+  const text = clamped > 0.55 ? "var(--paper)" : "var(--ink)";
+  return { bg, text };
+}
 
 export const ResultsDashboardPage: React.FC = () => {
-  const [runs, setRuns] = useState<BenchmarkRunInfo[]>([]);
-  const [selectedRunId, setSelectedRunId] = useState<string>("");
+  const [runs, setRuns] = useState<{ run_id: string; created_at: string }[]>([]);
+  const [selectedRunId, setSelectedRunId] = useState<string | null>(null);
   const [summary, setSummary] = useState<BenchmarkSummary | null>(null);
-  const [rocPrData, setRocPrData] = useState<RocPrResult | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const [loadingRuns, setLoadingRuns] = useState<boolean>(true);
-  const [loadingSummary, setLoadingSummary] = useState<boolean>(false);
-
-  // Strength curve transform filter
+  // Selected transform for strength degradation curves
   const [selectedTransform, setSelectedTransform] = useState<string>("");
 
-  // 1. Fetch available benchmark runs
-  useEffect(() => {
-    let mounted = true;
+  // Latency chart scale toggle: "linear" | "log"
+  const [latencyScale, setLatencyScale] = useState<"linear" | "log">("linear");
 
+  // ROC/PR curves
+  const [rocPrData, setRocPrData] = useState<RocPrResult | null>(null);
+  const [isWorkerCalculating, setIsWorkerCalculating] = useState<boolean>(false);
+  const [workerError, setWorkerError] = useState<string | null>(null);
+
+  // Fetch benchmark runs
+  useEffect(() => {
+    setIsLoading(true);
+    setError(null);
     getBenchmarkRuns()
-      .then((data) => {
-        if (!mounted) return;
-        setRuns(data);
-        if (data.length > 0) {
-          setSelectedRunId(data[0].run_id);
+      .then((runList) => {
+        setRuns(runList);
+        if (runList.length > 0) {
+          setSelectedRunId(runList[0].run_id);
         }
       })
-      .catch((err) => {
-        console.error("Failed to load benchmark runs:", err);
-        if (mounted) setRuns([]);
+      .catch((err: unknown) => {
+        setError(
+          err instanceof Error ? err.message : "Failed to load benchmark runs."
+        );
       })
       .finally(() => {
-        if (mounted) setLoadingRuns(false);
+        setIsLoading(false);
       });
-
-    return () => {
-      mounted = false;
-    };
   }, []);
 
-  // 2. Fetch summary & CSV when selectedRunId changes
+  // Fetch summary and CSV for selected run
   useEffect(() => {
-    let mounted = true;
     if (!selectedRunId) {
+      setSummary(null);
+      setRocPrData(null);
       return;
     }
 
-    Promise.resolve().then(() => {
-      if (mounted) {
-        setLoadingSummary(true);
-      }
-    });
+    setIsLoading(true);
+    setError(null);
+    setWorkerError(null);
 
     getBenchmarkSummary(selectedRunId)
       .then((data) => {
-        if (!mounted) return;
         setSummary(data);
-
-        // Set default selected transform for curves
-        const transforms = Array.from(
-          new Set(
-            data.by_transform
-              .map((t) => t.transform)
-              .filter((t) => t !== "none" && t !== "identity")
-          )
-        );
-        if (transforms.length > 0) {
-          setSelectedTransform(transforms[0]);
+        if (data.by_transform && data.by_transform.length > 0) {
+          setSelectedTransform(data.by_transform[0].transform);
         }
       })
-      .catch((err) => {
-        console.error("Failed to load benchmark summary:", err);
-        if (mounted) setSummary(null);
+      .catch((err: unknown) => {
+        setError(
+          err instanceof Error ? err.message : "Failed to fetch benchmark summary."
+        );
       })
       .finally(() => {
-        if (mounted) setLoadingSummary(false);
+        setIsLoading(false);
       });
 
-    getBenchmarkResultsCsv(selectedRunId)
-      .then((csvText) => {
-        if (!mounted) return;
-        processCsvInWorker(csvText)
-          .then((res) => {
-            if (mounted) setRocPrData(res);
-          })
-          .catch((err) => {
-            console.error("Failed to compute ROC/PR worker curves:", err);
-          });
+    // Fetch CSV and calculate ROC/PR via Web Worker
+    setIsWorkerCalculating(true);
+    fetchBenchmarkResultsCsv(selectedRunId)
+      .then((csvText) => processCsvInWorker(csvText))
+      .then((computed) => {
+        setRocPrData(computed);
       })
-      .catch((err) => {
-        console.error("Failed to fetch results CSV:", err);
+      .catch((err: unknown) => {
+        setWorkerError(
+          err instanceof Error ? err.message : "Failed to parse benchmark ROC curves."
+        );
+      })
+      .finally(() => {
+        setIsWorkerCalculating(false);
       });
-
-    return () => {
-      mounted = false;
-    };
   }, [selectedRunId]);
 
-  // Method Colors for Recharts (using CSS variable names or safe palette)
-  const methodColors: Record<string, string> = {
-    phash: "var(--chart-hash-1)",
-    dhash: "var(--chart-hash-2)",
-    ahash: "var(--chart-hash-3)",
-    whash: "var(--chart-hash-4)",
-    clip: "var(--chart-deep-1)",
-    dino: "var(--chart-deep-2)",
-    cascade: "var(--chart-cascade)",
-  };
+  // Methods list for heatmap
+  const methods = useMemo(
+    () => ["phash", "dhash", "ahash", "whash", "clip", "dino", "cascade"],
+    []
+  );
 
-  // Distinct transforms for Strength Curve selector
+  // Distinct transforms for curves
   const availableTransforms = useMemo(() => {
-    if (!summary) return [];
-    return Array.from(
-      new Set(
-        summary.by_transform
-          .map((t) => t.transform)
-          .filter((t) => t !== "none" && t !== "identity")
-      )
-    );
+    if (!summary?.by_transform) return [];
+    const set = new Set<string>();
+    summary.by_transform.forEach((t) => set.add(t.transform));
+    return Array.from(set);
   }, [summary]);
 
-  // Strength curve data formatted for Recharts
+  // Strength curves data for the selected transform
   const strengthCurveData = useMemo(() => {
-    if (!summary || !selectedTransform) return [];
+    if (!summary?.by_transform || !selectedTransform) return [];
     const strengths = ["weak", "medium", "strong"];
-    const transformRows = summary.by_transform.filter(
-      (r) => r.transform.toLowerCase() === selectedTransform.toLowerCase()
+    const filtered = summary.by_transform.filter(
+      (t) => t.transform.toLowerCase() === selectedTransform.toLowerCase()
     );
 
     return strengths.map((str) => {
-      const row: Record<string, string | number> = { strength: str };
-      transformRows
-        .filter((r) => r.strength.toLowerCase() === str.toLowerCase())
-        .forEach((r) => {
-          row[r.method] = Number(r.f1.toFixed(4));
-        });
+      const row: Record<string, number | string> = { strength: str.toUpperCase() };
+      methods.forEach((m) => {
+        const item = filtered.find(
+          (t) =>
+            t.strength.toLowerCase() === str.toLowerCase() &&
+            t.method.toLowerCase() === m.toLowerCase()
+        );
+        if (item) {
+          row[m] = Number(item.f1.toFixed(3));
+        }
+      });
       return row;
     });
-  }, [summary, selectedTransform]);
+  }, [summary, selectedTransform, methods]);
 
-  // Latency bar chart data
+  // Latency comparison data across methods
   const latencyData = useMemo(() => {
-    if (!summary) return [];
-    const methodLatencies: Record<string, { total: number; count: number }> = {};
-    const methods = ["phash", "dhash", "ahash", "whash", "clip", "dino"];
+    if (!summary?.by_transform) return [];
+    const methodLatencies: Record<string, number[]> = {};
+    methods.forEach((m) => (methodLatencies[m] = []));
 
-    methods.forEach((m) => {
-      methodLatencies[m] = { total: 0, count: 0 };
-    });
-
-    summary.by_transform.forEach((r) => {
-      const m = r.method.toLowerCase();
+    summary.by_transform.forEach((t) => {
+      const m = t.method.toLowerCase();
       if (methodLatencies[m]) {
-        methodLatencies[m].total += r.median_latency_ms;
-        methodLatencies[m].count += 1;
+        methodLatencies[m].push(t.median_latency_ms);
       }
     });
 
     return methods.map((m) => {
+      const latList = methodLatencies[m];
       const avg =
-        methodLatencies[m].count > 0
-          ? methodLatencies[m].total / methodLatencies[m].count
+        latList.length > 0
+          ? latList.reduce((a, b) => a + b, 0) / latList.length
           : 0;
+      
+      const clampedVal = latencyScale === "log" ? (avg <= 0 ? 0.01 : avg) : avg;
+
       return {
-        method: m,
-        latency_ms: Number(avg.toFixed(2)),
+        method: m.toUpperCase(),
+        latency: Number(clampedVal.toFixed(2)),
+        rawLatency: avg,
+        displayLatency: avg <= 0 && latencyScale === "log" ? "<0.01" : avg.toFixed(2),
       };
     });
-  }, [summary]);
+  }, [summary, methods, latencyScale]);
 
-  // Heatmap rows & columns setup
-  const heatmapData = useMemo(() => {
-    if (!summary) return { columns: [], rows: [] };
+  return (
+    <div className="relative min-w-0 max-w-[1080px] mx-auto px-4 pt-24 pb-16 flex flex-col gap-10 z-10">
+      <BackgroundCircle />
 
-    // Columns: distinct transform + strength
-    const colMap = new Map<string, { transform: string; strength: string; label: string }>();
-    summary.by_transform.forEach((t) => {
-      const key = `${t.transform}__${t.strength}`;
-      if (!colMap.has(key)) {
-        colMap.set(key, {
-          transform: t.transform,
-          strength: t.strength,
-          label: `${t.transform} (${t.strength})`,
-        });
-      }
-    });
-    const columns = Array.from(colMap.values());
+      {/* Hero Header */}
+      <section className="flex flex-col gap-6 pt-4 pb-2">
+        <div className="flex items-center gap-3 flex-wrap">
+          <Kicker>● BENCHMARK EVALUATION & MULTI-SPECTRAL ACCURACY</Kicker>
+          {selectedRunId && (
+            <Sticker variant="cobalt" rotate={-1}>
+              RUN: {selectedRunId.slice(0, 12)}
+            </Sticker>
+          )}
+        </div>
 
-    // Rows: methods
-    const methods = ["phash", "dhash", "ahash", "whash", "clip", "dino", "cascade"];
-    const rows = methods.map((m) => {
-      const cells = columns.map((col) => {
-        const metric = summary.by_transform.find(
-          (t) =>
-            t.method.toLowerCase() === m.toLowerCase() &&
-            t.transform.toLowerCase() === col.transform.toLowerCase() &&
-            t.strength.toLowerCase() === col.strength.toLowerCase()
-        );
-        return {
-          columnKey: `${col.transform}__${col.strength}`,
-          recall: metric ? metric.recall : 0,
-          precision: metric ? metric.precision : 0,
-          f1: metric ? metric.f1 : 0,
-          roc_auc: metric ? metric.roc_auc : 0,
-          n_pairs: metric ? metric.n_pairs : 0,
-        };
-      });
-      return { method: m, cells };
-    });
-
-    return { columns, rows };
-  }, [summary]);
-
-  const handleDownloadMasterCsv = () => {
-    if (!selectedRunId) return;
-    window.open(`/api/benchmark/results.csv?run_id=${encodeURIComponent(selectedRunId)}`, "_blank");
-  };
-
-  // Color interpolation for heatmap recall (0.00 -> 1.00)
-  const getHeatmapColor = (val: number) => {
-    if (val >= 0.95) return "bg-[var(--apple-success)] text-white";
-    if (val >= 0.85) return "bg-[var(--apple-success)]/80 text-white";
-    if (val >= 0.70) return "bg-[var(--apple-accent)] text-white";
-    if (val >= 0.50) return "bg-[var(--apple-warning)] text-white";
-    if (val >= 0.30) return "bg-[var(--apple-danger)]/75 text-white";
-    return "bg-[var(--apple-danger)] text-white";
-  };
-
-  // Empty State if no runs exist
-  if (!loadingRuns && runs.length === 0) {
-    return (
-      <div className="max-w-[1080px] mx-auto px-4 sm:px-6 py-20 animate-fadeIn">
-        <Card className="max-w-xl mx-auto text-center py-12 space-y-6">
-          <div className="w-16 h-16 rounded-full bg-[var(--apple-neutral-subtle)] text-[var(--apple-neutral)] mx-auto flex items-center justify-center">
-            <Terminal className="w-8 h-8 stroke-[1.75]" />
-          </div>
-          <div className="space-y-2">
-            <h2 className="text-title-2 font-bold text-[var(--apple-label)]">
-              No Benchmark Runs Available
-            </h2>
-            <p className="text-subheadline text-[var(--apple-secondary-label)]">
-              Run the ProvNet offline evaluation pipeline to generate metrics and benchmarks.
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div>
+            <h1 className="font-display text-[clamp(40px,7vw,84px)] leading-[0.95] tracking-[-0.02em] text-(--ink) m-0 font-normal">
+              The <span className="italic text-(--cobalt)">results</span>.
+            </h1>
+            <p className="text-[17px] text-(--ink-soft) max-w-[42ch] m-0 mt-2">
+              Empirical evaluation across transformations, adversarial attacks,
+              Hamming bit-distance distributions, and deep feature embeddings.
             </p>
           </div>
 
-          <div className="p-4 rounded-[12px] bg-[var(--apple-grouped-background)] border border-[var(--apple-separator)] text-left font-mono text-footnote space-y-2 text-[var(--apple-label)]">
-            <div className="text-caption text-[var(--apple-secondary-label)] font-sans uppercase tracking-wider mb-1">
-              Terminal Commands:
-            </div>
-            <div className="select-all">python -m bench.make_manifest</div>
-            <div className="select-all">python -m bench.attack</div>
-            <div className="select-all">python -m bench.evaluate --write-db</div>
-          </div>
-        </Card>
-      </div>
-    );
-  }
-
-  return (
-    <div className="max-w-[1080px] mx-auto px-4 sm:px-6 py-10 space-y-8 animate-fadeIn">
-      {/* Page Header & Actions */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-large-title text-[var(--apple-label)] tracking-tight">
-            Benchmark Results Dashboard
-          </h1>
-          <p className="text-subheadline text-[var(--apple-secondary-label)] mt-1">
-            Comparative performance analysis of classical perceptual hashes vs. deep visual embeddings.
-          </p>
+          {selectedRunId && (
+            <a
+              href={getBenchmarkResultsCsvUrl(selectedRunId)}
+              download={`benchmark_${selectedRunId}.csv`}
+              onClick={() => playTick()}
+              className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-(--paper-2) border border-(--rule) font-mono text-[13px] font-bold uppercase text-(--ink) hover:bg-(--ink) hover:text-(--paper) shadow-hard-sm transition-colors no-underline select-none shrink-0"
+            >
+              <Download size={15} />
+              <span>Download master_results.csv</span>
+            </a>
+          )}
         </div>
+      </section>
 
-        <div className="flex items-center space-x-3">
-          <Button
-            variant="secondary"
-            size="md"
-            onClick={handleDownloadMasterCsv}
-            disabled={!selectedRunId || loadingSummary}
-            icon={<Download className="w-4 h-4 stroke-[1.75]" />}
-          >
-            Download master_results.csv
-          </Button>
-        </div>
-      </div>
-
-      {/* Run Selector Control */}
+      {/* Benchmark Run Selector */}
       {runs.length > 0 && (
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-[16px] bg-[var(--apple-card)] border border-[var(--apple-separator)] shadow-[var(--apple-card-shadow)]">
-          <div className="flex items-center space-x-2">
-            <Layers className="w-5 h-5 text-[var(--apple-accent)] stroke-[1.75]" />
-            <span className="text-headline font-semibold text-[var(--apple-label)]">
-              Evaluation Run:
-            </span>
+        <div className="flex flex-col gap-2">
+          <span className="font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-(--ink-soft)">
+            SELECT BENCHMARK RUN ({runs.length} AVAILABLE)
+          </span>
+          <div className="flex items-center gap-2 flex-wrap">
+            {runs.map((r, idx) => {
+              const isSelected = r.run_id === selectedRunId;
+              return (
+                <button
+                  key={r.run_id}
+                  type="button"
+                  onClick={() => {
+                    playTick();
+                    setSelectedRunId(r.run_id);
+                  }}
+                  className={`px-4 py-2 rounded-full font-mono text-[12px] font-bold uppercase tracking-wider transition-all select-none ${
+                    isSelected
+                      ? "bg-(--ink) text-(--paper) shadow-hard-sm scale-105"
+                      : "bg-(--paper-2) text-(--ink-soft) border border-(--rule) hover:text-(--ink)"
+                  }`}
+                >
+                  Run #{idx + 1} ({new Date(r.created_at).toLocaleDateString()})
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Empty State when no runs exist */}
+      {!isLoading && runs.length === 0 && (
+        <PaperCard important className="flex flex-col items-center text-center p-8 md:p-12 gap-6">
+          <div className="w-14 h-14 rounded-full bg-(--ochre)/20 text-(--ink) flex items-center justify-center">
+            <BarChart3 size={28} />
           </div>
 
-          <div className="w-full sm:w-auto">
-            {runs.length <= 4 ? (
-              <SegmentedControl
-                options={runs.map((r) => ({
-                  value: r.run_id,
-                  label: `${r.run_id} (${new Date(r.created_at).toLocaleDateString()})`,
-                }))}
-                value={selectedRunId}
-                onChange={setSelectedRunId}
+          <div className="flex flex-col gap-2 max-w-lg">
+            <h2 className="font-display text-[32px] text-(--ink) m-0">
+              No Benchmark Runs Found
+            </h2>
+            <p className="text-[15px] text-(--ink-soft) m-0">
+              To populate the results dashboard with empirical evaluations, execute
+              the offline benchmark pipeline using the commands below:
+            </p>
+          </div>
+
+          <div className="w-full max-w-xl bg-(--ink) text-(--paper) rounded-xl p-5 text-left font-mono text-[13px] overflow-x-auto shadow-inner">
+            <div className="flex items-center gap-2 text-(--ink-soft) mb-3 pb-2 border-b border-(--paper)/15 text-[11px]">
+              <Terminal size={14} />
+              <span>TERMINAL COMMANDS (POWERSHELL)</span>
+            </div>
+            <div className="flex flex-col gap-1.5 text-(--ochre)">
+              <div>python -m bench.make_manifest</div>
+              <div>python -m bench.attack</div>
+              <div>python -m bench.evaluate --write-db</div>
+            </div>
+          </div>
+        </PaperCard>
+      )}
+
+      {/* Loading state */}
+      {isLoading && (
+        <div className="py-20 text-center font-mono text-[14px] text-(--ink-soft) animate-pulse">
+          Loading benchmark metrics and evaluating curves...
+        </div>
+      )}
+
+      {/* Error state */}
+      {error && !isLoading && (
+        <div className="p-4 bg-(--vermilion)/10 border border-(--vermilion)/30 rounded-xl text-(--vermilion) font-mono text-[13px]">
+          {error}
+        </div>
+      )}
+
+      {/* Results Content */}
+      {summary && !isLoading && (
+        <div className="flex flex-col gap-10">
+          {/* KPI Row (MetricNumber cards with hard shadows) */}
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <PaperCard important className="p-5">
+              <MetricNumber
+                label="ORIGINALS"
+                value={summary.n_originals}
+                sublabel="Indexed assets"
               />
-            ) : (
-              <select
-                value={selectedRunId}
-                onChange={(e) => setSelectedRunId(e.target.value)}
-                className="h-10 px-4 rounded-[10px] bg-[var(--apple-grouped-background)] text-[var(--apple-label)] border border-[var(--apple-separator)] apple-focus text-subheadline font-medium cursor-pointer"
-              >
-                {runs.map((r) => (
-                  <option key={r.run_id} value={r.run_id}>
-                    {r.run_id} — {new Date(r.created_at).toLocaleString()} ({r.n_rows} rows)
-                  </option>
-                ))}
-              </select>
-            )}
-          </div>
-        </div>
-      )}
+            </PaperCard>
 
-      {/* KPI Tiles Row */}
-      {summary && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-          <MetricNumber
-            label="Original Assets"
-            value={summary.n_originals}
-            sublabel="Registered dataset"
-          />
-          <MetricNumber
-            label="Hard Negatives"
-            value={summary.n_hard_negatives}
-            sublabel="Adversarial impostors"
-          />
-          <MetricNumber
-            label="Cascade Accuracy"
-            value={`${(summary.cascade.accuracy * 100).toFixed(1)}%`}
-            variant="success"
-            sublabel="Multi-tier pipeline"
-          />
-          <MetricNumber
-            label="Mean Latency"
-            value={`${summary.cascade.mean_latency_ms.toFixed(1)} ms`}
-            sublabel="Average verification"
-          />
-          <MetricNumber
-            label="Escalation Rate"
-            value={`${(summary.cascade.escalation_rate * 100).toFixed(1)}%`}
-            variant="warning"
-            sublabel="Escalated to DINO/CLIP"
-          />
-        </div>
-      )}
+            <PaperCard important className="p-5">
+              <MetricNumber
+                label="HARD NEGATIVES"
+                value={summary.n_hard_negatives}
+                sublabel="Adversarial pairs"
+              />
+            </PaperCard>
 
-      {/* Recall Heatmap Matrix */}
-      {summary && (
-        <Card className="space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <Flame className="w-5 h-5 text-[var(--apple-accent)] stroke-[1.75]" />
-              <h3 className="text-title-3 font-semibold text-[var(--apple-label)]">
-                Robustness & Recall Heatmap
-              </h3>
-            </div>
-            <div className="flex items-center gap-2 text-caption text-[var(--apple-secondary-label)]">
-              <span>0%</span>
-              <div className="w-24 h-3 rounded-full bg-gradient-to-r from-[var(--apple-danger)] via-[var(--apple-warning)] to-[var(--apple-success)]" />
-              <span>100%</span>
-            </div>
+            <PaperCard important className="p-5">
+              <MetricNumber
+                label="CASCADE ACCURACY"
+                value={`${(summary.cascade.accuracy * 100).toFixed(1)}%`}
+                sublabel="Overall F1 / Acc"
+                valueClassName="text-(--sage)"
+              />
+            </PaperCard>
+
+            <PaperCard important className="p-5">
+              <MetricNumber
+                label="CASCADE LATENCY"
+                value={summary.cascade.mean_latency_ms.toFixed(1)}
+                unit="ms"
+                sublabel="Mean response time"
+              />
+            </PaperCard>
+
+            <PaperCard important className="p-5 col-span-2 md:col-span-1">
+              <MetricNumber
+                label="ESCALATION RATE"
+                value={`${(summary.cascade.escalation_rate * 100).toFixed(1)}%`}
+                sublabel="Deep stage handoff"
+                valueClassName="text-(--ochre)"
+              />
+            </PaperCard>
           </div>
 
-          <div className="overflow-x-auto pb-2">
-            <div className="min-w-[640px]">
-              {/* Table Header */}
-              <div
-                className="grid gap-1 mb-1 text-caption font-semibold text-[var(--apple-secondary-label)]"
-                style={{
-                  gridTemplateColumns: `100px repeat(${heatmapData.columns.length}, minmax(80px, 1fr))`,
-                }}
-              >
-                <div className="p-2 text-left">Method</div>
-                {heatmapData.columns.map((col) => (
-                  <div key={col.label} className="p-2 text-center capitalize truncate">
-                    {col.transform}
-                    <span className="block text-[10px] font-normal text-[var(--apple-secondary-label)]">
-                      {col.strength}
-                    </span>
-                  </div>
-                ))}
+          {/* Recall Heatmap Card */}
+          <PaperCard important className="flex flex-col gap-6 overflow-hidden">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-(--rule) pb-4">
+              <div>
+                <span className="font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-(--cobalt)">
+                  ATTACK MATRIX
+                </span>
+                <h3 className="font-display text-[24px] text-(--ink) m-0">
+                  Recall Heatmap Matrix
+                </h3>
               </div>
 
-              {/* Table Rows */}
-              {heatmapData.rows.map((row) => (
-                <div
-                  key={row.method}
-                  className="grid gap-1 mb-1 items-center"
-                  style={{
-                    gridTemplateColumns: `100px repeat(${heatmapData.columns.length}, minmax(80px, 1fr))`,
-                  }}
-                >
-                  <div className="p-2 text-subheadline font-semibold text-[var(--apple-label)] uppercase font-mono">
-                    {row.method}
+              {/* Heatmap Legend Bar */}
+              <div className="flex items-center gap-3">
+                <span className="font-mono text-[11px] text-(--ink-soft) uppercase">
+                  Recall 0%
+                </span>
+                <div className="w-28 h-3 rounded-full bg-gradient-to-r from-(--paper-2) to-(--cobalt) border border-(--rule)" />
+                <span className="font-mono text-[11px] text-(--ink-soft) uppercase">
+                  100%
+                </span>
+              </div>
+            </div>
+
+            {/* Matrix Table with Horizontal Scroll & Sticky Column */}
+            <div className="overflow-x-auto w-full pb-2">
+              <div className="min-w-[640px] flex flex-col gap-1.5">
+                {/* Columns Header */}
+                <div className="flex items-center gap-1.5 font-mono text-[11px] font-bold text-(--ink-soft) uppercase pb-1 border-b border-(--rule)">
+                  <div className="w-28 sticky left-0 bg-(--paper-2) z-10">
+                    METHOD
                   </div>
-                  {row.cells.map((cell) => (
+                  {summary.by_transform.slice(0, 10).map((t, idx) => (
                     <div
-                      key={cell.columnKey}
-                      title={`Precision: ${(cell.precision * 100).toFixed(1)}%\nF1: ${cell.f1.toFixed(3)}\nAUC: ${cell.roc_auc.toFixed(3)}\nPairs: ${cell.n_pairs}`}
-                      className={`h-10 rounded-[8px] flex items-center justify-center font-mono text-footnote font-bold tabular-nums transition-transform hover:scale-105 cursor-pointer ${getHeatmapColor(
-                        cell.recall
-                      )}`}
+                      key={idx}
+                      className="flex-1 text-center truncate px-1"
+                      title={`${t.transform} (${t.strength})`}
                     >
-                      {(cell.recall * 100).toFixed(0)}%
+                      {t.transform.slice(0, 5)} {t.strength.slice(0, 1)}
                     </div>
                   ))}
                 </div>
-              ))}
-            </div>
-          </div>
-        </Card>
-      )}
 
-      {/* Strength Curves & Latency Grid */}
-      {summary && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Strength Curves Chart */}
-          <Card className="space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <div className="flex items-center gap-2">
-                <LineChartIcon className="w-5 h-5 text-[var(--apple-accent)] stroke-[1.75]" />
-                <h3 className="text-title-3 font-semibold text-[var(--apple-label)]">
-                  Strength Degradation Curves
+                {/* Rows per Method */}
+                {methods.map((method) => {
+                  return (
+                    <div key={method} className="flex items-center gap-1.5">
+                      <div className="w-28 sticky left-0 bg-(--paper-2) z-10 font-mono text-[12px] font-bold uppercase text-(--ink)">
+                        {method}
+                      </div>
+
+                      {summary.by_transform.slice(0, 10).map((t, colIdx) => {
+                        const cellItem = summary.by_transform.find(
+                          (item) =>
+                            item.transform === t.transform &&
+                            item.strength === t.strength &&
+                            item.method.toLowerCase() === method.toLowerCase()
+                        );
+
+                        const recallVal = cellItem ? cellItem.recall : 0;
+                        const { bg, text } = getHeatmapCellColor(recallVal);
+
+                        return (
+                          <div
+                            key={colIdx}
+                            style={{ backgroundColor: bg, color: text }}
+                            title={`${method.toUpperCase()} @ ${t.transform} (${t.strength})\nRecall: ${recallVal.toFixed(3)}\nPrecision: ${cellItem?.precision.toFixed(3) ?? 0}\nF1: ${cellItem?.f1.toFixed(3) ?? 0}`}
+                            className="flex-1 h-9 rounded-[4px] flex items-center justify-center font-mono text-[11px] font-bold tabular-nums transition-transform hover:scale-105 cursor-pointer shadow-xs"
+                          >
+                            {cellItem ? cellItem.recall.toFixed(2) : "—"}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </PaperCard>
+
+          {/* Strength Curves & Latency Row */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Strength Degradation Curves */}
+            <PaperCard important className="flex flex-col gap-4">
+              <div className="flex flex-col gap-3 border-b border-(--rule) pb-3">
+                <div className="flex items-center justify-between">
+                  <span className="font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-(--cobalt)">
+                    ROBUSTNESS ANALYSIS
+                  </span>
+                  <Activity size={16} className="text-(--ink-soft)" />
+                </div>
+                <h3 className="font-display text-[22px] text-(--ink) m-0">
+                  Strength Degradation Curves (F1)
                 </h3>
+
+                {/* Wrapping Transform Selector Stickers */}
+                <div className="flex items-center gap-1.5 flex-wrap pt-1">
+                  {availableTransforms.map((tr) => {
+                    const isSelected = tr === selectedTransform;
+                    return (
+                      <button
+                        key={tr}
+                        type="button"
+                        onClick={() => {
+                          playTick();
+                          setSelectedTransform(tr);
+                        }}
+                        className={`px-2.5 py-1 rounded-sm font-mono text-[10px] font-bold uppercase transition-all ${
+                          isSelected
+                            ? "bg-(--ink) text-(--paper) shadow-hard-sm"
+                            : "bg-(--paper) text-(--ink-soft) border border-(--rule) hover:text-(--ink)"
+                        }`}
+                      >
+                        {tr}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
 
-              {availableTransforms.length > 0 && (
-                <SegmentedControl
-                  size="sm"
-                  options={availableTransforms.map((t) => ({ value: t, label: t }))}
-                  value={selectedTransform}
-                  onChange={setSelectedTransform}
-                />
-              )}
-            </div>
-
-            <div className="h-64 w-full pt-4">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={strengthCurveData}>
-                  <CartesianGrid stroke="var(--apple-separator)" strokeDasharray="3 3" vertical={false} />
-                  <XAxis
-                    dataKey="strength"
-                    tick={{ fill: "var(--apple-secondary-label)", fontSize: 12 }}
-                    axisLine={{ stroke: "var(--apple-separator)" }}
-                    tickLine={false}
-                  />
-                  <YAxis
-                    domain={[0, 1]}
-                    tick={{ fill: "var(--apple-secondary-label)", fontSize: 12 }}
-                    axisLine={{ stroke: "var(--apple-separator)" }}
-                    tickLine={false}
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "var(--apple-card)",
-                      borderColor: "var(--apple-separator)",
-                      borderRadius: "12px",
-                      color: "var(--apple-label)",
-                      fontSize: "12px",
-                    }}
-                  />
-                  <Legend wrapperStyle={{ fontSize: "12px", paddingTop: "8px" }} />
-                  {Object.keys(methodColors).map((m) => (
-                    <Line
-                      key={m}
-                      type="monotone"
-                      dataKey={m}
-                      stroke={methodColors[m]}
-                      strokeWidth={2}
-                      dot={{ r: 3 }}
-                      activeDot={{ r: 5 }}
+              <div className="h-64 w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={strengthCurveData}>
+                    <XAxis
+                      dataKey="strength"
+                      stroke="var(--ink-soft)"
+                      tick={{ fill: "var(--ink)", fontSize: 11, fontFamily: "Space Mono" }}
                     />
-                  ))}
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          </Card>
+                    <YAxis
+                      domain={[0, 1]}
+                      stroke="var(--ink-soft)"
+                      tick={{ fill: "var(--ink)", fontSize: 11, fontFamily: "Space Mono" }}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "var(--paper)",
+                        borderColor: "var(--rule)",
+                        borderRadius: "8px",
+                        fontFamily: "Space Mono",
+                        fontSize: "12px",
+                      }}
+                    />
+                    <Legend wrapperStyle={{ fontSize: "11px", fontFamily: "Space Mono" }} />
+                    <Line type="monotone" dataKey="phash" stroke="var(--ink)" strokeWidth={2} dot={{ r: 3 }} />
+                    <Line type="monotone" dataKey="dhash" stroke="var(--ink-soft)" strokeWidth={2} dot={{ r: 3 }} />
+                    <Line type="monotone" dataKey="clip" stroke="var(--vermilion)" strokeWidth={2} dot={{ r: 3 }} />
+                    <Line type="monotone" dataKey="dino" stroke="var(--ochre)" strokeWidth={2} dot={{ r: 3 }} />
+                    <Line type="monotone" dataKey="cascade" stroke="var(--cobalt)" strokeWidth={3} strokeDasharray="3 3" dot={{ r: 4 }} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </PaperCard>
 
-          {/* Latency Comparison Chart */}
-          <Card className="space-y-4">
-            <div className="flex items-center gap-2">
-              <BarChart3 className="w-5 h-5 text-[var(--apple-accent)] stroke-[1.75]" />
-              <h3 className="text-title-3 font-semibold text-[var(--apple-label)]">
-                Median Latency Comparison
-              </h3>
-            </div>
+            {/* Latency Comparison BarChart */}
+            <PaperCard important className="flex flex-col gap-4">
+              <div className="flex items-center justify-between border-b border-(--rule) pb-3">
+                <div>
+                  <span className="font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-(--ochre)">
+                    COMPUTATION PROFILE
+                  </span>
+                  <h3 className="font-display text-[22px] text-(--ink) m-0">
+                    Latency Comparison
+                  </h3>
+                </div>
 
-            <div className="h-64 w-full pt-4">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={latencyData}>
-                  <CartesianGrid stroke="var(--apple-separator)" strokeDasharray="3 3" vertical={false} />
-                  <XAxis
-                    dataKey="method"
-                    tick={{ fill: "var(--apple-secondary-label)", fontSize: 12 }}
-                    axisLine={{ stroke: "var(--apple-separator)" }}
-                    tickLine={false}
-                  />
-                  <YAxis
-                    scale="log"
-                    domain={["auto", "auto"]}
-                    tick={{ fill: "var(--apple-secondary-label)", fontSize: 12 }}
-                    axisLine={{ stroke: "var(--apple-separator)" }}
-                    tickLine={false}
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "var(--apple-card)",
-                      borderColor: "var(--apple-separator)",
-                      borderRadius: "12px",
-                      color: "var(--apple-label)",
-                      fontSize: "12px",
+                {/* Scale Toggle: Linear / Log */}
+                <div className="flex items-center p-0.5 bg-(--paper) border border-(--rule) rounded-full font-mono text-[11px]">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      playTick();
+                      setLatencyScale("linear");
                     }}
-                    formatter={(val) => [`${val} ms`, "Median Latency"]}
-                  />
-                  <Bar dataKey="latency_ms" fill="var(--apple-accent)" radius={[6, 6, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </Card>
+                    className={`px-2.5 py-0.5 rounded-full uppercase font-bold transition-colors ${
+                      latencyScale === "linear"
+                        ? "bg-(--ink) text-(--paper)"
+                        : "text-(--ink-soft)"
+                    }`}
+                  >
+                    Linear
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      playTick();
+                      setLatencyScale("log");
+                    }}
+                    className={`px-2.5 py-0.5 rounded-full uppercase font-bold transition-colors ${
+                      latencyScale === "log"
+                        ? "bg-(--ink) text-(--paper)"
+                        : "text-(--ink-soft)"
+                    }`}
+                  >
+                    Log
+                  </button>
+                </div>
+              </div>
+
+              <div className="h-64 w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={latencyData}>
+                    <XAxis
+                      dataKey="method"
+                      stroke="var(--ink-soft)"
+                      tick={{ fill: "var(--ink)", fontSize: 11, fontFamily: "Space Mono" }}
+                    />
+                    <YAxis
+                      scale={latencyScale === "log" ? "log" : "auto"}
+                      domain={latencyScale === "log" ? [0.01, "auto"] : [0, "auto"]}
+                      stroke="var(--ink-soft)"
+                      tick={{ fill: "var(--ink)", fontSize: 11, fontFamily: "Space Mono" }}
+                      unit=" ms"
+                    />
+                    <Tooltip
+                      formatter={(val: any, _name: any, item: any) => [
+                        `${item?.payload?.displayLatency ?? val} ms`,
+                        "Latency",
+                      ]}
+                      contentStyle={{
+                        backgroundColor: "var(--paper)",
+                        borderColor: "var(--rule)",
+                        borderRadius: "8px",
+                        fontFamily: "Space Mono",
+                        fontSize: "12px",
+                      }}
+                    />
+                    <Bar dataKey="latency" fill="var(--cobalt)" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </PaperCard>
+          </div>
+
+          {/* Client-Side Web Worker ROC and PR Curves */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* ROC Curve Chart */}
+            <PaperCard important className="flex flex-col gap-4">
+              <div className="flex items-center justify-between border-b border-(--rule) pb-3">
+                <div>
+                  <span className="font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-(--cobalt)">
+                    DISCRIMINATION ABILITY
+                  </span>
+                  <h3 className="font-display text-[22px] text-(--ink) m-0">
+                    ROC Curves (True vs. False Positive)
+                  </h3>
+                </div>
+                <Zap size={16} className="text-(--ink-soft)" />
+              </div>
+
+              {isWorkerCalculating ? (
+                <div className="h-64 flex items-center justify-center font-mono text-[13px] text-(--ink-soft) animate-pulse">
+                  Computing ROC curves in Web Worker...
+                </div>
+              ) : workerError ? (
+                <div className="h-64 flex items-center justify-center font-mono text-[13px] text-(--vermilion)">
+                  {workerError}
+                </div>
+              ) : rocPrData ? (
+                <div className="h-64 w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <ComposedChart data={rocPrData.rocCurve}>
+                      <XAxis
+                        dataKey="x"
+                        domain={[0, 1]}
+                        type="number"
+                        stroke="var(--ink-soft)"
+                        tick={{ fill: "var(--ink)", fontSize: 11, fontFamily: "Space Mono" }}
+                        label={{ value: "FPR", position: "insideBottomRight", offset: -5, fill: "var(--ink)", fontSize: 10 }}
+                      />
+                      <YAxis
+                        domain={[0, 1]}
+                        stroke="var(--ink-soft)"
+                        tick={{ fill: "var(--ink)", fontSize: 11, fontFamily: "Space Mono" }}
+                        label={{ value: "TPR", angle: -90, position: "insideLeft", fill: "var(--ink)", fontSize: 10 }}
+                      />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: "var(--paper)",
+                          borderColor: "var(--rule)",
+                          borderRadius: "8px",
+                          fontFamily: "Space Mono",
+                          fontSize: "12px",
+                        }}
+                      />
+                      <Legend wrapperStyle={{ fontSize: "10px", fontFamily: "Space Mono" }} />
+                      <Line type="monotone" dataKey="phash" stroke="var(--ink)" dot={false} strokeWidth={2} name={`pHash (${rocPrData.aucByMethod.phash?.rocAuc ?? 0})`} />
+                      <Line type="monotone" dataKey="dhash" stroke="var(--ink-soft)" dot={false} strokeWidth={2} name={`dHash (${rocPrData.aucByMethod.dhash?.rocAuc ?? 0})`} />
+                      <Line type="monotone" dataKey="clip" stroke="var(--vermilion)" dot={false} strokeWidth={2} name={`CLIP (${rocPrData.aucByMethod.clip?.rocAuc ?? 0})`} />
+                      <Line type="monotone" dataKey="dino" stroke="var(--ochre)" dot={false} strokeWidth={2} name={`DINOv2 (${rocPrData.aucByMethod.dino?.rocAuc ?? 0})`} />
+                      {rocPrData.cascadePoint && (
+                        <Scatter
+                          data={[{ x: rocPrData.cascadePoint.fpr, y: rocPrData.cascadePoint.tpr }]}
+                          fill="var(--cobalt)"
+                          name="Cascade Point"
+                        />
+                      )}
+                    </ComposedChart>
+                  </ResponsiveContainer>
+                </div>
+              ) : null}
+            </PaperCard>
+
+            {/* Precision-Recall Curve Chart */}
+            <PaperCard important className="flex flex-col gap-4">
+              <div className="flex items-center justify-between border-b border-(--rule) pb-3">
+                <div>
+                  <span className="font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-(--sage)">
+                    RETRIEVAL ACCURACY
+                  </span>
+                  <h3 className="font-display text-[22px] text-(--ink) m-0">
+                    Precision-Recall Curves
+                  </h3>
+                </div>
+                <TrendingUp size={16} className="text-(--ink-soft)" />
+              </div>
+
+              {isWorkerCalculating ? (
+                <div className="h-64 flex items-center justify-center font-mono text-[13px] text-(--ink-soft) animate-pulse">
+                  Computing PR curves in Web Worker...
+                </div>
+              ) : workerError ? (
+                <div className="h-64 flex items-center justify-center font-mono text-[13px] text-(--vermilion)">
+                  {workerError}
+                </div>
+              ) : rocPrData ? (
+                <div className="h-64 w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <ComposedChart data={rocPrData.prCurve}>
+                      <XAxis
+                        dataKey="x"
+                        domain={[0, 1]}
+                        type="number"
+                        stroke="var(--ink-soft)"
+                        tick={{ fill: "var(--ink)", fontSize: 11, fontFamily: "Space Mono" }}
+                        label={{ value: "Recall", position: "insideBottomRight", offset: -5, fill: "var(--ink)", fontSize: 10 }}
+                      />
+                      <YAxis
+                        domain={[0, 1]}
+                        stroke="var(--ink-soft)"
+                        tick={{ fill: "var(--ink)", fontSize: 11, fontFamily: "Space Mono" }}
+                        label={{ value: "Precision", angle: -90, position: "insideLeft", fill: "var(--ink)", fontSize: 10 }}
+                      />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: "var(--paper)",
+                          borderColor: "var(--rule)",
+                          borderRadius: "8px",
+                          fontFamily: "Space Mono",
+                          fontSize: "12px",
+                        }}
+                      />
+                      <Legend wrapperStyle={{ fontSize: "10px", fontFamily: "Space Mono" }} />
+                      <Line type="monotone" dataKey="phash" stroke="var(--ink)" dot={false} strokeWidth={2} name={`pHash PR (${rocPrData.aucByMethod.phash?.prAuc ?? 0})`} />
+                      <Line type="monotone" dataKey="dhash" stroke="var(--ink-soft)" dot={false} strokeWidth={2} name={`dHash PR (${rocPrData.aucByMethod.dhash?.prAuc ?? 0})`} />
+                      <Line type="monotone" dataKey="clip" stroke="var(--vermilion)" dot={false} strokeWidth={2} name={`CLIP PR (${rocPrData.aucByMethod.clip?.prAuc ?? 0})`} />
+                      <Line type="monotone" dataKey="dino" stroke="var(--ochre)" dot={false} strokeWidth={2} name={`DINOv2 PR (${rocPrData.aucByMethod.dino?.prAuc ?? 0})`} />
+                      {rocPrData.cascadePoint && (
+                        <Scatter
+                          data={[{ x: rocPrData.cascadePoint.recall, y: rocPrData.cascadePoint.precision }]}
+                          fill="var(--cobalt)"
+                          name="Cascade Operating Point"
+                        />
+                      )}
+                    </ComposedChart>
+                  </ResponsiveContainer>
+                </div>
+              ) : null}
+            </PaperCard>
+          </div>
         </div>
       )}
 
-      {/* ROC & PR Curve Section */}
-      {rocPrData && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* ROC Curves */}
-          <Card className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Activity className="w-5 h-5 text-[var(--apple-accent)] stroke-[1.75]" />
-                <h3 className="text-title-3 font-semibold text-[var(--apple-label)]">
-                  Receiver Operating Characteristic (ROC)
-                </h3>
-              </div>
-              <span className="text-caption text-[var(--apple-secondary-label)]">
-                FPR vs. TPR
-              </span>
-            </div>
-
-            <div className="h-72 w-full pt-4">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={rocPrData.rocCurve}>
-                  <CartesianGrid stroke="var(--apple-separator)" strokeDasharray="3 3" vertical={false} />
-                  <XAxis
-                    dataKey="x"
-                    type="number"
-                    domain={[0, 1]}
-                    tick={{ fill: "var(--apple-secondary-label)", fontSize: 12 }}
-                    axisLine={{ stroke: "var(--apple-separator)" }}
-                    tickLine={false}
-                    name="False Positive Rate"
-                  />
-                  <YAxis
-                    domain={[0, 1]}
-                    tick={{ fill: "var(--apple-secondary-label)", fontSize: 12 }}
-                    axisLine={{ stroke: "var(--apple-separator)" }}
-                    tickLine={false}
-                    name="True Positive Rate"
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "var(--apple-card)",
-                      borderColor: "var(--apple-separator)",
-                      borderRadius: "12px",
-                      color: "var(--apple-label)",
-                      fontSize: "12px",
-                    }}
-                  />
-                  <Legend
-                    wrapperStyle={{ fontSize: "11px", paddingTop: "8px" }}
-                    formatter={(val) => {
-                      const auc = rocPrData.aucByMethod[val]?.rocAuc ?? 0;
-                      return `${val} (AUC ${auc.toFixed(3)})`;
-                    }}
-                  />
-                  {Object.keys(methodColors)
-                    .filter((m) => m !== "cascade")
-                    .map((m) => (
-                      <Line
-                        key={m}
-                        type="monotone"
-                        dataKey={m}
-                        stroke={methodColors[m]}
-                        strokeWidth={1.75}
-                        dot={false}
-                      />
-                    ))}
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          </Card>
-
-          {/* PR Curves */}
-          <Card className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Activity className="w-5 h-5 text-[var(--apple-accent)] stroke-[1.75]" />
-                <h3 className="text-title-3 font-semibold text-[var(--apple-label)]">
-                  Precision-Recall (PR) Curves
-                </h3>
-              </div>
-              <span className="text-caption text-[var(--apple-secondary-label)]">
-                Recall vs. Precision
-              </span>
-            </div>
-
-            <div className="h-72 w-full pt-4">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={rocPrData.prCurve}>
-                  <CartesianGrid stroke="var(--apple-separator)" strokeDasharray="3 3" vertical={false} />
-                  <XAxis
-                    dataKey="x"
-                    type="number"
-                    domain={[0, 1]}
-                    tick={{ fill: "var(--apple-secondary-label)", fontSize: 12 }}
-                    axisLine={{ stroke: "var(--apple-separator)" }}
-                    tickLine={false}
-                    name="Recall"
-                  />
-                  <YAxis
-                    domain={[0, 1]}
-                    tick={{ fill: "var(--apple-secondary-label)", fontSize: 12 }}
-                    axisLine={{ stroke: "var(--apple-separator)" }}
-                    tickLine={false}
-                    name="Precision"
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "var(--apple-card)",
-                      borderColor: "var(--apple-separator)",
-                      borderRadius: "12px",
-                      color: "var(--apple-label)",
-                      fontSize: "12px",
-                    }}
-                  />
-                  <Legend
-                    wrapperStyle={{ fontSize: "11px", paddingTop: "8px" }}
-                    formatter={(val) => {
-                      const auc = rocPrData.aucByMethod[val]?.prAuc ?? 0;
-                      return `${val} (AUC ${auc.toFixed(3)})`;
-                    }}
-                  />
-                  {Object.keys(methodColors)
-                    .filter((m) => m !== "cascade")
-                    .map((m) => (
-                      <Line
-                        key={m}
-                        type="monotone"
-                        dataKey={m}
-                        stroke={methodColors[m]}
-                        strokeWidth={1.75}
-                        dot={false}
-                      />
-                    ))}
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          </Card>
-        </div>
-      )}
+      {/* Marquee */}
+      <Marquee />
     </div>
   );
 };

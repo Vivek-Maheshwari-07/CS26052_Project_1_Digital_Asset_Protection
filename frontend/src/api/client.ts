@@ -85,11 +85,11 @@ async function handleResponse<T>(res: Response): Promise<T> {
   const code = errorBody?.error || (res.status === 404 ? "not_found" : "error");
   const message = errorBody?.message || res.statusText || `HTTP ${res.status}`;
 
-  if (res.status === 409 && code === "near_duplicate") {
+  if (res.status === 409) {
     throw new ApiError(
       message,
       409,
-      "near_duplicate",
+      code,
       retryAfter,
       errorBody as unknown as ConflictResponse,
     );
@@ -115,6 +115,9 @@ export async function registerImage(
 
   const res = await fetch("/api/register", {
     method: "POST",
+    headers: {
+      "X-Filename": encodeURIComponent(file.name || ""),
+    },
     body: formData,
   });
 
@@ -127,6 +130,9 @@ export async function verifyImage(file: File): Promise<VerifyResponse> {
 
   const res = await fetch("/api/verify", {
     method: "POST",
+    headers: {
+      "X-Filename": encodeURIComponent(file.name || ""),
+    },
     body: formData,
   });
 
@@ -143,6 +149,9 @@ export async function verifyImageDeep(
 
   const res = await fetch("/api/verify/deep", {
     method: "POST",
+    headers: {
+      "X-Filename": encodeURIComponent(file.name || ""),
+    },
     body: formData,
   });
 
@@ -194,3 +203,6 @@ export async function getBenchmarkResultsCsv(runId?: string): Promise<string> {
   }
   return res.text();
 }
+
+export const getImageRecord = getRegistrationRecord;
+export const fetchBenchmarkResultsCsv = getBenchmarkResultsCsv;

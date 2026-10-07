@@ -1,83 +1,61 @@
 import React from "react";
-import { CheckCircle2, XCircle, AlertTriangle, Info, Minus } from "lucide-react";
-
-export type StatusVariant = "success" | "warning" | "danger" | "neutral" | "accent";
+import { CheckCircle2, AlertTriangle, XCircle, Info } from "lucide-react";
 
 export interface StatusPillProps {
-  status: StatusVariant | "pass" | "fail" | "escalated" | "none" | "skipped";
+  status?: "pass" | "escalated" | "fail" | "neutral";
+  variant?: "success" | "warning" | "danger" | "neutral" | "info";
   label?: string;
+  children?: React.ReactNode;
   className?: string;
-  size?: "sm" | "md";
 }
 
 export const StatusPill: React.FC<StatusPillProps> = ({
   status,
+  variant,
   label,
+  children,
   className = "",
-  size = "md",
 }) => {
-  let variant: StatusVariant = "neutral";
-  let defaultLabel = "Neutral";
-  let IconComponent = Info;
+  // Normalize status
+  const normalized =
+    status ||
+    (variant === "success"
+      ? "pass"
+      : variant === "warning"
+      ? "escalated"
+      : variant === "danger"
+      ? "fail"
+      : "neutral");
 
-  switch (status) {
-    case "success":
-    case "pass":
-      variant = "success";
-      defaultLabel = "Pass";
-      IconComponent = CheckCircle2;
-      break;
-    case "warning":
-    case "escalated":
-      variant = "warning";
-      defaultLabel = "Escalated";
-      IconComponent = AlertTriangle;
-      break;
-    case "danger":
-    case "fail":
-      variant = "danger";
-      defaultLabel = "Fail";
-      IconComponent = XCircle;
-      break;
-    case "accent":
-      variant = "accent";
-      defaultLabel = "Active";
-      IconComponent = Info;
-      break;
-    case "skipped":
-    case "none":
-    case "neutral":
-    default:
-      variant = "neutral";
-      defaultLabel = status === "skipped" ? "Skipped" : "—";
-      IconComponent = Minus;
-      break;
-  }
-
-  const textToDisplay = label ?? defaultLabel;
-
-  let bgTextStyles = "bg-[var(--apple-neutral-subtle)] text-[var(--apple-neutral)]";
-  if (variant === "success") {
-    bgTextStyles = "bg-[var(--apple-success-subtle)] text-[var(--apple-success)]";
-  } else if (variant === "warning") {
-    bgTextStyles = "bg-[var(--apple-warning-subtle)] text-[var(--apple-warning)]";
-  } else if (variant === "danger") {
-    bgTextStyles = "bg-[var(--apple-danger-subtle)] text-[var(--apple-danger)]";
-  } else if (variant === "accent") {
-    bgTextStyles = "bg-[var(--apple-accent-subtle)] text-[var(--apple-accent)]";
-  }
-
-  const sizeStyles =
-    size === "sm"
-      ? "px-2 py-0.5 text-caption gap-1"
-      : "px-2.5 py-1 text-footnote gap-1.5";
+  const config = {
+    pass: {
+      icon: <CheckCircle2 size={13} strokeWidth={2.5} className="shrink-0" />,
+      text: label || children || "Pass",
+      classes: "bg-(--sage)/15 text-(--sage) border border-(--sage)/30",
+    },
+    escalated: {
+      icon: <AlertTriangle size={13} strokeWidth={2.5} className="shrink-0" />,
+      text: label || children || "Escalated",
+      classes: "bg-(--ochre)/20 text-(--ink) border border-(--ochre)",
+    },
+    fail: {
+      icon: <XCircle size={13} strokeWidth={2.5} className="shrink-0" />,
+      text: label || children || "Fail",
+      classes: "bg-(--vermilion)/15 text-(--vermilion) border border-(--vermilion)/30",
+    },
+    neutral: {
+      icon: <Info size={13} strokeWidth={2.5} className="shrink-0" />,
+      text: label || children || "Info",
+      classes: "bg-(--paper) text-(--ink-soft) border border-(--rule)",
+    },
+  }[normalized];
 
   return (
     <span
-      className={`inline-flex items-center font-medium rounded-full ${bgTextStyles} ${sizeStyles} ${className}`}
+      className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full font-mono text-[11px] font-bold tracking-wider uppercase select-none ${config.classes} ${className}`}
     >
-      <IconComponent className={size === "sm" ? "w-3.5 h-3.5 stroke-[1.75]" : "w-4 h-4 stroke-[1.75]"} />
-      <span>{textToDisplay}</span>
+      {config.icon}
+      <span>{config.text}</span>
     </span>
   );
 };

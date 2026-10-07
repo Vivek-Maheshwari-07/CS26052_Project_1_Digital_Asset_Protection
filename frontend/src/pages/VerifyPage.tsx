@@ -1,400 +1,363 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { formatErrorMessage, verifyImage } from "../api/client";
-import type {
-  Candidate,
-  EmbeddingStage,
-  HashStage,
-  Sha256Stage,
-  VerifyResponse,
-} from "../api/types";
+import { Link } from "react-router-dom";
+import { verifyImage } from "../api/client";
+import type { VerifyResponse } from "../api/types";
+import { useQueryImage } from "../context/QueryImageContext";
 import { ImageDropzone } from "../components/ImageDropzone";
-import { useQueryImage } from "../context/useQueryImage";
-import { Button } from "../components/ui/Button";
-import { Card } from "../components/ui/Card";
-import { DecidedByBadge } from "../components/ui/DecidedByBadge";
-import { StatusPill } from "../components/ui/StatusPill";
+import { PillButton } from "../components/ui/PillButton";
+import { Kicker } from "../components/ui/Kicker";
+import { Sticker } from "../components/ui/Sticker";
+import { Seal } from "../components/ui/Seal";
+import { Stamp } from "../components/ui/Stamp";
+import { Marquee } from "../components/ui/Marquee";
+import { BackgroundCircle } from "../components/ui/BackgroundCircle";
+import { TicketStub } from "../components/ui/TicketStub";
+import { FramedImage } from "../components/ui/FramedImage";
 import { HammingPanel } from "../components/ui/HammingPanel";
 import { CosinePanel } from "../components/ui/CosinePanel";
-import { ShieldCheck, ShieldAlert, ArrowRight, User, Calendar, Clock, AlertCircle } from "lucide-react";
+import { InsetGroupedList } from "../components/ui/InsetGroupedList";
+import { DecidedByBadge } from "../components/ui/DecidedByBadge";
+import { AlertCircle, ArrowRight, RefreshCw } from "lucide-react";
+import { playMatchChime, playNoMatchThud, playTick } from "../utils/sound";
 
 export const VerifyPage: React.FC = () => {
-  const navigate = useNavigate();
-  const { setQueryData } = useQueryImage();
-
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [loading, setLoading] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [verifyResult, setVerifyResult] = useState<VerifyResponse | null>(null);
+  const { setVerificationData } = useQueryImage();
 
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedFile) return;
+    if (!selectedFile) {
+      setErrorMsg("Please upload an image to verify.");
+      return;
+    }
 
-    setLoading(true);
+    setIsLoading(true);
     setErrorMsg(null);
     setVerifyResult(null);
 
     try {
-      const res = await verifyImage(selectedFile);
-      setVerifyResult(res);
-      setQueryData(selectedFile, res);
+      const response = await verifyImage(selectedFile);
+      setVerifyResult(response);
+      if (setVerificationData) {
+        setVerificationData(selectedFile, response);
+      }
+
+      if (response.verdict === "match") {
+        playMatchChime();
+      } else {
+        playNoMatchThud();
+      }
     } catch (err: unknown) {
-      setErrorMsg(formatErrorMessage(err));
+      if (err instanceof Error) {
+        setErrorMsg(err.message);
+      } else {
+        setErrorMsg("Verification failed due to an unexpected error.");
+      }
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
-  const shaStage =
-    verifyResult?.stages.find((s): s is Sha256Stage => s.stage === "sha256") || null;
-  const hashStage =
-    verifyResult?.stages.find((s): s is HashStage => s.stage === "hash") || null;
-  const embStage =
-    verifyResult?.stages.find((s): s is EmbeddingStage => s.stage === "embedding") || null;
-
-  const evidenceThresholds = verifyResult?.thresholds?.evidence || {
-    phash: 8,
-    dhash: 8,
-    ahash: 8,
-    whash: 8,
-    dino: 0.9,
-    clip: 0.9,
+  const handleReset = () => {
+    playTick();
+    setVerifyResult(null);
+    setSelectedFile(null);
+    setErrorMsg(null);
   };
-
-  const handleOpenEvidence = (candidateId: string) => {
-    if (!verifyResult) return;
-    navigate(`/evidence/${verifyResult.verification_id}?candidate=${encodeURIComponent(candidateId)}`);
-  };
-
-  const isMatch = verifyResult?.verdict === "match";
 
   return (
-    <div className="max-w-[1080px] mx-auto px-4 sm:px-6 py-10 space-y-8 animate-fadeIn">
-      {/* Page Header */}
-      <div>
-        <h1 className="text-large-title text-[var(--apple-label)] tracking-tight">
-          Verify Query Asset
-        </h1>
-        <p className="text-subheadline text-[var(--apple-secondary-label)] mt-1">
-          Perform multi-stage cascade evaluation across exact SHA-256, perceptual hashes, and deep embeddings.
-        </p>
-      </div>
+    <div className="relative min-w-0 max-w-[1080px] mx-auto px-4 pt-24 pb-16 flex flex-col gap-12 z-10">
+      <BackgroundCircle />
 
-      {/* Error Alert */}
-      {errorMsg && (
-        <div
-          role="alert"
-          aria-live="polite"
-          className="p-4 rounded-[14px] bg-[var(--apple-danger-subtle)] border border-[var(--apple-danger)]/20 flex items-center gap-3 text-body text-[var(--apple-danger)]"
-        >
-          <AlertCircle className="w-5 h-5 shrink-0 stroke-[1.75]" />
-          <span>{errorMsg}</span>
+      {/* Editorial HERO */}
+      <section className="relative flex flex-col gap-6 pt-4 pb-8 min-h-[50vh] justify-center">
+        <div className="flex items-center gap-3 flex-wrap">
+          <Kicker>● 3-STAGE HYBRID CASCADE PROVENANCE</Kicker>
+          <Sticker variant="cobalt" rotate={1}>
+            PROVNET VERIFY
+          </Sticker>
         </div>
-      )}
 
-      {/* Upload Query Asset Card */}
-      <Card>
-        <form onSubmit={handleVerify} className="space-y-6">
-          <div className="space-y-2">
-            <label className="text-headline text-[var(--apple-label)] block">
-              Query Image to Investigate
+        <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="flex flex-col gap-3 max-w-2xl">
+            <h1 className="font-display text-[clamp(44px,8vw,96px)] leading-[0.95] tracking-[-0.02em] text-(--ink) m-0 font-normal">
+              Verify an <span className="italic text-(--cobalt)">image</span>.
+            </h1>
+            <p className="text-[18px] text-(--ink-soft) max-w-[34ch] leading-relaxed m-0">
+              Test images across the 3-stage cascade: exact SHA-256, 4x perceptual hashes, and deep embeddings.
+            </p>
+          </div>
+
+          {/* Overlapping Rotating Seal */}
+          <div className="hidden md:block self-center lg:-ml-12">
+            <Seal size={140} />
+          </div>
+        </div>
+      </section>
+
+      {/* Upload Form */}
+      {!verifyResult && (
+        <form
+          onSubmit={handleVerify}
+          className="flex flex-col gap-8 bg-(--paper-2) border border-(--rule) rounded-[24px] p-6 md:p-10 shadow-hard relative z-10"
+        >
+          <div className="flex flex-col gap-2">
+            <label className="font-mono text-[12px] font-bold uppercase tracking-[0.12em] text-(--ink-soft)">
+              QUERY IMAGE FILE
             </label>
             <ImageDropzone
               selectedFile={selectedFile}
-              onFileSelected={setSelectedFile}
-              maxUploadMb={10}
+              onFileSelect={setSelectedFile}
+              disabled={isLoading}
             />
           </div>
 
-          <div className="pt-2 flex justify-end">
-            <Button
-              type="submit"
-              variant="primary"
-              size="lg"
-              disabled={!selectedFile || loading}
-              loading={loading}
-              icon={<ShieldCheck className="w-4 h-4 stroke-[1.75]" />}
-            >
-              Run Verification
-            </Button>
-          </div>
-        </form>
-      </Card>
-
-      {/* Progress & Cascade Pipeline Status */}
-      {(loading || verifyResult) && (
-        <Card className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-footnote font-semibold uppercase tracking-wider text-[var(--apple-secondary-label)]">
-              Cascade Execution Pipeline
-            </h3>
-            {verifyResult && (
-              <span className="text-caption text-[var(--apple-secondary-label)] flex items-center gap-1">
-                <Clock className="w-3.5 h-3.5 stroke-[1.75]" />
-                Total Latency: {verifyResult.latency_ms} ms
-              </span>
-            )}
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            {/* Step 1: SHA-256 Exact */}
+          {errorMsg && (
             <div
-              className={`p-4 rounded-[12px] border transition-all ${
-                shaStage?.hit
-                  ? "border-[var(--apple-success)]/40 bg-[var(--apple-success-subtle)]"
-                  : "border-[var(--apple-separator)] bg-[var(--apple-grouped-background)]"
-              }`}
+              className="p-4 bg-(--vermilion)/10 border border-(--vermilion)/30 rounded-xl text-(--vermilion) font-mono text-[13px] flex items-center gap-2"
+              role="alert"
             >
-              <div className="flex items-center justify-between text-subheadline font-semibold mb-1">
-                <span className="text-[var(--apple-label)]">1. SHA-256 Exact</span>
-                {shaStage ? (
-                  <span className="font-mono text-caption text-[var(--apple-secondary-label)] tabular-nums">
-                    {shaStage.latency_ms}ms
-                  </span>
-                ) : (
-                  loading && <span className="w-2 h-2 rounded-full bg-[var(--apple-accent)] animate-ping" />
-                )}
-              </div>
-              <div className="mt-1">
-                {shaStage ? (
-                  shaStage.hit ? (
-                    <StatusPill status="success" label="Exact Match (Exit)" size="sm" />
-                  ) : (
-                    <StatusPill status="neutral" label="Miss (Proceed)" size="sm" />
-                  )
-                ) : (
-                  <span className="text-caption text-[var(--apple-secondary-label)]">Evaluating...</span>
-                )}
-              </div>
-            </div>
-
-            {/* Step 2: Perceptual Hashes */}
-            <div
-              className={`p-4 rounded-[12px] border transition-all ${
-                hashStage?.confident
-                  ? "border-[var(--apple-success)]/40 bg-[var(--apple-success-subtle)]"
-                  : hashStage
-                  ? "border-[var(--apple-warning)]/40 bg-[var(--apple-warning-subtle)]"
-                  : "border-[var(--apple-separator)] bg-[var(--apple-grouped-background)] opacity-60"
-              }`}
-            >
-              <div className="flex items-center justify-between text-subheadline font-semibold mb-1">
-                <span className="text-[var(--apple-label)]">2. Hash Check (SQL)</span>
-                {hashStage ? (
-                  <span className="font-mono text-caption text-[var(--apple-secondary-label)] tabular-nums">
-                    {hashStage.latency_ms}ms
-                  </span>
-                ) : null}
-              </div>
-              <div className="mt-1">
-                {hashStage ? (
-                  hashStage.confident ? (
-                    <StatusPill
-                      status="success"
-                      label={`Confident (d_H=${hashStage.best_phash_hamming ?? "—"})`}
-                      size="sm"
-                    />
-                  ) : (
-                    <StatusPill
-                      status="warning"
-                      label={`Escalated (d_H=${hashStage.best_phash_hamming ?? "—"})`}
-                      size="sm"
-                    />
-                  )
-                ) : (
-                  <StatusPill
-                    status="neutral"
-                    label={shaStage?.hit ? "Skipped" : "Waiting..."}
-                    size="sm"
-                  />
-                )}
-              </div>
-            </div>
-
-            {/* Step 3: Deep Embedding */}
-            <div
-              className={`p-4 rounded-[12px] border transition-all ${
-                embStage?.passed
-                  ? "border-[var(--apple-success)]/40 bg-[var(--apple-success-subtle)]"
-                  : embStage
-                  ? "border-[var(--apple-separator)] bg-[var(--apple-grouped-background)]"
-                  : "border-[var(--apple-separator)] bg-[var(--apple-grouped-background)] opacity-60"
-              }`}
-            >
-              <div className="flex items-center justify-between text-subheadline font-semibold mb-1">
-                <span className="text-[var(--apple-label)]">3. Embedding (DINO/CLIP)</span>
-                {embStage ? (
-                  <span className="font-mono text-caption text-[var(--apple-secondary-label)] tabular-nums">
-                    {embStage.latency_ms}ms
-                  </span>
-                ) : null}
-              </div>
-              <div className="mt-1">
-                {embStage ? (
-                  embStage.passed ? (
-                    <StatusPill
-                      status="success"
-                      label={`Match (cos=${embStage.best_dino_cosine?.toFixed(4) ?? "—"})`}
-                      size="sm"
-                    />
-                  ) : (
-                    <StatusPill
-                      status="fail"
-                      label={`No match (cos=${embStage.best_dino_cosine?.toFixed(4) ?? "—"})`}
-                      size="sm"
-                    />
-                  )
-                ) : (
-                  <StatusPill
-                    status="neutral"
-                    label={verifyResult ? "Skipped (Hash Exit)" : "Waiting..."}
-                    size="sm"
-                  />
-                )}
-              </div>
-            </div>
-          </div>
-        </Card>
-      )}
-
-      {/* Verification Verdict Banner */}
-      {verifyResult && (
-        <Card
-          className={`space-y-4 border-2 ${
-            isMatch
-              ? "border-[var(--apple-success)]/30 bg-[var(--apple-card)]"
-              : "border-[var(--apple-separator)] bg-[var(--apple-card)]"
-          }`}
-        >
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="flex items-center space-x-3">
-              <div
-                className={`w-12 h-12 rounded-[14px] flex items-center justify-center ${
-                  isMatch
-                    ? "bg-[var(--apple-success-subtle)] text-[var(--apple-success)]"
-                    : "bg-[var(--apple-neutral-subtle)] text-[var(--apple-neutral)]"
-                }`}
-              >
-                {isMatch ? (
-                  <ShieldCheck className="w-6 h-6 stroke-[1.75]" />
-                ) : (
-                  <ShieldAlert className="w-6 h-6 stroke-[1.75]" />
-                )}
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h2 className="text-title-1 font-bold tracking-tight text-[var(--apple-label)]">
-                    {isMatch ? "Verdict: Match Found" : "Verdict: No Match Found"}
-                  </h2>
-                  <StatusPill
-                    status={isMatch ? "success" : "neutral"}
-                    label={isMatch ? "Verified Copy" : "Independent Asset"}
-                  />
-                </div>
-                <p className="text-subheadline text-[var(--apple-secondary-label)] mt-0.5">
-                  {isMatch
-                    ? "Query image matched against the registered database."
-                    : "No registered asset satisfied the similarity confidence criteria."}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center space-x-3 self-end sm:self-center">
-              <DecidedByBadge
-                decidedBy={verifyResult.decided_by}
-                verdict={verifyResult.verdict}
-              />
-            </div>
-          </div>
-        </Card>
-      )}
-
-      {/* Candidates List Section (Fix 2.2 applied) */}
-      {verifyResult && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-title-2 font-bold text-[var(--apple-label)]">
-              {isMatch ? "Matched candidates" : "Nearest candidates (no match)"}
-            </h2>
-            <span className="text-footnote text-[var(--apple-secondary-label)]">
-              {verifyResult.candidates.length} candidate{verifyResult.candidates.length === 1 ? "" : "s"} evaluated
-            </span>
-          </div>
-
-          {verifyResult.candidates.length === 0 ? (
-            <Card className="text-center py-12 text-[var(--apple-secondary-label)]">
-              <ShieldAlert className="w-12 h-12 mx-auto mb-3 opacity-40 stroke-[1.75]" />
-              <p className="text-headline text-[var(--apple-label)]">No registered image matched</p>
-              <p className="text-footnote mt-1">
-                The asset has no perceptual hash collisions or deep embedding similarities in the database.
-              </p>
-            </Card>
-          ) : (
-            <div className="space-y-4">
-              {verifyResult.candidates.map((candidate: Candidate) => (
-                <Card key={candidate.image_id} className="space-y-4">
-                  {/* Candidate Header */}
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 hairline-b pb-4">
-                    <div className="flex items-center space-x-3">
-                      <img
-                        src={candidate.thumbnail_url}
-                        alt={`Candidate rank #${candidate.rank}`}
-                        className="w-16 h-16 object-cover rounded-[10px] border border-[var(--apple-separator)] bg-[var(--apple-grouped-background)] shadow-sm"
-                      />
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <span className="px-2 py-0.5 rounded-[6px] bg-[var(--apple-grouped-background)] text-caption font-bold text-[var(--apple-label)] border border-[var(--apple-separator)]">
-                            Rank #{candidate.rank}
-                          </span>
-                          <span className="font-mono text-footnote font-semibold text-[var(--apple-label)]">
-                            {candidate.image_id}
-                          </span>
-                        </div>
-                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-footnote text-[var(--apple-secondary-label)]">
-                          <span className="flex items-center gap-1">
-                            <User className="w-3.5 h-3.5 stroke-[1.75]" />
-                            {candidate.owner_name || "Anonymous"}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <Calendar className="w-3.5 h-3.5 stroke-[1.75]" />
-                            {new Date(candidate.registered_at).toLocaleDateString()}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div>
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        onClick={() => handleOpenEvidence(candidate.image_id)}
-                        icon={<ArrowRight className="w-3.5 h-3.5 stroke-[1.75]" />}
-                      >
-                        Open evidence
-                      </Button>
-                    </div>
-                  </div>
-
-                  {/* Similarity Metrics Panels */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <HammingPanel
-                      scores={candidate.hamming}
-                      thresholds={evidenceThresholds}
-                      title="Classical Hashes (Hamming /64)"
-                    />
-                    <CosinePanel
-                      scores={candidate.cosine}
-                      thresholds={evidenceThresholds}
-                      title="Deep Embeddings (Cosine)"
-                    />
-                  </div>
-                </Card>
-              ))}
+              <AlertCircle size={18} className="shrink-0" />
+              <span>{errorMsg}</span>
             </div>
           )}
-        </div>
+
+          <div className="flex items-center justify-between pt-2 border-t border-(--rule)">
+            <span className="font-mono text-[12px] text-(--ink-soft) hidden sm:inline">
+              Executes exact match, perceptual distance, and deep embeddings.
+            </span>
+            <PillButton
+              type="submit"
+              disabled={isLoading || !selectedFile}
+              className="w-full sm:w-auto"
+            >
+              {isLoading ? "Running cascade..." : "Verify image"}
+            </PillButton>
+          </div>
+        </form>
       )}
+
+      {/* Verification Results */}
+      {verifyResult && (
+        <section
+          className="flex flex-col gap-10 relative z-10 animate-in fade-in zoom-in-95 duration-200"
+          aria-live="polite"
+        >
+          {/* Cascade 3 Ticket Stubs */}
+          {(() => {
+            const stagesArray = Array.isArray(verifyResult.stages) ? verifyResult.stages : [];
+            const stagesObj = !Array.isArray(verifyResult.stages)
+              ? (verifyResult.stages as Record<string, any>)
+              : undefined;
+
+            const shaStage =
+              (stagesArray.find((s) => s.stage === "sha256") as any) ?? stagesObj?.sha256;
+            const hashStage =
+              (stagesArray.find((s) => s.stage === "hash") as any) ?? stagesObj?.hash;
+            const embeddingStage =
+              (stagesArray.find((s) => s.stage === "embedding") as any) ?? stagesObj?.embedding;
+
+            const isShaMatch = Boolean(shaStage?.hit || shaStage?.matched);
+            const isHashSkipped = !hashStage || hashStage?.status === "skipped";
+            const isHashMatch = !isHashSkipped && Boolean(hashStage?.confident || hashStage?.matched);
+            const isEmbeddingSkipped =
+              !embeddingStage || embeddingStage?.status === "skipped";
+            const isEmbeddingMatch =
+              !isEmbeddingSkipped && Boolean(embeddingStage?.passed || embeddingStage?.matched);
+
+            return (
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center justify-between">
+                  <span className="font-mono text-[12px] font-bold uppercase tracking-[0.12em] text-(--ink-soft)">
+                    CASCADE PIPELINE (3 STAGES)
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleReset}
+                    className="inline-flex items-center gap-1 font-mono text-[12px] font-bold uppercase text-(--cobalt) hover:underline"
+                  >
+                    <RefreshCw size={13} />
+                    <span>Verify another</span>
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <TicketStub
+                    number="01"
+                    name="SHA-256 Digest"
+                    status={isShaMatch ? "match" : "no_match"}
+                    latencyMs={shaStage?.latency_ms}
+                    detail={isShaMatch ? "Exact copy found" : "No exact match"}
+                    delayIndex={0}
+                  />
+                  <TicketStub
+                    number="02"
+                    name="Perceptual Hashes"
+                    status={
+                      isHashSkipped
+                        ? "skipped"
+                        : isHashMatch
+                        ? "match"
+                        : "no_match"
+                    }
+                    latencyMs={hashStage?.latency_ms}
+                    detail={
+                      isHashSkipped
+                        ? undefined
+                        : hashStage?.best_phash_hamming != null
+                        ? `best d_H=${hashStage.best_phash_hamming}`
+                        : `${hashStage?.candidates_evaluated ?? 1} candidates evaluated`
+                    }
+                    delayIndex={1}
+                  />
+                  <TicketStub
+                    number="03"
+                    name="Deep Embeddings"
+                    status={
+                      isEmbeddingSkipped
+                        ? "skipped"
+                        : isEmbeddingMatch
+                        ? "match"
+                        : "no_match"
+                    }
+                    latencyMs={embeddingStage?.latency_ms}
+                    detail={
+                      isEmbeddingSkipped
+                        ? undefined
+                        : embeddingStage?.best_dino_cosine != null
+                        ? `cosine=${embeddingStage.best_dino_cosine.toFixed(4)}`
+                        : "DINOv2 + CLIP similarity"
+                    }
+                    delayIndex={2}
+                  />
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* Verdict Banner Row */}
+          <div className="bg-(--paper-2) border-2 border-(--ink) rounded-[24px] p-6 md:p-8 shadow-hard flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="flex items-center gap-6">
+              <Stamp
+                verdict={
+                  verifyResult.verdict === "match"
+                    ? "match"
+                    : "no_match"
+                }
+                size={110}
+              />
+
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <DecidedByBadge decidedBy={verifyResult.decided_by} />
+                  <span className="font-mono text-[12px] text-(--ink-soft) tabular-nums">
+                    Total: {verifyResult.latency_ms.toFixed(1)} ms
+                  </span>
+                </div>
+                <h2 className="font-display text-[32px] md:text-[40px] font-normal text-(--ink) m-0">
+                  {verifyResult.verdict === "match"
+                    ? "Match found."
+                    : "No match found."}
+                </h2>
+                <span className="font-mono text-[13px] text-(--ink-soft)">
+                  Session: {verifyResult.verification_id}
+                </span>
+              </div>
+            </div>
+
+            {/* Inspect Evidence Button */}
+            <Link
+              to={`/evidence/${verifyResult.verification_id}${
+                verifyResult.candidates.length > 0
+                  ? `?candidate=${verifyResult.candidates[0].image_id}`
+                  : ""
+              }`}
+              onClick={() => playTick()}
+              className="inline-flex items-center gap-2 px-6 py-3.5 rounded-full bg-(--cobalt) text-(--paper) font-mono text-[14px] font-bold uppercase tracking-wider shadow-hard-sm hover:bg-(--cobalt)/90 transition-colors no-underline select-none shrink-0"
+            >
+              <span>Inspect Evidence</span>
+              <ArrowRight size={16} />
+            </Link>
+          </div>
+
+          {/* Candidate List */}
+          <div className="flex flex-col gap-6">
+            <div className="flex items-center justify-between border-b border-(--rule) pb-3">
+              <h3 className="font-display text-[26px] font-normal text-(--ink) m-0">
+                {verifyResult.verdict === "match"
+                  ? "Matched candidates"
+                  : "Nearest candidates (no match)"}
+              </h3>
+              <span className="font-mono text-[12px] text-(--ink-soft)">
+                {verifyResult.candidates.length} returned
+              </span>
+            </div>
+
+            {verifyResult.candidates.length === 0 ? (
+              <div className="p-8 text-center bg-(--paper-2) border border-(--rule) rounded-2xl font-mono text-[14px] text-(--ink-soft)">
+                No candidate images met index distance criteria.
+              </div>
+            ) : (
+              <div className="flex flex-col gap-8">
+                {verifyResult.candidates.map((cand) => {
+                  const thumbUrl = `/api/images/${cand.image_id}/file?size=thumb`;
+                  return (
+                    <div
+                      key={cand.image_id}
+                      className="bg-(--paper-2) border border-(--rule) rounded-[24px] p-6 shadow-sm flex flex-col gap-6"
+                    >
+                      {/* Top candidate header & thumbnail */}
+                      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 items-center">
+                        <div className="flex justify-center md:justify-start">
+                          <FramedImage
+                            src={thumbUrl}
+                            alt={`Candidate ${cand.image_id}`}
+                            className="max-h-36"
+                            offset={10}
+                          />
+                        </div>
+
+                        <div className="md:col-span-3">
+                          <InsetGroupedList
+                            items={[
+                              { label: "Rank", value: `#${cand.rank}` },
+                              { label: "Image ID", value: cand.image_id },
+                              { label: "Owner Name", value: cand.owner_name, mono: false },
+                              {
+                                label: "Registered At",
+                                value: new Date(cand.registered_at).toLocaleString(),
+                                mono: false,
+                              },
+                            ]}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Separate Classical & Deep panels */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <HammingPanel
+                          scores={cand.hamming}
+                          thresholds={verifyResult.thresholds?.evidence ?? undefined}
+                        />
+                        <CosinePanel
+                          scores={cand.cosine}
+                          thresholds={verifyResult.thresholds?.evidence ?? undefined}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+
+      {/* Marquee */}
+      <Marquee />
     </div>
   );
 };

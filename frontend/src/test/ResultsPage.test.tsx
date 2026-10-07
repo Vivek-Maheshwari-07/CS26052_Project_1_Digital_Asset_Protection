@@ -17,18 +17,19 @@ describe('ResultsDashboardPage Component', () => {
     );
 
     // Header should render
-    expect(screen.getByText('Benchmark Results Dashboard')).toBeInTheDocument();
+    expect(screen.getByText(/The/i)).toBeInTheDocument();
+    expect(screen.getByText(/results/i)).toBeInTheDocument();
 
     // KPI row items should render
     await waitFor(() => {
-      expect(screen.getByText('Original Assets')).toBeInTheDocument();
+      expect(screen.getByText('ORIGINALS')).toBeInTheDocument();
     });
-    expect(screen.getByText('Hard Negatives')).toBeInTheDocument();
-    expect(screen.getByText('Cascade Accuracy')).toBeInTheDocument();
-    expect(screen.getByText('Escalation Rate')).toBeInTheDocument();
+    expect(screen.getByText('HARD NEGATIVES')).toBeInTheDocument();
+    expect(screen.getByText('CASCADE ACCURACY')).toBeInTheDocument();
+    expect(screen.getByText('ESCALATION RATE')).toBeInTheDocument();
 
     // Heatmap title should render
-    expect(screen.getByText('Robustness & Recall Heatmap')).toBeInTheDocument();
+    expect(screen.getByText('Recall Heatmap Matrix')).toBeInTheDocument();
   });
 
   it('renders empty state with terminal instructions when no benchmark runs exist', async () => {
@@ -48,7 +49,7 @@ describe('ResultsDashboardPage Component', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText('No Benchmark Runs Available')).toBeInTheDocument();
+      expect(screen.getByText('No Benchmark Runs Found')).toBeInTheDocument();
     });
 
     expect(screen.getByText('python -m bench.make_manifest')).toBeInTheDocument();

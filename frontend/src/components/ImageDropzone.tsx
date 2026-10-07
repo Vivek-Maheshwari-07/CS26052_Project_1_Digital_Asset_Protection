@@ -1,70 +1,55 @@
 import React, { useRef, useState } from "react";
-import { UploadCloud, Image as ImageIcon, X, AlertCircle } from "lucide-react";
-import { Button } from "./ui/Button";
+import { Upload, X } from "lucide-react";
+import { playTick } from "../utils/sound";
 
-interface ImageDropzoneProps {
-  onFileSelected: (file: File | null) => void;
+export interface ImageDropzoneProps {
   selectedFile: File | null;
-  maxUploadMb?: number;
+  onFileSelect: (file: File | null) => void;
+  disabled?: boolean;
 }
 
-const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
-const DEFAULT_MAX_MB = 10;
-
 export const ImageDropzone: React.FC<ImageDropzoneProps> = ({
-  onFileSelected,
   selectedFile,
-  maxUploadMb = DEFAULT_MAX_MB,
+  onFileSelect,
+  disabled = false,
 }) => {
   const [isDragOver, setIsDragOver] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const validateAndSetFile = (file: File | null) => {
-    setError(null);
-    if (!file) {
-      if (previewUrl) URL.revokeObjectURL(previewUrl);
-      setPreviewUrl(null);
-      onFileSelected(null);
+  const validateAndSetFile = (file: File) => {
+    setErrorMsg(null);
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+      setErrorMsg("Please select a valid image (JPEG, PNG, or WebP).");
       return;
     }
-
-    if (!ALLOWED_TYPES.includes(file.type)) {
-      setError("Unsupported format. Please select a JPEG, PNG, or WebP image.");
-      onFileSelected(null);
+    // 10MB limit
+    if (file.size > 10 * 1024 * 1024) {
+      setErrorMsg("Image size exceeds 10 MB limit.");
       return;
     }
-
-    const maxBytes = maxUploadMb * 1024 * 1024;
-    if (file.size > maxBytes) {
-      setError(`Image exceeds maximum allowed size of ${maxUploadMb} MB.`);
-      onFileSelected(null);
-      return;
-    }
-
-    if (previewUrl) URL.revokeObjectURL(previewUrl);
-    const newPreview = URL.createObjectURL(file);
-    setPreviewUrl(newPreview);
-    onFileSelected(file);
-  };
-
-  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    setIsDragOver(true);
-  };
-
-  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    setIsDragOver(false);
+    playTick();
+    onFileSelect(file);
   };
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setIsDragOver(false);
+    if (disabled) return;
+
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       validateAndSetFile(e.dataTransfer.files[0]);
     }
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    if (!disabled) setIsDragOver(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragOver(false);
   };
 
   const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -73,98 +58,88 @@ export const ImageDropzone: React.FC<ImageDropzoneProps> = ({
     }
   };
 
-  const handleClear = (e: React.MouseEvent) => {
+  const clearSelection = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (fileInputRef.current) fileInputRef.current.value = "";
-    validateAndSetFile(null);
+    playTick();
+    onFileSelect(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
 
   return (
-    <div className="w-full space-y-2">
+    <div className="w-full">
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileInputChange}
+        accept="image/jpeg,image/png,image/webp"
+        className="hidden"
+        id="image-upload-input"
+        disabled={disabled}
+      />
+
       <div
+        onClick={() => !disabled && fileInputRef.current?.click()}
+        onDrop={handleDrop}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-        onClick={() => fileInputRef.current?.click()}
-        className={`relative border-2 border-dashed rounded-[16px] p-6 text-center cursor-pointer transition-all duration-200 apple-focus ${
+        className={`relative flex flex-col items-center justify-center p-8 md:p-12 border-2 border-dashed rounded-2xl cursor-pointer transition-all duration-200 select-none ${
           isDragOver
-            ? "border-[var(--apple-accent)] bg-[var(--apple-accent-subtle)]"
-            : "border-[var(--apple-separator)] hover:border-[var(--apple-accent)] bg-[var(--apple-grouped-background)]"
-        }`}
+            ? "border-(--cobalt) bg-(--paper-2) scale-[1.01]"
+            : "border-(--ink-soft)/40 bg-(--paper-2)/70 hover:bg-(--paper-2) hover:border-(--ink)"
+        } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
       >
-        <input
-          id="image-upload-input"
-          ref={fileInputRef}
-          type="file"
-          accept="image/jpeg,image/png,image/webp"
-          onChange={handleFileInputChange}
-          className="hidden"
-          aria-label="Upload image"
-        />
-
-        {selectedFile && previewUrl ? (
-          <div className="flex flex-col items-center space-y-3">
-            <div className="relative group max-w-xs rounded-[12px] overflow-hidden border border-[var(--apple-separator)] bg-[var(--apple-card)] shadow-sm">
+        {selectedFile ? (
+          <div className="flex flex-col items-center gap-4 text-center">
+            {/* Preview image */}
+            <div className="relative border-2 border-(--ink) bg-(--paper) shadow-hard-sm">
               <img
-                src={previewUrl}
-                alt="Upload preview"
-                className="max-h-48 object-contain w-full rounded-[12px]"
+                src={URL.createObjectURL(selectedFile)}
+                alt="Selected preview"
+                className="max-h-56 max-w-full object-contain"
               />
               <button
                 type="button"
-                onClick={handleClear}
-                aria-label="Remove image"
-                className="absolute top-2 right-2 p-1.5 rounded-full bg-[var(--apple-modal-bg)] text-[var(--apple-label)] shadow-md hover:opacity-80 transition cursor-pointer"
+                onClick={clearSelection}
+                className="absolute -top-3 -right-3 w-7 h-7 rounded-full bg-(--vermilion) text-(--paper) flex items-center justify-center shadow-xs hover:scale-110 transition-transform"
+                title="Remove image"
+                aria-label="Remove selected image"
               >
-                <X className="w-4 h-4 stroke-[1.75]" />
+                <X size={16} strokeWidth={2.5} />
               </button>
             </div>
-            <div className="text-footnote text-[var(--apple-label)] font-medium">
-              {selectedFile.name}
-              <span className="text-[var(--apple-secondary-label)] ml-2">
-                ({(selectedFile.size / (1024 * 1024)).toFixed(2)} MB)
+
+            <div className="flex flex-col gap-1">
+              <span className="font-mono text-[14px] font-bold text-(--ink) truncate max-w-[280px]">
+                {selectedFile.name}
+              </span>
+              <span className="font-mono text-[12px] text-(--ink-soft)">
+                {(selectedFile.size / (1024 * 1024)).toFixed(2)} MB · {selectedFile.type.replace("image/", "").toUpperCase()}
               </span>
             </div>
-            <span className="text-caption text-[var(--apple-accent)] font-medium">
-              Click or drag to replace image
-            </span>
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center space-y-3 py-4">
-            <div className="w-12 h-12 rounded-full bg-[var(--apple-accent-subtle)] text-[var(--apple-accent)] flex items-center justify-center">
-              {isDragOver ? (
-                <UploadCloud className="w-6 h-6 stroke-[1.75]" />
-              ) : (
-                <ImageIcon className="w-6 h-6 stroke-[1.75]" />
-              )}
+          <div className="flex flex-col items-center gap-3 text-center">
+            <div className="w-12 h-12 rounded-full bg-(--paper) border border-(--rule) flex items-center justify-center text-(--cobalt) shadow-xs">
+              <Upload size={22} strokeWidth={2} />
             </div>
-            <div className="space-y-1">
-              <p className="text-headline font-semibold text-[var(--apple-label)]">
-                Drag and drop your image here
-              </p>
-              <p className="text-footnote text-[var(--apple-secondary-label)]">
-                Supports JPEG, PNG, or WebP (max {maxUploadMb} MB)
-              </p>
+
+            <div className="flex flex-col gap-1">
+              <span className="font-display text-[24px] font-normal text-(--ink)">
+                Drop an image or <span className="text-(--cobalt) italic">browse</span> ↗
+              </span>
+              <span className="font-mono text-[12px] font-bold uppercase tracking-wider text-(--ink-soft)">
+                JPEG · PNG · WEBP · ≤ 10 MB
+              </span>
             </div>
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                fileInputRef.current?.click();
-              }}
-            >
-              Select Image File
-            </Button>
           </div>
         )}
       </div>
 
-      {error && (
-        <div className="flex items-center gap-2 p-3 bg-[var(--apple-danger-subtle)] border border-[var(--apple-danger)]/20 rounded-[12px] text-footnote text-[var(--apple-danger)]">
-          <AlertCircle className="w-4 h-4 shrink-0 stroke-[1.75]" />
-          <span>{error}</span>
+      {errorMsg && (
+        <div className="mt-2 text-center font-mono text-[12px] font-bold text-(--vermilion)">
+          {errorMsg}
         </div>
       )}
     </div>

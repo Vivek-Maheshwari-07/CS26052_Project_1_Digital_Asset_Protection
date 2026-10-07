@@ -1,62 +1,41 @@
 import React from "react";
 
-export interface InsetItem {
-  id?: string;
-  label: React.ReactNode;
+export interface InsetGroupedItem {
+  label: string;
   value: React.ReactNode;
-  isMono?: boolean;
-  action?: React.ReactNode;
+  mono?: boolean;
 }
 
 export interface InsetGroupedListProps {
-  items: InsetItem[];
-  header?: string;
-  footer?: string;
+  items: InsetGroupedItem[];
   className?: string;
 }
 
 export const InsetGroupedList: React.FC<InsetGroupedListProps> = ({
   items,
-  header,
-  footer,
   className = "",
 }) => {
   return (
-    <div className={`space-y-1.5 ${className}`}>
-      {header && (
-        <div className="px-4 text-footnote font-medium text-[var(--apple-secondary-label)] uppercase tracking-wider">
-          {header}
-        </div>
-      )}
-      <div className="bg-[var(--apple-card)] rounded-[16px] border border-[var(--apple-separator)] overflow-hidden shadow-[var(--apple-card-shadow)]">
-        {items.map((item, index) => (
-          <div
-            key={item.id ?? index}
-            className={`flex items-center justify-between px-4 py-3 min-h-[44px] ${
-              index < items.length - 1 ? "hairline-b" : ""
+    <div
+      className={`bg-(--paper-2) border border-(--rule) rounded-2xl overflow-hidden divide-y divide-(--rule) shadow-xs ${className}`}
+    >
+      {items.map((item, index) => (
+        <div
+          key={index}
+          className="flex items-center justify-between px-4 py-3 text-[14px]"
+        >
+          <span className="font-mono text-[12px] font-bold uppercase tracking-wider text-(--ink-soft)">
+            {item.label}
+          </span>
+          <span
+            className={`text-right text-(--ink) select-all max-w-[65%] truncate ${
+              item.mono !== false ? "font-mono tabular-nums text-[13px]" : ""
             }`}
           >
-            <div className="text-subheadline text-[var(--apple-label)] font-normal">
-              {item.label}
-            </div>
-            <div className="flex items-center space-x-2">
-              <div
-                className={`text-subheadline text-[var(--apple-secondary-label)] ${
-                  item.isMono ? "font-mono tabular-nums select-all" : ""
-                }`}
-              >
-                {item.value}
-              </div>
-              {item.action && <div>{item.action}</div>}
-            </div>
-          </div>
-        ))}
-      </div>
-      {footer && (
-        <div className="px-4 text-caption text-[var(--apple-secondary-label)]">
-          {footer}
+            {item.value}
+          </span>
         </div>
-      )}
+      ))}
     </div>
   );
 };

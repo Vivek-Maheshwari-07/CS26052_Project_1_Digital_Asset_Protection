@@ -1,114 +1,122 @@
 import React from "react";
-import type { CosineScores } from "../../api/types";
+import { PaperCard } from "./PaperCard";
 import { StatusPill } from "./StatusPill";
-import { Sparkles, AlertCircle } from "lucide-react";
+import type { CosineScores, EvidenceThresholds } from "../../api/types";
+import { AlertCircle, Sparkles } from "lucide-react";
 
 export interface CosinePanelProps {
   scores: CosineScores;
-  thresholds?: {
-    dino?: number | null;
-    clip?: number | null;
-  };
-  title?: string;
-  loading?: boolean;
+  thresholds?: EvidenceThresholds;
+  isLoading?: boolean;
   error?: string | null;
-  computedOnDemand?: boolean;
+  isOnDemand?: boolean;
   className?: string;
 }
 
 export const CosinePanel: React.FC<CosinePanelProps> = ({
   scores,
-  thresholds = { dino: 0.9, clip: 0.9 },
-  title = "Deep Embeddings (Cosine)",
-  loading = false,
+  thresholds,
+  isLoading = false,
   error = null,
-  computedOnDemand = false,
+  isOnDemand = false,
   className = "",
 }) => {
   const deepList = [
-    { key: "dino" as const, name: "DINOv2 (Vision)", val: scores.dino, thresh: thresholds.dino ?? 0.9 },
-    { key: "clip" as const, name: "CLIP (Multimodal)", val: scores.clip, thresh: thresholds.clip ?? 0.9 },
+    {
+      key: "dino",
+      label: "DINOv2 (ViT-B/14)",
+      val: scores.dino,
+      thresh: thresholds?.dino ?? 0.82,
+    },
+    {
+      key: "clip",
+      label: "CLIP (ViT-B/32)",
+      val: scores.clip,
+      thresh: thresholds?.clip ?? 0.88,
+    },
   ];
 
   return (
-    <div
-      className={`bg-[var(--apple-card)] rounded-[16px] border border-[var(--apple-separator)] p-5 shadow-[var(--apple-card-shadow)] space-y-4 ${className}`}
-    >
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-1.5">
-          <h3 className="text-headline font-semibold text-[var(--apple-label)]">{title}</h3>
-          {computedOnDemand && (
-            <span
-              title="Computed on demand"
-              className="text-[var(--apple-accent)] inline-flex items-center"
-            >
-              <Sparkles className="w-3.5 h-3.5 stroke-[1.75]" />
-            </span>
-          )}
+    <PaperCard className={`flex flex-col justify-between ${className}`}>
+      <div>
+        <div className="flex items-center justify-between border-b border-(--rule) pb-3 mb-4">
+          <div>
+            <div className="font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-(--ochre)">
+              DEEP EMBEDDINGS
+            </div>
+            <h3 className="font-display text-[20px] font-normal text-(--ink) m-0">
+              Cosine Similarity ([-1, 1])
+            </h3>
+          </div>
+          <span className="font-mono text-[11px] text-(--ink-soft) uppercase">
+            Higher is closer
+          </span>
         </div>
-        <span className="text-caption text-[var(--apple-secondary-label)]">Higher is closer</span>
+
+        {error ? (
+          <div className="p-4 bg-(--vermilion)/10 border border-(--vermilion)/30 rounded-xl text-(--vermilion) font-mono text-[12px] flex items-center gap-2">
+            <AlertCircle size={18} className="shrink-0" />
+            <span>{error}</span>
+          </div>
+        ) : isLoading ? (
+          <div className="grid grid-cols-2 gap-3 animate-pulse">
+            <div className="p-4 bg-(--paper) border border-(--rule) rounded-xl h-28 flex flex-col justify-between">
+              <div className="h-3 bg-(--rule) rounded-xs w-16" />
+              <div className="h-7 bg-(--rule) rounded-xs w-24" />
+            </div>
+            <div className="p-4 bg-(--paper) border border-(--rule) rounded-xl h-28 flex flex-col justify-between">
+              <div className="h-3 bg-(--rule) rounded-xs w-16" />
+              <div className="h-7 bg-(--rule) rounded-xs w-24" />
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-3">
+            {deepList.map((item) => {
+              const isComputed = item.val !== null && item.val !== undefined;
+              const isPass = isComputed && item.val! >= item.thresh;
+              return (
+                <div
+                  key={item.key}
+                  className="p-3 bg-(--paper) border border-(--rule) rounded-xl flex flex-col justify-between"
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="font-mono text-[12px] font-bold text-(--ink-soft) uppercase truncate">
+                      {item.label}
+                    </span>
+                    {isComputed ? (
+                      <StatusPill
+                        status={isPass ? "pass" : "fail"}
+                        label={isPass ? "✓ Pass" : "✕ Fail"}
+                      />
+                    ) : (
+                      <StatusPill status="neutral" label="Skipped" />
+                    )}
+                  </div>
+                  <div className="flex items-baseline gap-1 mt-1">
+                    <span className="font-mono tabular-nums text-[26px] font-bold text-(--ink)">
+                      {isComputed ? item.val!.toFixed(4) : "—"}
+                    </span>
+                    <span className="font-mono text-[11px] text-(--ink-soft)">
+                      (≥ {item.thresh.toFixed(2)})
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
-      {error ? (
-        <div className="bg-[var(--apple-danger-subtle)] border border-[var(--apple-danger)]/20 rounded-[12px] p-3 text-caption text-[var(--apple-danger)] flex items-center gap-2">
-          <AlertCircle className="w-4 h-4 shrink-0 stroke-[1.75]" />
-          <span>{error}</span>
-        </div>
-      ) : loading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {[1, 2].map((i) => (
-            <div
-              key={i}
-              className="bg-[var(--apple-grouped-background)] rounded-[12px] p-3 border border-[var(--apple-separator)] animate-pulse space-y-2"
-            >
-              <div className="h-4 bg-[var(--apple-separator)] rounded w-1/2" />
-              <div className="h-8 bg-[var(--apple-separator)] rounded w-3/4" />
-              <div className="h-3 bg-[var(--apple-separator)] rounded w-1/3" />
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {deepList.map((item) => {
-            const hasVal = item.val !== null && item.val !== undefined;
-            const isMatch = hasVal && (item.val as number) >= item.thresh;
-
-            return (
-              <div
-                key={item.key}
-                className="bg-[var(--apple-grouped-background)] rounded-[12px] p-3 border border-[var(--apple-separator)] flex flex-col justify-between"
-              >
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-caption font-medium text-[var(--apple-secondary-label)]">
-                    {item.name}
-                  </span>
-                  {hasVal ? (
-                    <StatusPill
-                      size="sm"
-                      status={isMatch ? "pass" : "fail"}
-                      label={isMatch ? "Pass" : "Fail"}
-                    />
-                  ) : (
-                    <StatusPill size="sm" status="none" label="— not computed" />
-                  )}
-                </div>
-                <div className="text-title-2 font-bold tabular-nums text-[var(--apple-label)]">
-                  {hasVal ? (item.val as number).toFixed(4) : "—"}
-                </div>
-                <div className="text-[11px] text-[var(--apple-secondary-label)] mt-0.5">
-                  Threshold: ≥{item.thresh.toFixed(2)}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {computedOnDemand && !loading && !error && (
-        <p className="text-caption text-[var(--apple-secondary-label)]">
-          Computed on demand: does not change the verdict.
-        </p>
-      )}
-    </div>
+      <div className="mt-4 pt-3 border-t border-(--rule) font-mono text-[11px] text-(--ink-soft) flex items-center justify-between">
+        {isOnDemand ? (
+          <span className="text-(--cobalt) font-semibold flex items-center gap-1">
+            <Sparkles size={13} />
+            Computed on demand: does not change the verdict.
+          </span>
+        ) : (
+          <span>Rule: cosine ≥ threshold qualifies candidate in Stage 3.</span>
+        )}
+      </div>
+    </PaperCard>
   );
 };

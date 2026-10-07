@@ -1,24 +1,23 @@
 import React, { useEffect } from "react";
 import { X } from "lucide-react";
+import { playTick } from "../../utils/sound";
 
 export interface SheetProps {
   isOpen: boolean;
   onClose: () => void;
-  title?: string;
-  subtitle?: string;
+  title: string;
   children: React.ReactNode;
-  footer?: React.ReactNode;
-  maxWidth?: "sm" | "md" | "lg" | "xl";
+  className?: string;
+  size?: "default" | "large";
 }
 
 export const Sheet: React.FC<SheetProps> = ({
   isOpen,
   onClose,
   title,
-  subtitle,
   children,
-  footer,
-  maxWidth = "md",
+  className = "",
+  size = "default",
 }) => {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -26,56 +25,61 @@ export const Sheet: React.FC<SheetProps> = ({
         onClose();
       }
     };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+      window.addEventListener("keydown", handleKeyDown);
+    }
+    return () => {
+      document.body.style.overflow = "";
+      window.removeEventListener("keydown", handleKeyDown);
+    };
   }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
-  let widthClass = "max-w-lg";
-  if (maxWidth === "sm") widthClass = "max-w-md";
-  else if (maxWidth === "lg") widthClass = "max-w-2xl";
-  else if (maxWidth === "xl") widthClass = "max-w-3xl";
+  const maxWidth = size === "large" ? "max-w-3xl" : "max-w-xl";
 
   return (
     <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-(--ink)/60 backdrop-blur-xs"
       role="dialog"
       aria-modal="true"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[var(--apple-dim-backdrop)] transition-opacity duration-300"
-      onClick={onClose}
+      aria-labelledby="sheet-title"
     >
       <div
-        className={`w-full ${widthClass} material-modal rounded-[16px] shadow-2xl overflow-hidden flex flex-col max-h-[88vh] text-[var(--apple-label)] transition-all duration-350 ease-[cubic-bezier(0.25,0.1,0.25,1)]`}
-        onClick={(e) => e.stopPropagation()}
+        className="fixed inset-0"
+        onClick={() => {
+          playTick();
+          onClose();
+        }}
+        aria-hidden="true"
+      />
+      <div
+        className={`relative w-full ${maxWidth} bg-(--paper) border-2 border-(--ink) rounded-2xl shadow-hard-lg overflow-hidden z-10 animate-in fade-in zoom-in-95 duration-200 ${className}`}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 hairline-b">
-          <div>
-            {title && <h2 className="text-headline font-semibold">{title}</h2>}
-            {subtitle && (
-              <p className="text-footnote text-[var(--apple-secondary-label)] mt-0.5">
-                {subtitle}
-              </p>
-            )}
-          </div>
-          <button
-            onClick={onClose}
-            aria-label="Close"
-            className="p-1.5 rounded-full text-[var(--apple-secondary-label)] hover:text-[var(--apple-label)] hover:bg-[var(--apple-grouped-background)] apple-focus cursor-pointer transition-colors"
+        <div className="flex items-center justify-between px-6 py-4 border-b border-(--rule) bg-(--paper-2)">
+          <h2
+            id="sheet-title"
+            className="font-display text-[22px] font-normal text-(--ink) m-0"
           >
-            <X className="w-5 h-5 stroke-[1.75]" />
+            {title}
+          </h2>
+          <button
+            type="button"
+            onClick={() => {
+              playTick();
+              onClose();
+            }}
+            className="w-8 h-8 rounded-full bg-(--paper) border border-(--rule) flex items-center justify-center text-(--ink) hover:bg-(--ink) hover:text-(--paper) transition-colors"
+            aria-label="Close dialog"
+          >
+            <X size={16} strokeWidth={2} />
           </button>
         </div>
 
-        {/* Body */}
-        <div className="p-6 overflow-y-auto flex-1">{children}</div>
-
-        {/* Footer */}
-        {footer && (
-          <div className="flex items-center justify-end px-6 py-3.5 hairline-t bg-[var(--apple-grouped-background)]">
-            {footer}
-          </div>
-        )}
+        {/* Content */}
+        <div className="p-6 max-h-[80vh] overflow-y-auto">{children}</div>
       </div>
     </div>
   );

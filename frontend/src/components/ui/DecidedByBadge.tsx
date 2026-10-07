@@ -1,9 +1,8 @@
 import React from "react";
-import { Hash, Key, Cpu, HelpCircle } from "lucide-react";
+import { Sticker } from "./Sticker";
 
 export interface DecidedByBadgeProps {
-  decidedBy: "sha256" | "hash" | "embedding" | "none" | string;
-  verdict?: "match" | "no_match";
+  decidedBy: string;
   className?: string;
 }
 
@@ -11,40 +10,28 @@ export const DecidedByBadge: React.FC<DecidedByBadgeProps> = ({
   decidedBy,
   className = "",
 }) => {
-  let label = "Decided by: No match";
-  let IconComponent = HelpCircle;
-  let bgStyles = "bg-[var(--apple-neutral-subtle)] text-[var(--apple-neutral)]";
+  const norm = decidedBy.toLowerCase();
 
-  switch (decidedBy) {
-    case "sha256":
-      label = "Decided by: SHA-256";
-      IconComponent = Key;
-      bgStyles = "bg-[var(--apple-accent-subtle)] text-[var(--apple-accent)]";
-      break;
-    case "hash":
-      label = "Decided by: Hash";
-      IconComponent = Hash;
-      bgStyles = "bg-[var(--apple-accent-subtle)] text-[var(--apple-accent)]";
-      break;
-    case "embedding":
-      label = "Decided by: Embedding";
-      IconComponent = Cpu;
-      bgStyles = "bg-[var(--apple-accent-subtle)] text-[var(--apple-accent)]";
-      break;
-    case "none":
-    default:
-      label = "Decided by: No match";
-      IconComponent = HelpCircle;
-      bgStyles = "bg-[var(--apple-neutral-subtle)] text-[var(--apple-neutral)]";
-      break;
+  let label = "DECIDED BY: " + decidedBy.toUpperCase();
+  let variant: "cobalt" | "ink" | "ochre" | "sage" | "paper" = "cobalt";
+
+  if (norm === "sha256") {
+    label = "STAGE 1 · SHA-256";
+    variant = "sage";
+  } else if (norm === "hash" || norm === "phash" || norm === "dhash") {
+    label = "STAGE 2 · HASH";
+    variant = "cobalt";
+  } else if (norm === "deep" || norm === "embedding") {
+    label = "STAGE 3 · EMBEDDING";
+    variant = "ochre";
+  } else if (norm === "none") {
+    label = "CASCADE · EXHAUSTED";
+    variant = "paper";
   }
 
   return (
-    <span
-      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-footnote font-medium border border-[var(--apple-separator)] ${bgStyles} ${className}`}
-    >
-      <IconComponent className="w-4 h-4 stroke-[1.75]" />
-      <span>{label}</span>
-    </span>
+    <Sticker variant={variant} rotate={-1} className={className}>
+      {label}
+    </Sticker>
   );
 };

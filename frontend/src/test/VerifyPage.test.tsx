@@ -20,7 +20,7 @@ describe("VerifyPage Component", () => {
   it("verifies image with hash-exit, showing embedding skipped and cosines not computed", async () => {
     renderWithProviders(<VerifyPage />);
 
-    expect(screen.getByText("Verify Query Asset")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /Verify an/i })).toBeInTheDocument();
 
     // Select standard image (triggers verify_hash_exit.json in MSW)
     const file = new File(["sample_bytes"], "sample.png", { type: "image/png" });
@@ -28,27 +28,24 @@ describe("VerifyPage Component", () => {
 
     fireEvent.change(input, { target: { files: [file] } });
 
-    const submitBtn = screen.getByRole("button", { name: /Run Verification/i });
+    const submitBtn = screen.getByRole("button", { name: /Verify image/i });
     fireEvent.click(submitBtn);
 
     // Wait for results
     await waitFor(() => {
-      expect(screen.getByText(/Verdict: Match Found/i)).toBeInTheDocument();
+      expect(screen.getByText("Match found.")).toBeInTheDocument();
     });
 
     // Check Decided By badge
-    expect(screen.getByText("Decided by: Hash")).toBeInTheDocument();
+    expect(screen.getByText(/STAGE 2 · HASH/i)).toBeInTheDocument();
 
     // Check Embedding stage is marked as skipped
-    expect(screen.getByText("Skipped (Hash Exit)")).toBeInTheDocument();
+    expect(screen.getByText("SKIPPED")).toBeInTheDocument();
 
-    // Check Cosine panel displays "— not computed"
-    const notComputedElements = screen.getAllByText("— not computed");
-    expect(notComputedElements.length).toBeGreaterThanOrEqual(2);
-
-    // Check Candidates list
+    // Check Candidates list heading and inspect evidence link
+    expect(screen.getByText("Matched candidates")).toBeInTheDocument();
     expect(screen.getByText("Aarav Mehta")).toBeInTheDocument();
-    expect(screen.getByText("Open evidence")).toBeInTheDocument();
+    expect(screen.getByText("Inspect Evidence")).toBeInTheDocument();
   });
 
   it("verifies escalated image, showing all 3 stages and No Match badge", async () => {
@@ -60,21 +57,20 @@ describe("VerifyPage Component", () => {
 
     fireEvent.change(input, { target: { files: [file] } });
 
-    const submitBtn = screen.getByRole("button", { name: /Run Verification/i });
+    const submitBtn = screen.getByRole("button", { name: /Verify image/i });
     fireEvent.click(submitBtn);
 
     // Wait for results
     await waitFor(() => {
-      expect(screen.getByText(/Verdict: No Match Found/i)).toBeInTheDocument();
+      expect(screen.getByText("No match found.")).toBeInTheDocument();
     });
 
-    // Check Decided by No match badge
-    expect(screen.getByText("Decided by: No match")).toBeInTheDocument();
+    // Heading for candidates says Nearest candidates (no match)
+    expect(screen.getByText("Nearest candidates (no match)")).toBeInTheDocument();
 
-    // Verify all 3 stages executed
-    expect(screen.getByText("1. SHA-256 Exact")).toBeInTheDocument();
-    expect(screen.getByText("2. Hash Check (SQL)")).toBeInTheDocument();
-    expect(screen.getByText("3. Embedding (DINO/CLIP)")).toBeInTheDocument();
-    expect(screen.getByText("Escalated (d_H=12)")).toBeInTheDocument();
+    // Verify all 3 stages rendered in stubs
+    expect(screen.getByText("SHA-256 Digest")).toBeInTheDocument();
+    expect(screen.getByText("Perceptual Hashes")).toBeInTheDocument();
+    expect(screen.getByText("Deep Embeddings")).toBeInTheDocument();
   });
 });

@@ -27,7 +27,7 @@ const TestContextInitializer: React.FC<{
 };
 
 describe('EvidencePage Component', () => {
-  it('shows Apple-style "Evidence session expired" state when context is empty', async () => {
+  it('shows "Evidence session expired" state when context is empty', async () => {
     render(
       <ThemeProvider>
         <QueryImageProvider>
@@ -40,7 +40,7 @@ describe('EvidencePage Component', () => {
       </ThemeProvider>
     );
 
-    expect(screen.getByText('Evidence session expired')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /evidence session/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /re-run verification/i })).toBeInTheDocument();
   });
 
@@ -65,8 +65,8 @@ describe('EvidencePage Component', () => {
     );
 
     // Header and Classical panel should render immediately
-    expect(screen.getByText('Evidence & Deep Inspection')).toBeInTheDocument();
-    expect(screen.getByText('Classical Hashes (Hamming /64)')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /the evidence/i })).toBeInTheDocument();
+    expect(screen.getByText('Hamming Distances (/64)')).toBeInTheDocument();
 
     // Deep panel should resolve and display the computed on-demand cosine values
     await waitFor(() => {
@@ -97,7 +97,7 @@ describe('EvidencePage Component', () => {
     );
 
     // Classical panel remains fully intact
-    expect(screen.getByText('Classical Hashes (Hamming /64)')).toBeInTheDocument();
+    expect(screen.getByText('Hamming Distances (/64)')).toBeInTheDocument();
 
     // Deep panel displays the error message without crashing the page
     await waitFor(() => {

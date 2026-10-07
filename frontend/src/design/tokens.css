@@ -1,134 +1,84 @@
-/* Apple Human Interface Guidelines Design System Tokens */
-@import "@fontsource/inter/400.css";
-@import "@fontsource/inter/600.css";
-@import "@fontsource/inter/700.css";
-@import "@fontsource/jetbrains-mono/400.css";
-@import "@fontsource/jetbrains-mono/600.css";
+/* Editorial Print-Studio Design Tokens */
+@theme {
+  --color-paper: var(--paper);
+  --color-paper-2: var(--paper-2);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-cobalt: var(--cobalt);
+  --color-ochre: var(--ochre);
+  --color-vermilion: var(--vermilion);
+  --color-sage: var(--sage);
+  --color-peach: var(--peach);
+  --color-rule: var(--rule);
+
+  --font-display: "Instrument Serif", Georgia, serif;
+  --font-sans: "Space Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "Space Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
 
 :root {
-  /* Semantic Light Mode Colors */
-  --apple-label: #1d1d1f;
-  --apple-secondary-label: #6e6e73;
-  --apple-background: #ffffff;
-  --apple-grouped-background: #f5f5f7;
-  --apple-card: #ffffff;
-  --apple-separator: rgba(60, 60, 67, 0.18);
-  --apple-accent: #0071e3;
-  --apple-accent-subtle: rgba(0, 113, 227, 0.12);
-  --apple-success: #34c759;
-  --apple-success-subtle: rgba(52, 199, 89, 0.14);
-  --apple-warning: #ff9500;
-  --apple-warning-subtle: rgba(255, 149, 0, 0.14);
-  --apple-danger: #ff3b30;
-  --apple-danger-subtle: rgba(255, 59, 48, 0.14);
-  --apple-neutral: #8e8e93;
-  --apple-neutral-subtle: rgba(142, 142, 147, 0.14);
+  /* Paper Theme (Light / Default) */
+  --paper: #F5EFE4;
+  --paper-2: #EDE4D3;
+  --ink: #1B2240;
+  --ink-soft: #4A5170;
+  --cobalt: #2350D8;
+  --ochre: #E9C77E;
+  --vermilion: #E4553B;
+  --sage: #2F7D57;
+  --peach: #F2AC7E;
+  --rule: rgba(27, 34, 64, 0.14);
 
-  /* Materials & Overlays */
-  --apple-nav-bg: rgba(255, 255, 255, 0.72);
-  --apple-modal-bg: rgba(255, 255, 255, 0.88);
-  --apple-dim-backdrop: rgba(0, 0, 0, 0.4);
-  --apple-card-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 8px 24px rgba(0, 0, 0, 0.06);
-
-  /* Chart & Visualization Semantic Tones */
-  --chart-hash-1: #0071e3;
-  --chart-hash-2: #34aadc;
-  --chart-hash-3: #5856d6;
-  --chart-hash-4: #007aff;
-  --chart-deep-1: #ff9500;
-  --chart-deep-2: #ff2d55;
-  --chart-cascade: #8e8e93;
+  /* Semantic Aliases */
+  --bg-page: var(--paper);
+  --bg-card: var(--paper-2);
+  --text-primary: var(--ink);
+  --text-secondary: var(--ink-soft);
+  --accent: var(--cobalt);
+  --border-rule: var(--rule);
+  --status-pass: var(--sage);
+  --status-escalated: var(--ochre);
+  --status-fail: var(--vermilion);
 }
 
-/* Dark Mode Overrides (supports both .dark class & prefers-color-scheme) */
 .dark,
-:root:not(.light) {
-  @media (prefers-color-scheme: dark) {
-    --apple-label: #f5f5f7;
-    --apple-secondary-label: #a1a1a6;
-    --apple-background: #000000;
-    --apple-grouped-background: #1c1c1e;
-    --apple-card: #2c2c2e;
-    --apple-separator: rgba(84, 84, 88, 0.6);
-    --apple-accent: #0a84ff;
-    --apple-accent-subtle: rgba(10, 132, 255, 0.16);
-    --apple-success: #30d158;
-    --apple-success-subtle: rgba(48, 209, 88, 0.16);
-    --apple-warning: #ff9f0a;
-    --apple-warning-subtle: rgba(255, 159, 10, 0.16);
-    --apple-danger: #ff453a;
-    --apple-danger-subtle: rgba(255, 69, 58, 0.16);
-    --apple-neutral: #8e8e93;
-    --apple-neutral-subtle: rgba(142, 142, 147, 0.18);
+[data-theme="dark"],
+[data-theme="ink"] {
+  /* Ink Theme (Dark) */
+  --paper: #10162B;
+  --paper-2: #182042;
+  --ink: #F5EFE4;
+  --ink-soft: #B9BFD6;
+  --cobalt: #5B7FFF;
+  --ochre: #C9A55A;
+  --vermilion: #FF6A4F;
+  --sage: #4FBF86;
+  --peach: #D98A5E;
+  --rule: rgba(245, 239, 228, 0.16);
 
-    --apple-nav-bg: rgba(29, 29, 31, 0.72);
-    --apple-modal-bg: rgba(44, 44, 46, 0.88);
-    --apple-dim-backdrop: rgba(0, 0, 0, 0.65);
-    --apple-card-shadow: none;
+  /* Semantic Aliases */
+  --bg-page: var(--paper);
+  --bg-card: var(--paper-2);
+  --text-primary: var(--ink);
+  --text-secondary: var(--ink-soft);
+  --accent: var(--cobalt);
+  --border-rule: var(--rule);
+  --status-pass: var(--sage);
+  --status-escalated: var(--ochre);
+  --status-fail: var(--vermilion);
+}
 
-    --chart-hash-1: #0a84ff;
-    --chart-hash-2: #5ac8fa;
-    --chart-hash-3: #5e5ce6;
-    --chart-hash-4: #409cff;
-    --chart-deep-1: #ff9f0a;
-    --chart-deep-2: #ff375f;
-    --chart-cascade: #98989d;
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="paper"]):not(.light) {
+    --paper: #10162B;
+    --paper-2: #182042;
+    --ink: #F5EFE4;
+    --ink-soft: #B9BFD6;
+    --cobalt: #5B7FFF;
+    --ochre: #C9A55A;
+    --vermilion: #FF6A4F;
+    --sage: #4FBF86;
+    --peach: #D98A5E;
+    --rule: rgba(245, 239, 228, 0.16);
   }
-}
-
-.dark {
-  --apple-label: #f5f5f7;
-  --apple-secondary-label: #a1a1a6;
-  --apple-background: #000000;
-  --apple-grouped-background: #1c1c1e;
-  --apple-card: #2c2c2e;
-  --apple-separator: rgba(84, 84, 88, 0.6);
-  --apple-accent: #0a84ff;
-  --apple-accent-subtle: rgba(10, 132, 255, 0.16);
-  --apple-success: #30d158;
-  --apple-success-subtle: rgba(48, 209, 88, 0.16);
-  --apple-warning: #ff9f0a;
-  --apple-warning-subtle: rgba(255, 159, 10, 0.16);
-  --apple-danger: #ff453a;
-  --apple-danger-subtle: rgba(255, 69, 58, 0.16);
-  --apple-neutral: #8e8e93;
-  --apple-neutral-subtle: rgba(142, 142, 147, 0.18);
-
-  --apple-nav-bg: rgba(29, 29, 31, 0.72);
-  --apple-modal-bg: rgba(44, 44, 46, 0.88);
-  --apple-dim-backdrop: rgba(0, 0, 0, 0.65);
-  --apple-card-shadow: none;
-
-  --chart-hash-1: #0a84ff;
-  --chart-hash-2: #5ac8fa;
-  --chart-hash-3: #5e5ce6;
-  --chart-hash-4: #409cff;
-  --chart-deep-1: #ff9f0a;
-  --chart-deep-2: #ff375f;
-  --chart-cascade: #98989d;
-}
-
-@theme {
-  --font-sans: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
-  --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace;
-
-  /* Semantic Theme Bindings */
-  --color-apple-label: var(--apple-label);
-  --color-apple-secondary: var(--apple-secondary-label);
-  --color-apple-bg: var(--apple-background);
-  --color-apple-grouped: var(--apple-grouped-background);
-  --color-apple-card: var(--apple-card);
-  --color-apple-separator: var(--apple-separator);
-  --color-apple-accent: var(--apple-accent);
-  --color-apple-accent-subtle: var(--apple-accent-subtle);
-  --color-apple-success: var(--apple-success);
-  --color-apple-success-subtle: var(--apple-success-subtle);
-  --color-apple-warning: var(--apple-warning);
-  --color-apple-warning-subtle: var(--apple-warning-subtle);
-  --color-apple-danger: var(--apple-danger);
-  --color-apple-danger-subtle: var(--apple-danger-subtle);
-  --color-apple-neutral: var(--apple-neutral);
-  --color-apple-neutral-subtle: var(--apple-neutral-subtle);
-
-  --shadow-apple-card: var(--apple-card-shadow);
 }
