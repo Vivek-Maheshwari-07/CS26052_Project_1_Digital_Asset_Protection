@@ -3,12 +3,14 @@ import { Link, useLocation } from "react-router-dom";
 import { getHealth } from "../api/client";
 import type { HealthResponse } from "../api/types";
 import { useTheme } from "../context/useTheme";
+import { Shield, Menu, X, Sun, Moon } from "lucide-react";
 
 export const Navbar: React.FC = () => {
   const location = useLocation();
   const { theme, toggleTheme } = useTheme();
   const [health, setHealth] = useState<HealthResponse | null>(null);
   const [healthStatus, setHealthStatus] = useState<"ok" | "degraded" | "unreachable">("ok");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -18,14 +20,13 @@ export const Navbar: React.FC = () => {
         const data = await getHealth();
         if (!mounted) return;
         setHealth(data);
-        if (data.status === "ok" && data.database === "ok") {
+        if (data.status === "ok") {
           setHealthStatus("ok");
         } else {
           setHealthStatus("degraded");
         }
       } catch {
         if (!mounted) return;
-        setHealth(null);
         setHealthStatus("unreachable");
       }
     };
@@ -39,112 +40,150 @@ export const Navbar: React.FC = () => {
   }, []);
 
   const navItems = [
-    { path: "/register", label: "Register" },
-    { path: "/verify", label: "Verify" },
-    { path: "/evidence", label: "Evidence", matchPrefix: "/evidence" },
-    { path: "/results", label: "Results" },
+    { name: "Register", path: "/register" },
+    { name: "Verify", path: "/verify" },
+    { name: "Evidence", path: "/evidence" },
+    { name: "Results", path: "/results" },
   ];
 
-  const getDotColor = () => {
+  const getHealthDotColor = () => {
     switch (healthStatus) {
       case "ok":
-        return "bg-emerald-500 shadow-emerald-500/50";
+        return "bg-[var(--apple-success)]";
       case "degraded":
-        return "bg-amber-500 shadow-amber-500/50";
+        return "bg-[var(--apple-warning)]";
       case "unreachable":
-        return "bg-rose-500 shadow-rose-500/50";
+      default:
+        return "bg-[var(--apple-danger)]";
     }
   };
 
-  const getHealthTitle = () => {
-    if (!health) return "Backend: Unreachable";
-    return `Backend: ${health.status.toUpperCase()} | DB: ${health.database} | Models: CLIP ${health.models_loaded.clip ? "✓" : "✗"}, DINO ${health.models_loaded.dino ? "✓" : "✗"} (${health.device}) | Images: ${health.registered_images ?? 0}`;
+  const getHealthTooltip = () => {
+    switch (healthStatus) {
+      case "ok":
+        return `ProvNet Backend OK (${health?.device || "online"})`;
+      case "degraded":
+        return `ProvNet Backend Degraded (${health?.status || "issues"})`;
+      case "unreachable":
+      default:
+        return "ProvNet Backend Unreachable";
+    }
   };
 
   return (
-    <header className="sticky top-0 z-40 border-b border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 backdrop-blur">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-        {/* Brand / Logo */}
+    <nav className="sticky top-0 z-40 material-navbar w-full">
+      <div className="max-w-[1080px] mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+        {/* Brand Logo & Title */}
         <div className="flex items-center space-x-3">
-          <Link to="/register" className="flex items-center space-x-2">
-            <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-bold text-lg tracking-wider">
-              P
+          <Link
+            to="/register"
+            className="flex items-center space-x-2 text-[var(--apple-label)] apple-focus rounded-lg p-1"
+          >
+            <div className="w-8 h-8 rounded-[9px] bg-[var(--apple-accent)] text-white flex items-center justify-center shadow-sm">
+              <Shield className="w-4 h-4 stroke-[1.75]" />
             </div>
-            <span className="font-semibold text-lg tracking-tight text-slate-900 dark:text-slate-100">
-              ProvNet
-            </span>
+            <div className="flex flex-col">
+              <span className="text-headline font-bold tracking-tight">ProvNet</span>
+              <span className="text-[10px] text-[var(--apple-secondary-label)] -mt-1 font-medium tracking-wide">
+                RESEARCH SUITE
+              </span>
+            </div>
           </Link>
-          <span className="text-xs px-2 py-0.5 rounded font-mono bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
-            v2026.10-1
-          </span>
         </div>
 
-        {/* Navigation Links */}
-        <nav className="flex items-center space-x-1 sm:space-x-2">
+        {/* Desktop Nav Items */}
+        <div className="hidden sm:flex items-center space-x-1">
           {navItems.map((item) => {
-            const isActive = item.matchPrefix
-              ? location.pathname.startsWith(item.matchPrefix)
-              : location.pathname === item.path;
-
+            const isActive =
+              location.pathname === item.path ||
+              (item.path === "/evidence" && location.pathname.startsWith("/evidence"));
             return (
               <Link
                 key={item.path}
                 to={item.path}
-                className={`px-3.5 py-2 rounded-md text-sm font-medium transition-colors ${
+                className={`px-3.5 py-1.5 rounded-[10px] text-subheadline font-medium transition-colors apple-focus ${
                   isActive
-                    ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 font-semibold"
-                    : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/60"
+                    ? "bg-[var(--apple-grouped-background)] text-[var(--apple-label)] font-semibold"
+                    : "text-[var(--apple-secondary-label)] hover:text-[var(--apple-label)] hover:bg-[var(--apple-grouped-background)]"
                 }`}
               >
-                {item.label}
+                {item.name}
               </Link>
             );
           })}
-        </nav>
+        </div>
 
-        {/* Right tools: Health dot + Theme switch */}
-        <div className="flex items-center space-x-4">
-          {/* Health indicator */}
+        {/* Right Tools: Health Dot, Theme Toggle, Mobile Menu Trigger */}
+        <div className="flex items-center space-x-2 sm:space-x-3">
+          {/* Health Status Dot */}
           <div
-            className="flex items-center space-x-2 cursor-help px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs"
-            title={getHealthTitle()}
+            className="flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-[var(--apple-grouped-background)] border border-[var(--apple-separator)]"
+            title={getHealthTooltip()}
           >
             <span
-              className={`w-2.5 h-2.5 rounded-full ${getDotColor()} shadow-sm animate-pulse`}
+              data-testid="health-dot"
+              className={`w-2 h-2 rounded-full ${getHealthDotColor()} animate-pulse`}
             />
-            <span className="capitalize font-mono text-[11px] text-slate-600 dark:text-slate-300">
+            <span className="text-caption font-medium text-[var(--apple-secondary-label)] hidden md:inline capitalize">
               {healthStatus}
             </span>
           </div>
 
-          {/* Theme Toggle */}
+          {/* Theme Toggle Button */}
           <button
             onClick={toggleTheme}
-            aria-label="Toggle theme"
-            className="p-2 rounded-lg text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            aria-label="Toggle color theme"
+            className="p-2 rounded-[10px] text-[var(--apple-secondary-label)] hover:text-[var(--apple-label)] hover:bg-[var(--apple-grouped-background)] apple-focus cursor-pointer transition-colors"
           >
-            {theme === "light" ? (
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
-                />
-              </svg>
+            {theme === "dark" ? (
+              <Sun className="w-4 h-4 stroke-[1.75]" />
             ) : (
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M12 3v1m0 16v1m9-9h-1M4 9H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
-                />
-              </svg>
+              <Moon className="w-4 h-4 stroke-[1.75]" />
+            )}
+          </button>
+
+          {/* Mobile Menu Hamburger Button */}
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label="Toggle navigation menu"
+            className="sm:hidden p-2 rounded-[10px] text-[var(--apple-secondary-label)] hover:text-[var(--apple-label)] hover:bg-[var(--apple-grouped-background)] apple-focus cursor-pointer"
+          >
+            {mobileMenuOpen ? (
+              <X className="w-5 h-5 stroke-[1.75]" />
+            ) : (
+              <Menu className="w-5 h-5 stroke-[1.75]" />
             )}
           </button>
         </div>
       </div>
-    </header>
+
+      {/* Mobile Navigation Sheet Drawer (Below 640px) */}
+      {mobileMenuOpen && (
+        <div className="sm:hidden material-modal hairline-b px-4 py-3 space-y-1 animate-fadeIn">
+          {navItems.map((item) => {
+            const isActive =
+              location.pathname === item.path ||
+              (item.path === "/evidence" && location.pathname.startsWith("/evidence"));
+            return (
+              <Link
+                key={item.path}
+                to={item.path}
+                onClick={() => setMobileMenuOpen(false)}
+                className={`flex items-center justify-between px-3 py-2.5 rounded-[10px] text-body font-medium transition-colors ${
+                  isActive
+                    ? "bg-[var(--apple-grouped-background)] text-[var(--apple-accent)] font-semibold"
+                    : "text-[var(--apple-label)] hover:bg-[var(--apple-grouped-background)]"
+                }`}
+              >
+                <span>{item.name}</span>
+                {isActive && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-[var(--apple-accent)]" />
+                )}
+              </Link>
+            );
+          })}
+        </div>
+      )}
+    </nav>
   );
 };

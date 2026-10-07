@@ -185,3 +185,12 @@ export function getBenchmarkResultsCsvUrl(runId?: string): string {
     ? `/api/benchmark/results.csv?run_id=${encodeURIComponent(runId)}`
     : "/api/benchmark/results.csv";
 }
+
+export async function getBenchmarkResultsCsv(runId?: string): Promise<string> {
+  const url = getBenchmarkResultsCsvUrl(runId);
+  const res = await fetch(url);
+  if (!res.ok) {
+    throw new ApiError(`Failed to fetch benchmark CSV: ${res.statusText}`, res.status);
+  }
+  return res.text();
+}

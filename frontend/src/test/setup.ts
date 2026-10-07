@@ -23,6 +23,13 @@ if (typeof window.URL.createObjectURL === 'undefined') {
   window.URL.revokeObjectURL = () => {};
 }
 
+// Mock ResizeObserver for Recharts ResponsiveContainer in JSDOM
+globalThis.ResizeObserver = class ResizeObserver {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+};
+
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
