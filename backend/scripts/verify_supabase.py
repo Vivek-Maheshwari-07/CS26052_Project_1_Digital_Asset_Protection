@@ -17,20 +17,19 @@ import os
 import sys
 import time
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from urllib.parse import urlparse
 
+import asyncpg
 import numpy as np
 from dotenv import load_dotenv
+from pgvector.asyncpg import register_vector
 from rich.box import ROUNDED
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
-
-import asyncpg
-from pgvector.asyncpg import register_vector
 from sqlalchemy import text
 
 # Add backend directory to sys.path
@@ -55,10 +54,9 @@ def load_environment():
         load_dotenv(backend_env, override=False)
 
     db_url = os.getenv("DATABASE_URL")
-    if not db_url or "[YOUR-PASSWORD]" in db_url:
-        if root_env.exists():
-            load_dotenv(root_env, override=True)
-            db_url = os.getenv("DATABASE_URL")
+    if (not db_url or "[YOUR-PASSWORD]" in db_url) and root_env.exists():
+        load_dotenv(root_env, override=True)
+        db_url = os.getenv("DATABASE_URL")
 
     vector_schema = os.getenv("VECTOR_SCHEMA", "extensions")
     return db_url, vector_schema
@@ -80,7 +78,7 @@ def mask_dsn(dsn: str) -> str:
         if parsed.password:
             safe_netloc = parsed.netloc.replace(f":{parsed.password}@", ":****@")
             return parsed._replace(netloc=safe_netloc).geturl()
-    except Exception:
+    except Exception:  # noqa: BLE001, S110
         pass
     return dsn
 
@@ -99,7 +97,7 @@ async def run_diagnostics() -> list[dict]:
 
     console.print(Panel.fit(
         "[bold cyan]ProvNet Supabase PostgreSQL Reliability & Operational Verification[/bold cyan]\n"
-        f"[dim]Project: CEUP 301 | Host: Supabase Cloud Pooler | Generated: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}[/dim]",
+        f"[dim]Project: CEUP 301 | Host: Supabase Cloud Pooler | Generated: {datetime.now(UTC).strftime('%Y-%m-%d %H:%M:%S UTC')}[/dim]",
         border_style="cyan"
     ))
 
@@ -149,7 +147,7 @@ async def run_diagnostics() -> list[dict]:
             0.0
         )
 
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         latency_ms = (time.perf_counter() - t0) * 1000
         record_check("1. Connection & Driver", "Async Connection", False, f"Connection failed: {e}", latency_ms)
         console.print(f"[bold red]Connection failed:[/bold red] {e}")
@@ -172,7 +170,7 @@ async def run_diagnostics() -> list[dict]:
             f"Registered in schema '{actual_schema}'",
             0.0
         )
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         record_check("1. Connection & Driver", "pgvector asyncpg type codec registration", False, f"Registration failed: {e}", 0.0)
 
     # =========================================================================
@@ -228,10 +226,10 @@ async def run_diagnostics() -> list[dict]:
                         f"Authorized | Row count: {count}",
                         0.0
                     )
-                except Exception as e:
+                except Exception as e:  # noqa: BLE001
                     record_check("2. Schema & Extension", f"RLS Read Access: '{tbl}'", False, f"Blocked or error: {e}", 0.0)
 
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         record_check("2. Schema & Extension", "Schema & Extension Audit", False, f"Audit error: {e}", 0.0)
 
     # =========================================================================
@@ -294,7 +292,7 @@ async def run_diagnostics() -> list[dict]:
             0.0
         )
 
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         record_check("3. Column Types & Constraints", "Column Types Audit", False, f"Error: {e}", 0.0)
 
     # =========================================================================
@@ -382,7 +380,7 @@ async def run_diagnostics() -> list[dict]:
             t_cos
         )
 
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         record_check("4. Indexes & Native Operators", "Index & Operator Benchmark", False, f"Error: {e}", 0.0)
 
     # =========================================================================
@@ -407,144 +405,143 @@ async def run_diagnostics() -> list[dict]:
         dino_raw = rng.standard_normal(768).astype(np.float32)
         dino_emb = (dino_raw / np.linalg.norm(dino_raw)).tolist()
 
-        async with engine.connect() as async_conn:
-            async with async_conn.begin() as trans:
-                t0 = time.perf_counter()
-                await async_conn.execute(
-                    text("""
-                    INSERT INTO images (
-                        id, owner_name, original_filename, file_path, source_format,
-                        sha256, width, height, phash, dhash, ahash, whash, low_detail,
-                        clip_emb, dino_emb, clip_model, dino_model, config_version, registered_at
-                    ) VALUES (
-                        :id, :owner, :fname, :fpath, :fmt,
-                        :sha, :w, :h, CAST(:phash AS bit(64)), CAST(:dhash AS bit(64)),
-                        CAST(:ahash AS bit(64)), CAST(:whash AS bit(64)), :low,
-                        :clip, :dino,
-                        :clip_m, :dino_m, :cfg_v, now()
-                    );
-                    """),
-                    {
-                        "id": test_img_id,
-                        "owner": "CEUP301_Diagnostic_Robot",
-                        "fname": "diagnostic_probe.png",
-                        "fpath": f"storage/diagnostic_{test_img_id}.png",
-                        "fmt": "PNG",
-                        "sha": mock_sha256,
-                        "w": 1024,
-                        "h": 1024,
-                        "phash": bytes.fromhex(mock_phash_hex),
-                        "dhash": bytes.fromhex(mock_dhash_hex),
-                        "ahash": bytes.fromhex(mock_ahash_hex),
-                        "whash": bytes.fromhex(mock_whash_hex),
-                        "low": False,
-                        "clip": clip_emb,
-                        "dino": dino_emb,
-                        "clip_m": "ViT-B-32",
-                        "dino_m": "dinov2_base",
-                        "cfg_v": "1.0.0"
-                    }
-                )
-                t_insert = (time.perf_counter() - t0) * 1000
-                record_check(
-                    "5. End-to-End Pipeline Queries",
-                    "Synthetic Record Insert (in xact)",
-                    True,
-                    f"Inserted ID {test_img_id}",
-                    t_insert
-                )
+        async with engine.connect() as async_conn, async_conn.begin() as trans:
+            t0 = time.perf_counter()
+            await async_conn.execute(
+                text("""
+                INSERT INTO images (
+                    id, owner_name, original_filename, file_path, source_format,
+                    sha256, width, height, phash, dhash, ahash, whash, low_detail,
+                    clip_emb, dino_emb, clip_model, dino_model, config_version, registered_at
+                ) VALUES (
+                    :id, :owner, :fname, :fpath, :fmt,
+                    :sha, :w, :h, CAST(:phash AS bit(64)), CAST(:dhash AS bit(64)),
+                    CAST(:ahash AS bit(64)), CAST(:whash AS bit(64)), :low,
+                    :clip, :dino,
+                    :clip_m, :dino_m, :cfg_v, now()
+                );
+                """),
+                {
+                    "id": test_img_id,
+                    "owner": "CEUP301_Diagnostic_Robot",
+                    "fname": "diagnostic_probe.png",
+                    "fpath": f"storage/diagnostic_{test_img_id}.png",
+                    "fmt": "PNG",
+                    "sha": mock_sha256,
+                    "w": 1024,
+                    "h": 1024,
+                    "phash": bytes.fromhex(mock_phash_hex),
+                    "dhash": bytes.fromhex(mock_dhash_hex),
+                    "ahash": bytes.fromhex(mock_ahash_hex),
+                    "whash": bytes.fromhex(mock_whash_hex),
+                    "low": False,
+                    "clip": clip_emb,
+                    "dino": dino_emb,
+                    "clip_m": "ViT-B-32",
+                    "dino_m": "dinov2_base",
+                    "cfg_v": "1.0.0"
+                }
+            )
+            t_insert = (time.perf_counter() - t0) * 1000
+            record_check(
+                "5. End-to-End Pipeline Queries",
+                "Synthetic Record Insert (in xact)",
+                True,
+                f"Inserted ID {test_img_id}",
+                t_insert
+            )
 
-                # Q4_CONFLICT test
-                t0 = time.perf_counter()
-                res_q4 = await async_conn.execute(
-                    Q4_CONFLICT,
-                    {
-                        "sha": mock_sha256,
-                        "low": False,
-                        "phash": mock_phash_hex,
-                        "dhash": mock_dhash_hex,
-                        "ahash": mock_ahash_hex,
-                        "whash": mock_whash_hex,
-                        "hmax": 10,
-                        "dino": dino_emb,
-                        "clip": clip_emb,
-                        "cmin": 0.85
-                    }
-                )
-                q4_row = res_q4.mappings().first()
-                t_q4 = (time.perf_counter() - t0) * 1000
-                q4_pass = q4_row is not None and str(q4_row["id"]) == str(test_img_id)
-                record_check(
-                    "5. End-to-End Pipeline Queries",
-                    "Execute Q4_CONFLICT (Duplicate Detection)",
-                    q4_pass,
-                    f"Match reason: '{q4_row['reason'] if q4_row else 'None'}' | cos_dino: {q4_row['cos_dino'] if q4_row else 0:.4f}",
-                    t_q4
-                )
+            # Q4_CONFLICT test
+            t0 = time.perf_counter()
+            res_q4 = await async_conn.execute(
+                Q4_CONFLICT,
+                {
+                    "sha": mock_sha256,
+                    "low": False,
+                    "phash": mock_phash_hex,
+                    "dhash": mock_dhash_hex,
+                    "ahash": mock_ahash_hex,
+                    "whash": mock_whash_hex,
+                    "hmax": 10,
+                    "dino": dino_emb,
+                    "clip": clip_emb,
+                    "cmin": 0.85
+                }
+            )
+            q4_row = res_q4.mappings().first()
+            t_q4 = (time.perf_counter() - t0) * 1000
+            q4_pass = q4_row is not None and str(q4_row["id"]) == str(test_img_id)
+            record_check(
+                "5. End-to-End Pipeline Queries",
+                "Execute Q4_CONFLICT (Duplicate Detection)",
+                q4_pass,
+                f"Match reason: '{q4_row['reason'] if q4_row else 'None'}' | cos_dino: {q4_row['cos_dino'] if q4_row else 0:.4f}",
+                t_q4
+            )
 
-                # Q2_STAGE1 test
-                t0 = time.perf_counter()
-                res_q2 = await async_conn.execute(
-                    Q2_STAGE1,
-                    {
-                        "phash": mock_phash_hex,
-                        "dhash": mock_dhash_hex,
-                        "ahash": mock_ahash_hex,
-                        "whash": mock_whash_hex,
-                        "k": 5
-                    }
-                )
-                q2_rows = res_q2.mappings().all()
-                t_q2 = (time.perf_counter() - t0) * 1000
-                q2_pass = len(q2_rows) > 0 and any(str(r["id"]) == str(test_img_id) for r in q2_rows)
-                top_d_phash = q2_rows[0]["d_phash"] if q2_rows else -1
-                record_check(
-                    "5. End-to-End Pipeline Queries",
-                    "Execute Q2_STAGE1 (Fast Hash Stage 1)",
-                    q2_pass,
-                    f"Returned {len(q2_rows)} candidate(s) | Top d_phash: {top_d_phash}",
-                    t_q2
-                )
+            # Q2_STAGE1 test
+            t0 = time.perf_counter()
+            res_q2 = await async_conn.execute(
+                Q2_STAGE1,
+                {
+                    "phash": mock_phash_hex,
+                    "dhash": mock_dhash_hex,
+                    "ahash": mock_ahash_hex,
+                    "whash": mock_whash_hex,
+                    "k": 5
+                }
+            )
+            q2_rows = res_q2.mappings().all()
+            t_q2 = (time.perf_counter() - t0) * 1000
+            q2_pass = len(q2_rows) > 0 and any(str(r["id"]) == str(test_img_id) for r in q2_rows)
+            top_d_phash = q2_rows[0]["d_phash"] if q2_rows else -1
+            record_check(
+                "5. End-to-End Pipeline Queries",
+                "Execute Q2_STAGE1 (Fast Hash Stage 1)",
+                q2_pass,
+                f"Returned {len(q2_rows)} candidate(s) | Top d_phash: {top_d_phash}",
+                t_q2
+            )
 
-                # Q3_STAGE2 test
-                t0 = time.perf_counter()
-                res_q3 = await async_conn.execute(
-                    Q3_STAGE2,
-                    {
-                        "phash": mock_phash_hex,
-                        "dhash": mock_dhash_hex,
-                        "ahash": mock_ahash_hex,
-                        "whash": mock_whash_hex,
-                        "dino": dino_emb,
-                        "clip": clip_emb,
-                        "k": 5
-                    }
-                )
-                q3_rows = res_q3.mappings().all()
-                t_q3 = (time.perf_counter() - t0) * 1000
-                q3_pass = len(q3_rows) > 0 and str(q3_rows[0]["id"]) == str(test_img_id)
-                top_cos_dino = q3_rows[0]["cos_dino"] if q3_rows else -1.0
-                record_check(
-                    "5. End-to-End Pipeline Queries",
-                    "Execute Q3_STAGE2 (Deep Vector Stage 2)",
-                    q3_pass,
-                    f"Returned {len(q3_rows)} candidate(s) | Top cos_dino: {top_cos_dino:.4f}",
-                    t_q3
-                )
+            # Q3_STAGE2 test
+            t0 = time.perf_counter()
+            res_q3 = await async_conn.execute(
+                Q3_STAGE2,
+                {
+                    "phash": mock_phash_hex,
+                    "dhash": mock_dhash_hex,
+                    "ahash": mock_ahash_hex,
+                    "whash": mock_whash_hex,
+                    "dino": dino_emb,
+                    "clip": clip_emb,
+                    "k": 5
+                }
+            )
+            q3_rows = res_q3.mappings().all()
+            t_q3 = (time.perf_counter() - t0) * 1000
+            q3_pass = len(q3_rows) > 0 and str(q3_rows[0]["id"]) == str(test_img_id)
+            top_cos_dino = q3_rows[0]["cos_dino"] if q3_rows else -1.0
+            record_check(
+                "5. End-to-End Pipeline Queries",
+                "Execute Q3_STAGE2 (Deep Vector Stage 2)",
+                q3_pass,
+                f"Returned {len(q3_rows)} candidate(s) | Top cos_dino: {top_cos_dino:.4f}",
+                t_q3
+            )
 
-                # Rollback transaction to keep state clean
-                await trans.rollback()
-                record_check(
-                    "5. End-to-End Pipeline Queries",
-                    "Transaction Rollback & State Pristine",
-                    True,
-                    "Rollback executed successfully; zero persistent side-effects",
-                    0.0
-                )
+            # Rollback transaction to keep state clean
+            await trans.rollback()
+            record_check(
+                "5. End-to-End Pipeline Queries",
+                "Transaction Rollback & State Pristine",
+                True,
+                "Rollback executed successfully; zero persistent side-effects",
+                0.0
+            )
 
         await engine.dispose()
 
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         record_check("5. End-to-End Pipeline Queries", "End-to-End Pipeline Queries", False, f"Pipeline Error: {e}", 0.0)
 
     finally:
