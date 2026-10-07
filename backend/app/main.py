@@ -9,6 +9,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.assets import router as assets_router
+from app.api.benchmark import router as benchmark_router
 from app.api.health import router as health_router
 from app.api.register import router as register_router
 from app.api.verify import router as verify_router
@@ -102,6 +103,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(register_router, prefix="/api")
     app.include_router(verify_router, prefix="/api")
     app.include_router(assets_router, prefix="/api")
+    app.include_router(benchmark_router, prefix="/api")
 
     return app
 
