@@ -184,6 +184,59 @@ class ImageDetail(BaseModel):
     record_url: str
 
 
+class DeepAboveThreshold(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    dino: bool
+    clip: bool
+
+
+class DeepCandidate(BaseModel):
+    """Lazily computed deep scores for one candidate of an earlier verification."""
+
+    model_config = ConfigDict(extra="forbid")
+    rank: int
+    image_id: UUID
+    cosine: CosineScores
+    above_threshold: DeepAboveThreshold
+
+
+class DeepVerifyResponse(BaseModel):
+    """Deep cosine scores for the Evidence View. Never changes the stored verdict."""
+
+    model_config = ConfigDict(extra="forbid")
+    verification_id: UUID
+    decided_by: Literal["sha256", "hash", "embedding", "none"]
+    query_sha256: Sha256
+    thresholds: EvidenceThresholds
+    candidates: list[DeepCandidate] = Field(max_length=5)
+    embedding_latency_ms: int | None
+    latency_ms: int
+
+
+class RegistrationRecord(BaseModel):
+    """Timestamped fingerprint receipt. Not a provenance or copyright certificate."""
+
+    model_config = ConfigDict(extra="forbid")
+    record_type: Literal["provnet.registration_record"] = "provnet.registration_record"
+    record_version: Literal["1"] = "1"
+    image_id: UUID
+    owner_name: Annotated[str | None, StringConstraints(max_length=100)] = None
+    owner_name_verified: Literal[False] = False
+    registered_at: UtcDatetime
+    issued_at: UtcDatetime
+    sha256: Sha256
+    sha256_scope: Literal["original_upload_bytes"] = "original_upload_bytes"
+    width: int
+    height: int
+    source_format: str
+    low_detail: bool
+    fingerprints: Fingerprints
+    models: ModelsInfo
+    file_url: str
+    record_url: str
+    disclaimer: str
+
+
 class BenchmarkTransformMetric(BaseModel):
     model_config = ConfigDict(extra="forbid")
     transform: str

@@ -153,3 +153,31 @@ def register_client(async_db_url, migrated_db, clean_db, tmp_path):
         yield client
     limiter.enabled = True
     limiter.reset()
+
+
+@pytest.fixture
+def api_client(async_db_url, migrated_db, clean_db, tmp_path):
+    """Client for register + verify + assets sharing ONE FakeEmbedder (``client.fake_embedder``),
+    so tests can assert exactly when the deep models run. Set ``client.models_available = False``
+    to simulate models that failed to load."""
+    from app.api.deps import get_embedder, get_optional_embedder
+    from app.limiter import limiter
+    from tests.fakes import FakeEmbedder
+
+    settings = Settings(
+        database_url=async_db_url,
+        provnet_skip_models=True,
+        storage_dir=str(tmp_path),
+    )
+    app = create_app(settings)
+    fake = FakeEmbedder()
+    app.dependency_overrides[get_embedder] = lambda: fake
+    limiter.enabled = False
+    with TestClient(app, raise_server_exceptions=False) as client:
+        client.storage_dir = tmp_path
+        client.fake_embedder = fake
+        client.models_available = True
+        app.dependency_overrides[get_optional_embedder] = lambda: fake if client.models_available else None
+        yield client
+    limiter.enabled = True
+    limiter.reset()
