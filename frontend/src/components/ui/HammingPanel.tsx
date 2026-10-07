@@ -70,7 +70,7 @@ export const HammingPanel: React.FC<HammingPanelProps> = ({
       </div>
 
       <div className="mt-4 pt-3 border-t border-(--rule) font-mono text-[11px] text-(--ink-soft)">
-        <span>Rule: distance ≤ threshold qualifies candidate in Stage 2.</span>
+        <span>Rule: distance ≤ threshold qualifies candidate in Stage 1.</span>
       </div>
     </PaperCard>
   );

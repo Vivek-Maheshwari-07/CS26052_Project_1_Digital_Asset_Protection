@@ -88,4 +88,27 @@ describe("RegisterPage Component", () => {
     expect(modalContent).not.toMatch(/overall\s*score/i);
     expect(modalContent).not.toMatch(/combined\s*score/i);
   });
+
+  it("enables submit with an image and no owner name, sending no owner_name in body", async () => {
+    renderWithProviders(<RegisterPage />);
+
+    const file = new File(["bytes_without_owner"], "no_owner.png", { type: "image/png" });
+    const input = document.getElementById("image-upload-input") as HTMLInputElement;
+
+    // Initially disabled without an image
+    const submitBtn = screen.getByRole("button", { name: /Register work/i });
+    expect(submitBtn).toBeDisabled();
+
+    // Select file without entering owner name
+    fireEvent.change(input, { target: { files: [file] } });
+
+    // Submit button is immediately enabled
+    expect(submitBtn).not.toBeDisabled();
+
+    fireEvent.click(submitBtn);
+
+    await waitFor(() => {
+      expect(screen.getByText("Registration Complete.")).toBeInTheDocument();
+    });
+  });
 });

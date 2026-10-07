@@ -4,9 +4,9 @@ import { CheckCircle2, XCircle, Clock } from "lucide-react";
 import { Sticker } from "./Sticker";
 
 export interface TicketStubProps {
-  number: string;
+  number?: string;
   name: string;
-  status: "match" | "no_match" | "skipped" | "running" | "pending";
+  status: "match" | "no_match" | "miss" | "skipped" | "running" | "pending";
   latencyMs?: number | null;
   detail?: string;
   delayIndex?: number;
@@ -27,6 +27,7 @@ export const TicketStub: React.FC<TicketStubProps> = ({
   const isSkipped = status === "skipped";
   const isMatch = status === "match";
   const isNoMatch = status === "no_match";
+  const isMiss = status === "miss";
 
   return (
     <motion.div
@@ -46,10 +47,18 @@ export const TicketStub: React.FC<TicketStubProps> = ({
 
       {/* Header */}
       <div className="flex items-center justify-between gap-2 mb-2 font-mono">
-        <span className="text-[12px] font-bold text-(--cobalt)">{number}</span>
-        <span className="text-[12px] font-bold uppercase tracking-wider text-(--ink)">
-          {name}
-        </span>
+        {number ? (
+          <>
+            <span className="text-[12px] font-bold text-(--cobalt)">{number}</span>
+            <span className="text-[12px] font-bold uppercase tracking-wider text-(--ink)">
+              {name}
+            </span>
+          </>
+        ) : (
+          <span className="text-[12px] font-bold uppercase tracking-wider text-(--ink)">
+            {name}
+          </span>
+        )}
       </div>
 
       {/* Content */}
@@ -64,6 +73,10 @@ export const TicketStub: React.FC<TicketStubProps> = ({
           <div className="flex items-center gap-1.5 text-(--sage) font-mono text-[13px] font-bold">
             <CheckCircle2 size={16} strokeWidth={2} />
             <span>Match</span>
+          </div>
+        ) : isMiss ? (
+          <div className="text-(--ink-soft) font-mono text-[12px] font-medium">
+            → Miss · next stage
           </div>
         ) : isNoMatch ? (
           <div className="flex items-center gap-1.5 text-(--vermilion) font-mono text-[13px] font-bold">

@@ -16,13 +16,13 @@ export const DecidedByBadge: React.FC<DecidedByBadgeProps> = ({
   let variant: "cobalt" | "ink" | "ochre" | "sage" | "paper" = "cobalt";
 
   if (norm === "sha256") {
-    label = "STAGE 1 · SHA-256";
+    label = "STAGE 0 · SHA-256";
     variant = "sage";
   } else if (norm === "hash" || norm === "phash" || norm === "dhash") {
-    label = "STAGE 2 · HASH";
+    label = "STAGE 1 · HASH";
     variant = "cobalt";
   } else if (norm === "deep" || norm === "embedding") {
-    label = "STAGE 3 · EMBEDDING";
+    label = "STAGE 2 · EMBEDDING";
     variant = "ochre";
   } else if (norm === "none") {
     label = "CASCADE · EXHAUSTED";

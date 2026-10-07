@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useSearchParams, Link } from "react-router-dom";
-import { useQueryImage } from "../context/QueryImageContext";
+import { useQueryImage } from "../context/useQueryImage";
 import { verifyImageDeep } from "../api/client";
 import type { DeepVerifyResponse, Candidate } from "../api/types";
 import { Kicker } from "../components/ui/Kicker";
@@ -179,7 +179,7 @@ export const EvidencePage: React.FC = () => {
           The <span className="italic text-(--cobalt)">evidence</span>.
         </h1>
         <p className="text-[17px] text-(--ink-soft) max-w-[44ch] m-0">
-          Multi-spectral inspection: side-by-side comparison, interactive swipe
+          Inspection and forensics: side-by-side comparison, interactive swipe
           overlay, classical Hamming distances, and deep cosine embeddings.
         </p>
       </div>
@@ -213,15 +213,13 @@ export const EvidencePage: React.FC = () => {
             </span>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <TicketStub
-                number="01"
-                name="SHA-256 Digest"
-                status={isShaMatch ? "match" : "no_match"}
+                name="STAGE 0 · SHA-256"
+                status={isShaMatch ? "match" : "miss"}
                 latencyMs={shaStage?.latency_ms}
-                detail={isShaMatch ? "Exact SHA-256 copy" : "No exact match"}
+                detail={isShaMatch ? "Exact bitwise match" : "No bitwise identical match"}
               />
               <TicketStub
-                number="02"
-                name="Perceptual Hashes"
+                name="STAGE 1 · HASH"
                 status={
                   isHashSkipped
                     ? "skipped"
@@ -239,8 +237,7 @@ export const EvidencePage: React.FC = () => {
                 }
               />
               <TicketStub
-                number="03"
-                name="Deep Embeddings"
+                name="STAGE 2 · EMBEDDING"
                 status={
                   isEmbeddingSkipped
                     ? "skipped"

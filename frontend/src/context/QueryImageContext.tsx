@@ -1,7 +1,6 @@
 import { useState, type ReactNode } from "react";
 import type { VerifyResponse } from "../api/types";
 import { QueryImageContext } from "./QueryImageContextDefinition";
-export { useQueryImage } from "./useQueryImage";
 
 export function QueryImageProvider({ children }: { children: ReactNode }) {
   const [queryFile, setQueryFile] = useState<File | null>(null);

@@ -114,7 +114,7 @@ export const CosinePanel: React.FC<CosinePanelProps> = ({
             Computed on demand: does not change the verdict.
           </span>
         ) : (
-          <span>Rule: cosine ≥ threshold qualifies candidate in Stage 3.</span>
+          <span>Rule: cosine ≥ threshold qualifies candidate in Stage 2.</span>
         )}
       </div>
     </PaperCard>

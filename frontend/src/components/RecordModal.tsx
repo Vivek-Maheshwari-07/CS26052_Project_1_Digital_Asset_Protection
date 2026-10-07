@@ -24,24 +24,43 @@ export const RecordModal: React.FC<RecordModalProps> = ({
   const [copiedSha, setCopiedSha] = useState(false);
 
   useEffect(() => {
-    if (!isOpen || !imageId) return;
-    setIsLoading(true);
-    setError(null);
+    let isMounted = true;
+    if (!isOpen || !imageId) {
+      queueMicrotask(() => {
+        if (isMounted) {
+          setRecord(null);
+          setError(null);
+        }
+      });
+      return;
+    }
+    queueMicrotask(() => {
+      if (isMounted) {
+        setIsLoading(true);
+        setError(null);
+      }
+    });
 
     getImageRecord(imageId)
       .then((rec) => {
-        setRecord(rec);
+        if (isMounted) setRecord(rec);
       })
       .catch((err: unknown) => {
-        setError(
-          err instanceof Error
-            ? err.message
-            : "Failed to fetch registration record."
-        );
+        if (isMounted) {
+          setError(
+            err instanceof Error
+              ? err.message
+              : "Failed to fetch registration record."
+          );
+        }
       })
       .finally(() => {
-        setIsLoading(false);
+        if (isMounted) setIsLoading(false);
       });
+
+    return () => {
+      isMounted = false;
+    };
   }, [isOpen, imageId]);
 
   const handleCopySha = (sha: string) => {

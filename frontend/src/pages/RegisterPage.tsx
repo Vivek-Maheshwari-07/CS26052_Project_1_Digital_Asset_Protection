@@ -32,10 +32,6 @@ export const RegisterPage: React.FC = () => {
       setErrorMsg("Please select an image file to register.");
       return;
     }
-    if (!ownerName.trim()) {
-      setErrorMsg("Owner name is required.");
-      return;
-    }
 
     setIsLoading(true);
     setErrorMsg(null);
@@ -43,7 +39,8 @@ export const RegisterPage: React.FC = () => {
     setConflictData(null);
 
     try {
-      const response = await registerImage(selectedFile, ownerName.trim());
+      const trimmedOwner = ownerName.trim() ? ownerName.trim() : undefined;
+      const response = await registerImage(selectedFile, trimmedOwner);
       setSuccessData(response);
       playMatchChime();
     } catch (err: unknown) {
@@ -95,7 +92,7 @@ export const RegisterPage: React.FC = () => {
               Register your <span className="italic text-(--cobalt)">work</span>.
             </h1>
             <p className="text-[18px] text-(--ink-soft) max-w-[34ch] leading-relaxed m-0">
-              Register images into the multi-stage provenance index with SHA-256 and multi-modal embeddings.
+              Register images into the multi-stage provenance index with SHA-256 and perceptual embeddings.
             </p>
           </div>
 
@@ -124,22 +121,21 @@ export const RegisterPage: React.FC = () => {
             />
           </div>
 
-          {/* Owner Name Input */}
+          {/* Owner Name Input (Optional) */}
           <div className="flex flex-col gap-2">
             <label
               htmlFor="owner-name-input"
               className="font-mono text-[12px] font-bold uppercase tracking-[0.12em] text-(--ink-soft)"
             >
-              2. CLAIMANT / OWNER NAME
+              2. CLAIMANT / OWNER NAME (OPTIONAL)
             </label>
             <input
               id="owner-name-input"
               type="text"
               value={ownerName}
               onChange={(e) => setOwnerName(e.target.value)}
-              placeholder="e.g. Studio Alice, Photographer Bob"
+              placeholder="e.g. Studio Alice, Photographer Bob (optional)"
               disabled={isLoading}
-              required
               className="h-14 px-5 bg-(--paper) border border-(--rule) rounded-xl font-mono text-[15px] text-(--ink) placeholder:text-(--ink-soft)/60 focus:border-(--cobalt) transition-colors"
             />
           </div>
@@ -162,7 +158,7 @@ export const RegisterPage: React.FC = () => {
             </span>
             <PillButton
               type="submit"
-              disabled={isLoading || !selectedFile || !ownerName.trim()}
+              disabled={isLoading || !selectedFile}
               className="w-full sm:w-auto"
             >
               {isLoading ? "Indexing work..." : "Register work"}

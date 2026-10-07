@@ -36,8 +36,8 @@ describe("VerifyPage Component", () => {
       expect(screen.getByText("Match found.")).toBeInTheDocument();
     });
 
-    // Check Decided By badge
-    expect(screen.getByText(/STAGE 2 · HASH/i)).toBeInTheDocument();
+    // Check Decided By badge and stage ticket stub
+    expect(screen.getAllByText(/STAGE 1 · HASH/i).length).toBeGreaterThanOrEqual(1);
 
     // Check Embedding stage is marked as skipped
     expect(screen.getByText("SKIPPED")).toBeInTheDocument();
@@ -48,7 +48,7 @@ describe("VerifyPage Component", () => {
     expect(screen.getByText("Inspect Evidence")).toBeInTheDocument();
   });
 
-  it("verifies escalated image, showing all 3 stages and No Match badge", async () => {
+  it("verifies escalated image, showing all 3 stages with Stage 0 miss and No Match verdict", async () => {
     renderWithProviders(<VerifyPage />);
 
     // Select escalated image (triggers verify_escalated.json in MSW)
@@ -68,9 +68,12 @@ describe("VerifyPage Component", () => {
     // Heading for candidates says Nearest candidates (no match)
     expect(screen.getByText("Nearest candidates (no match)")).toBeInTheDocument();
 
-    // Verify all 3 stages rendered in stubs
-    expect(screen.getByText("SHA-256 Digest")).toBeInTheDocument();
-    expect(screen.getByText("Perceptual Hashes")).toBeInTheDocument();
-    expect(screen.getByText("Deep Embeddings")).toBeInTheDocument();
+    // Verify all 3 stages rendered with Stage 0, Stage 1, Stage 2
+    expect(screen.getByText("STAGE 0 · SHA-256")).toBeInTheDocument();
+    expect(screen.getByText("STAGE 1 · HASH")).toBeInTheDocument();
+    expect(screen.getByText("STAGE 2 · EMBEDDING")).toBeInTheDocument();
+
+    // Stage 0 miss is neutral without red fail
+    expect(screen.getByText("→ Miss · next stage")).toBeInTheDocument();
   });
 });

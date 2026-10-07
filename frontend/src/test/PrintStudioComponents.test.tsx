@@ -1,7 +1,8 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { BitGrid, hexTo64Bits } from "../components/ui/BitGrid";
-import { getHeatmapCellColor } from "../pages/ResultsDashboardPage";
+import { BitGrid } from "../components/ui/BitGrid";
+import { hexTo64Bits } from "../utils/bitGridHelper";
+import { getHeatmapCellColor } from "../utils/heatmap";
 import { isSoundEnabled, setSoundEnabled } from "../utils/sound";
 
 describe("Editorial Print-Studio Signature Components & Utilities", () => {
@@ -52,22 +53,16 @@ describe("Editorial Print-Studio Signature Components & Utilities", () => {
     expect(localStorage.getItem("provnet_sound")).toBe("off");
   });
 
-  it("Heatmap color function is monotonic with respect to recall", () => {
-    const c0 = getHeatmapCellColor(0.0);
-    const c25 = getHeatmapCellColor(0.25);
-    const c50 = getHeatmapCellColor(0.5);
-    const c75 = getHeatmapCellColor(0.75);
-    const c100 = getHeatmapCellColor(1.0);
+  it("Heatmap text-colour function returns >= 4.5:1 contrast for 0, 0.5, and 1.0 in both Paper and Ink themes", () => {
+    const testPoints = [0.0, 0.5, 1.0];
+    const themes: ("paper" | "ink")[] = ["paper", "ink"];
 
-    // Darker cells switch text to light color
-    expect(c0.text).toBe("var(--ink)");
-    expect(c100.text).toBe("var(--paper)");
-
-    // Alpha values increase monotonically
-    const extractAlpha = (bg: string) => parseFloat(bg.match(/[\d.]+\)$/)?.[0] || "0");
-    expect(extractAlpha(c0.bg)).toBeLessThan(extractAlpha(c25.bg));
-    expect(extractAlpha(c25.bg)).toBeLessThan(extractAlpha(c50.bg));
-    expect(extractAlpha(c50.bg)).toBeLessThan(extractAlpha(c75.bg));
-    expect(extractAlpha(c75.bg)).toBeLessThan(extractAlpha(c100.bg));
+    themes.forEach((theme) => {
+      testPoints.forEach((recall) => {
+        const { text, contrastRatio } = getHeatmapCellColor(recall, theme);
+        expect(contrastRatio).toBeGreaterThanOrEqual(4.5);
+        expect(text).toBeTruthy();
+      });
+    });
   });
 });

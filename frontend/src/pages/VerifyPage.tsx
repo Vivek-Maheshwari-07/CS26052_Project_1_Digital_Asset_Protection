@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { verifyImage } from "../api/client";
 import type { VerifyResponse } from "../api/types";
-import { useQueryImage } from "../context/QueryImageContext";
+import { useQueryImage } from "../context/useQueryImage";
 import { ImageDropzone } from "../components/ImageDropzone";
 import { PillButton } from "../components/ui/PillButton";
 import { Kicker } from "../components/ui/Kicker";
@@ -186,16 +186,14 @@ export const VerifyPage: React.FC = () => {
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <TicketStub
-                    number="01"
-                    name="SHA-256 Digest"
-                    status={isShaMatch ? "match" : "no_match"}
+                    name="STAGE 0 · SHA-256"
+                    status={isShaMatch ? "match" : "miss"}
                     latencyMs={shaStage?.latency_ms}
-                    detail={isShaMatch ? "Exact copy found" : "No exact match"}
+                    detail={isShaMatch ? "Exact bitwise match" : "No bitwise identical match"}
                     delayIndex={0}
                   />
                   <TicketStub
-                    number="02"
-                    name="Perceptual Hashes"
+                    name="STAGE 1 · HASH"
                     status={
                       isHashSkipped
                         ? "skipped"
@@ -214,8 +212,7 @@ export const VerifyPage: React.FC = () => {
                     delayIndex={1}
                   />
                   <TicketStub
-                    number="03"
-                    name="Deep Embeddings"
+                    name="STAGE 2 · EMBEDDING"
                     status={
                       isEmbeddingSkipped
                         ? "skipped"

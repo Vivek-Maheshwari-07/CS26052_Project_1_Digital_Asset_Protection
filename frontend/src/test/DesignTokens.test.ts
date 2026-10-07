@@ -13,6 +13,7 @@ describe('Editorial Print-Studio Design Tokens & Color Audit', () => {
     '--ink-soft',
     '--cobalt',
     '--ochre',
+    '--ochre-text',
     '--vermilion',
     '--sage',
     '--peach',
@@ -52,4 +53,18 @@ describe('Editorial Print-Studio Design Tokens & Color Audit', () => {
 
     checkDir(srcDir);
   });
+
+  it('heatmap text-colour function returns a >= 4.5:1 colour for 0, 0.5 and 1.0 in both themes', async () => {
+    const { getHeatmapCellColor } = await import('../utils/heatmap');
+    const testValues = [0, 0.5, 1.0];
+    const themes: Array<'paper' | 'ink'> = ['paper', 'ink'];
+
+    for (const theme of themes) {
+      for (const val of testValues) {
+        const result = getHeatmapCellColor(val, theme);
+        expect(result.contrastRatio).toBeGreaterThanOrEqual(4.5);
+      }
+    }
+  });
 });
+

@@ -6,6 +6,7 @@
   --color-ink-soft: var(--ink-soft);
   --color-cobalt: var(--cobalt);
   --color-ochre: var(--ochre);
+  --color-ochre-text: var(--ochre-text);
   --color-vermilion: var(--vermilion);
   --color-sage: var(--sage);
   --color-peach: var(--peach);
@@ -24,6 +25,7 @@
   --ink-soft: #4A5170;
   --cobalt: #2350D8;
   --ochre: #E9C77E;
+  --ochre-text: #8F6008;
   --vermilion: #E4553B;
   --sage: #2F7D57;
   --peach: #F2AC7E;
@@ -37,7 +39,7 @@
   --accent: var(--cobalt);
   --border-rule: var(--rule);
   --status-pass: var(--sage);
-  --status-escalated: var(--ochre);
+  --status-escalated: var(--ochre-text);
   --status-fail: var(--vermilion);
 }
 
@@ -51,6 +53,7 @@
   --ink-soft: #B9BFD6;
   --cobalt: #5B7FFF;
   --ochre: #C9A55A;
+  --ochre-text: #E9C77E;
   --vermilion: #FF6A4F;
   --sage: #4FBF86;
   --peach: #D98A5E;

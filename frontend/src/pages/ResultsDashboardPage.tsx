@@ -8,6 +8,11 @@ import {
 import type { BenchmarkSummary } from "../api/types";
 import { processCsvInWorker } from "../utils/rocWorker";
 import { type RocPrResult } from "../utils/rocCalculator";
+import {
+  getHeatmapCellColor,
+  CHART_METHODS,
+} from "../utils/heatmap";
+import { useTheme } from "../context/useTheme";
 import { Kicker } from "../components/ui/Kicker";
 import { Sticker } from "../components/ui/Sticker";
 import { PaperCard } from "../components/ui/PaperCard";
@@ -37,18 +42,8 @@ import {
 } from "recharts";
 import { playTick } from "../utils/sound";
 
-// Single-hue sequential scale function from --paper-2 (0%) to --cobalt (100%)
-export function getHeatmapCellColor(recall: number): { bg: string; text: string } {
-  const clamped = Math.max(0, Math.min(1, recall));
-  // In CSS: background rgba of cobalt (35, 80, 216) with alpha based on recall
-  const alpha = 0.08 + clamped * 0.92;
-  const bg = `rgba(35, 80, 216, ${alpha.toFixed(3)})`;
-  // Switch text to white/paper on dark cells
-  const text = clamped > 0.55 ? "var(--paper)" : "var(--ink)";
-  return { bg, text };
-}
-
 export const ResultsDashboardPage: React.FC = () => {
+  const { theme } = useTheme();
   const [runs, setRuns] = useState<{ run_id: string; created_at: string }[]>([]);
   const [selectedRunId, setSelectedRunId] = useState<string | null>(null);
   const [summary, setSummary] = useState<BenchmarkSummary | null>(null);
@@ -68,68 +63,90 @@ export const ResultsDashboardPage: React.FC = () => {
 
   // Fetch benchmark runs
   useEffect(() => {
-    setIsLoading(true);
-    setError(null);
+    let isMounted = true;
     getBenchmarkRuns()
       .then((runList) => {
+        if (!isMounted) return;
         setRuns(runList);
         if (runList.length > 0) {
           setSelectedRunId(runList[0].run_id);
         }
       })
       .catch((err: unknown) => {
+        if (!isMounted) return;
         setError(
           err instanceof Error ? err.message : "Failed to load benchmark runs."
         );
       })
       .finally(() => {
-        setIsLoading(false);
+        if (isMounted) setIsLoading(false);
       });
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // Fetch summary and CSV for selected run
   useEffect(() => {
-    if (!selectedRunId) {
-      setSummary(null);
-      setRocPrData(null);
-      return;
-    }
+    if (!selectedRunId) return;
 
-    setIsLoading(true);
-    setError(null);
-    setWorkerError(null);
+    let isMounted = true;
+    queueMicrotask(() => {
+      if (isMounted) {
+        setIsLoading(true);
+        setError(null);
+        setWorkerError(null);
+      }
+    });
 
     getBenchmarkSummary(selectedRunId)
       .then((data) => {
+        if (!isMounted) return;
         setSummary(data);
         if (data.by_transform && data.by_transform.length > 0) {
-          setSelectedTransform(data.by_transform[0].transform);
+          const validTransforms = Array.from(
+            new Set(data.by_transform.map((t) => t.transform))
+          ).filter((t) => t && t !== "none");
+          if (validTransforms.includes("jpeg")) {
+            setSelectedTransform("jpeg");
+          } else if (validTransforms.length > 0) {
+            setSelectedTransform(validTransforms[0]);
+          }
         }
       })
       .catch((err: unknown) => {
+        if (!isMounted) return;
         setError(
           err instanceof Error ? err.message : "Failed to fetch benchmark summary."
         );
       })
       .finally(() => {
-        setIsLoading(false);
+        if (isMounted) setIsLoading(false);
       });
 
     // Fetch CSV and calculate ROC/PR via Web Worker
-    setIsWorkerCalculating(true);
     fetchBenchmarkResultsCsv(selectedRunId)
-      .then((csvText) => processCsvInWorker(csvText))
+      .then((csvText) => {
+        if (isMounted) setIsWorkerCalculating(true);
+        return processCsvInWorker(csvText);
+      })
       .then((computed) => {
-        setRocPrData(computed);
+        if (isMounted) setRocPrData(computed);
       })
       .catch((err: unknown) => {
-        setWorkerError(
-          err instanceof Error ? err.message : "Failed to parse benchmark ROC curves."
-        );
+        if (isMounted) {
+          setWorkerError(
+            err instanceof Error ? err.message : "Failed to parse benchmark ROC curves."
+          );
+        }
       })
       .finally(() => {
-        setIsWorkerCalculating(false);
+        if (isMounted) setIsWorkerCalculating(false);
       });
+
+    return () => {
+      isMounted = false;
+    };
   }, [selectedRunId]);
 
   // Methods list for heatmap
@@ -138,11 +155,15 @@ export const ResultsDashboardPage: React.FC = () => {
     []
   );
 
-  // Distinct transforms for curves
+  // Distinct transforms for curves (excluding "none")
   const availableTransforms = useMemo(() => {
     if (!summary?.by_transform) return [];
     const set = new Set<string>();
-    summary.by_transform.forEach((t) => set.add(t.transform));
+    summary.by_transform.forEach((t) => {
+      if (t.transform && t.transform !== "none") {
+        set.add(t.transform);
+      }
+    });
     return Array.from(set);
   }, [summary]);
 
@@ -208,7 +229,7 @@ export const ResultsDashboardPage: React.FC = () => {
       {/* Hero Header */}
       <section className="flex flex-col gap-6 pt-4 pb-2">
         <div className="flex items-center gap-3 flex-wrap">
-          <Kicker>● BENCHMARK EVALUATION & MULTI-SPECTRAL ACCURACY</Kicker>
+          <Kicker>● BENCHMARK EVALUATION & RETRIEVAL ACCURACY</Kicker>
           {selectedRunId && (
             <Sticker variant="cobalt" rotate={-1}>
               RUN: {selectedRunId.slice(0, 12)}
@@ -222,7 +243,7 @@ export const ResultsDashboardPage: React.FC = () => {
               The <span className="italic text-(--cobalt)">results</span>.
             </h1>
             <p className="text-[17px] text-(--ink-soft) max-w-[42ch] m-0 mt-2">
-              Empirical evaluation across transformations, adversarial attacks,
+              Empirical evaluation across transformations, look-alike queries,
               Hamming bit-distance distributions, and deep feature embeddings.
             </p>
           </div>
@@ -334,7 +355,7 @@ export const ResultsDashboardPage: React.FC = () => {
               <MetricNumber
                 label="HARD NEGATIVES"
                 value={summary.n_hard_negatives}
-                sublabel="Adversarial pairs"
+                sublabel="Look-alike images"
               />
             </PaperCard>
 
@@ -342,7 +363,7 @@ export const ResultsDashboardPage: React.FC = () => {
               <MetricNumber
                 label="CASCADE ACCURACY"
                 value={`${(summary.cascade.accuracy * 100).toFixed(1)}%`}
-                sublabel="Overall F1 / Acc"
+                sublabel="Test-split accuracy"
                 valueClassName="text-(--sage)"
               />
             </PaperCard>
@@ -361,7 +382,7 @@ export const ResultsDashboardPage: React.FC = () => {
                 label="ESCALATION RATE"
                 value={`${(summary.cascade.escalation_rate * 100).toFixed(1)}%`}
                 sublabel="Deep stage handoff"
-                valueClassName="text-(--ochre)"
+                valueClassName="text-(--ochre-text)"
               />
             </PaperCard>
           </div>
@@ -426,7 +447,10 @@ export const ResultsDashboardPage: React.FC = () => {
                         );
 
                         const recallVal = cellItem ? cellItem.recall : 0;
-                        const { bg, text } = getHeatmapCellColor(recallVal);
+                        const { bg, text } = getHeatmapCellColor(
+                          recallVal,
+                          theme === "dark" ? "ink" : "paper"
+                        );
 
                         return (
                           <div
@@ -461,7 +485,7 @@ export const ResultsDashboardPage: React.FC = () => {
                   Strength Degradation Curves (F1)
                 </h3>
 
-                {/* Wrapping Transform Selector Stickers */}
+                {/* Wrapping Transform Selector Stickers (excluding 'none') */}
                 <div className="flex items-center gap-1.5 flex-wrap pt-1">
                   {availableTransforms.map((tr) => {
                     const isSelected = tr === selectedTransform;
@@ -509,11 +533,18 @@ export const ResultsDashboardPage: React.FC = () => {
                       }}
                     />
                     <Legend wrapperStyle={{ fontSize: "11px", fontFamily: "Space Mono" }} />
-                    <Line type="monotone" dataKey="phash" stroke="var(--ink)" strokeWidth={2} dot={{ r: 3 }} />
-                    <Line type="monotone" dataKey="dhash" stroke="var(--ink-soft)" strokeWidth={2} dot={{ r: 3 }} />
-                    <Line type="monotone" dataKey="clip" stroke="var(--vermilion)" strokeWidth={2} dot={{ r: 3 }} />
-                    <Line type="monotone" dataKey="dino" stroke="var(--ochre)" strokeWidth={2} dot={{ r: 3 }} />
-                    <Line type="monotone" dataKey="cascade" stroke="var(--cobalt)" strokeWidth={3} strokeDasharray="3 3" dot={{ r: 4 }} />
+                    {CHART_METHODS.map((m) => (
+                      <Line
+                        key={m.key}
+                        type="monotone"
+                        dataKey={m.key}
+                        name={m.name}
+                        stroke={m.color}
+                        strokeDasharray={m.strokeDasharray}
+                        strokeWidth={m.strokeWidth ?? 2}
+                        dot={{ r: 3 }}
+                      />
+                    ))}
                   </LineChart>
                 </ResponsiveContainer>
               </div>
@@ -523,7 +554,7 @@ export const ResultsDashboardPage: React.FC = () => {
             <PaperCard important className="flex flex-col gap-4">
               <div className="flex items-center justify-between border-b border-(--rule) pb-3">
                 <div>
-                  <span className="font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-(--ochre)">
+                  <span className="font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-(--ochre-text)">
                     COMPUTATION PROFILE
                   </span>
                   <h3 className="font-display text-[22px] text-(--ink) m-0">
@@ -651,10 +682,18 @@ export const ResultsDashboardPage: React.FC = () => {
                         }}
                       />
                       <Legend wrapperStyle={{ fontSize: "10px", fontFamily: "Space Mono" }} />
-                      <Line type="monotone" dataKey="phash" stroke="var(--ink)" dot={false} strokeWidth={2} name={`pHash (${rocPrData.aucByMethod.phash?.rocAuc ?? 0})`} />
-                      <Line type="monotone" dataKey="dhash" stroke="var(--ink-soft)" dot={false} strokeWidth={2} name={`dHash (${rocPrData.aucByMethod.dhash?.rocAuc ?? 0})`} />
-                      <Line type="monotone" dataKey="clip" stroke="var(--vermilion)" dot={false} strokeWidth={2} name={`CLIP (${rocPrData.aucByMethod.clip?.rocAuc ?? 0})`} />
-                      <Line type="monotone" dataKey="dino" stroke="var(--ochre)" dot={false} strokeWidth={2} name={`DINOv2 (${rocPrData.aucByMethod.dino?.rocAuc ?? 0})`} />
+                      {CHART_METHODS.filter((m) => m.key !== "cascade" || rocPrData.rocCurve.some((pt) => pt.cascade !== undefined)).map((m) => (
+                        <Line
+                          key={m.key}
+                          type="monotone"
+                          dataKey={m.key}
+                          name={`${m.name}${rocPrData.aucByMethod[m.key]?.rocAuc != null ? ` (${rocPrData.aucByMethod[m.key].rocAuc.toFixed(3)})` : ""}`}
+                          stroke={m.color}
+                          strokeDasharray={m.strokeDasharray}
+                          strokeWidth={m.strokeWidth ?? 2}
+                          dot={false}
+                        />
+                      ))}
                       {rocPrData.cascadePoint && (
                         <Scatter
                           data={[{ x: rocPrData.cascadePoint.fpr, y: rocPrData.cascadePoint.tpr }]}
@@ -718,10 +757,18 @@ export const ResultsDashboardPage: React.FC = () => {
                         }}
                       />
                       <Legend wrapperStyle={{ fontSize: "10px", fontFamily: "Space Mono" }} />
-                      <Line type="monotone" dataKey="phash" stroke="var(--ink)" dot={false} strokeWidth={2} name={`pHash PR (${rocPrData.aucByMethod.phash?.prAuc ?? 0})`} />
-                      <Line type="monotone" dataKey="dhash" stroke="var(--ink-soft)" dot={false} strokeWidth={2} name={`dHash PR (${rocPrData.aucByMethod.dhash?.prAuc ?? 0})`} />
-                      <Line type="monotone" dataKey="clip" stroke="var(--vermilion)" dot={false} strokeWidth={2} name={`CLIP PR (${rocPrData.aucByMethod.clip?.prAuc ?? 0})`} />
-                      <Line type="monotone" dataKey="dino" stroke="var(--ochre)" dot={false} strokeWidth={2} name={`DINOv2 PR (${rocPrData.aucByMethod.dino?.prAuc ?? 0})`} />
+                      {CHART_METHODS.filter((m) => m.key !== "cascade" || rocPrData.prCurve.some((pt) => pt.cascade !== undefined)).map((m) => (
+                        <Line
+                          key={m.key}
+                          type="monotone"
+                          dataKey={m.key}
+                          name={`${m.name}${rocPrData.aucByMethod[m.key]?.prAuc != null ? ` (${rocPrData.aucByMethod[m.key].prAuc.toFixed(3)})` : ""}`}
+                          stroke={m.color}
+                          strokeDasharray={m.strokeDasharray}
+                          strokeWidth={m.strokeWidth ?? 2}
+                          dot={false}
+                        />
+                      ))}
                       {rocPrData.cascadePoint && (
                         <Scatter
                           data={[{ x: rocPrData.cascadePoint.recall, y: rocPrData.cascadePoint.precision }]}
