@@ -59,9 +59,14 @@ def test_invalid_hamming_threshold(tmp_path):
         load_config(str(cfg_path))
 
 
+from pathlib import Path
+
+_CONFIG_PATH = Path(__file__).resolve().parent.parent / "config.yaml"
+
+
 def test_invalid_preprocessing(tmp_path):
     cfg_path = tmp_path / "invalid_prep.yaml"
-    with open("config.yaml", "r", encoding="utf-8") as f:
+    with open(_CONFIG_PATH, "r", encoding="utf-8") as f:
         data = yaml.safe_load(f)
 
     data["models"]["preprocessing"] = "stretch"
@@ -74,7 +79,7 @@ def test_invalid_preprocessing(tmp_path):
 
 def test_unknown_top_level_key(tmp_path):
     cfg_path = tmp_path / "extra_key.yaml"
-    with open("config.yaml", "r", encoding="utf-8") as f:
+    with open(_CONFIG_PATH, "r", encoding="utf-8") as f:
         data = yaml.safe_load(f)
 
     data["unknown_key"] = "forbidden"
