@@ -1,0 +1,70 @@
+import { describe, it, expect } from 'vitest';
+import fs from 'fs';
+import path from 'path';
+
+describe('Editorial Print-Studio Design Tokens & Color Audit', () => {
+  const tokensPath = path.resolve(__dirname, '../design/tokens.css');
+  const tokensContent = fs.readFileSync(tokensPath, 'utf-8');
+
+  const requiredVariables = [
+    '--paper',
+    '--paper-2',
+    '--ink',
+    '--ink-soft',
+    '--cobalt',
+    '--ochre',
+    '--ochre-text',
+    '--vermilion',
+    '--sage',
+    '--peach',
+    '--rule',
+  ];
+
+  it('defines every required semantic color variable in tokens.css', () => {
+    requiredVariables.forEach((variable) => {
+      expect(tokensContent).toContain(variable);
+    });
+  });
+
+  it('has zero raw hex colors (#123456) in src/ components outside tokens.css', () => {
+    const srcDir = path.resolve(__dirname, '..');
+    const hexRegex = /#[0-9a-fA-F]{6}\b/g;
+
+    function checkDir(dir: string) {
+      const entries = fs.readdirSync(dir, { withFileTypes: true });
+      for (const entry of entries) {
+        const fullPath = path.join(dir, entry.name);
+        if (entry.isDirectory()) {
+          checkDir(fullPath);
+        } else if (
+          (entry.name.endsWith('.tsx') || entry.name.endsWith('.ts') || entry.name.endsWith('.css')) &&
+          !entry.name.endsWith('tokens.css') &&
+          !entry.name.includes('.test.')
+        ) {
+          const content = fs.readFileSync(fullPath, 'utf-8');
+          const matches = content.match(hexRegex);
+          expect(
+            matches,
+            `Found raw hex color(s) [${matches?.join(', ')}] in ${entry.name}. Use semantic CSS variables instead.`
+          ).toBeNull();
+        }
+      }
+    }
+
+    checkDir(srcDir);
+  });
+
+  it('heatmap text-colour function returns a >= 4.5:1 colour for 0, 0.5 and 1.0 in both themes', async () => {
+    const { getHeatmapCellColor } = await import('../utils/heatmap');
+    const testValues = [0, 0.5, 1.0];
+    const themes: Array<'paper' | 'ink'> = ['paper', 'ink'];
+
+    for (const theme of themes) {
+      for (const val of testValues) {
+        const result = getHeatmapCellColor(val, theme);
+        expect(result.contrastRatio).toBeGreaterThanOrEqual(4.5);
+      }
+    }
+  });
+});
+
