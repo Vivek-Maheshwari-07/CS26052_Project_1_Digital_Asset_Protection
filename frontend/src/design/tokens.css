@@ -25,10 +25,16 @@
   --ink-soft: #4A5170;
   --cobalt: #2350D8;
   --ochre: #E9C77E;
-  --ochre-text: #8F6008;
+  --ochre-text: #885B08;
   --vermilion: #E4553B;
   --sage: #2F7D57;
   --peach: #F2AC7E;
+
+  /* Text-on-paper shades: >= 4.5:1 on --paper AND --paper-2 (WCAG AA).
+     The brighter base colours above are for fills, stamps and strokes only. */
+  --cobalt-text: #2350D8;
+  --vermilion-text: #BB331A;
+  --sage-text: #2A704E;
   --rule: rgba(27, 34, 64, 0.14);
 
   /* Semantic Aliases */
@@ -38,9 +44,9 @@
   --text-secondary: var(--ink-soft);
   --accent: var(--cobalt);
   --border-rule: var(--rule);
-  --status-pass: var(--sage);
+  --status-pass: var(--sage-text);
   --status-escalated: var(--ochre-text);
-  --status-fail: var(--vermilion);
+  --status-fail: var(--vermilion-text);
 }
 
 .dark,
@@ -58,6 +64,9 @@
   --sage: #4FBF86;
   --peach: #D98A5E;
   --rule: rgba(245, 239, 228, 0.16);
+  --cobalt-text: #6083FF;
+  --vermilion-text: #FF6A4F;
+  --sage-text: #4FBF86;
 
   /* Semantic Aliases */
   --bg-page: var(--paper);
@@ -66,9 +75,9 @@
   --text-secondary: var(--ink-soft);
   --accent: var(--cobalt);
   --border-rule: var(--rule);
-  --status-pass: var(--sage);
-  --status-escalated: var(--ochre);
-  --status-fail: var(--vermilion);
+  --status-pass: var(--sage-text);
+  --status-escalated: var(--ochre-text);
+  --status-fail: var(--vermilion-text);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -83,5 +92,9 @@
     --sage: #4FBF86;
     --peach: #D98A5E;
     --rule: rgba(245, 239, 228, 0.16);
+    --ochre-text: #E9C77E;
+    --cobalt-text: #6083FF;
+    --vermilion-text: #FF6A4F;
+    --sage-text: #4FBF86;
   }
 }

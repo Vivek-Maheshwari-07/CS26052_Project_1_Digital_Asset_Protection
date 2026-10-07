@@ -240,7 +240,7 @@ export const ResultsDashboardPage: React.FC = () => {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
             <h1 className="font-display text-[clamp(40px,7vw,84px)] leading-[0.95] tracking-[-0.02em] text-(--ink) m-0 font-normal">
-              The <span className="italic text-(--cobalt)">results</span>.
+              The <span className="italic text-(--cobalt-text)">results</span>.
             </h1>
             <p className="text-[17px] text-(--ink-soft) max-w-[42ch] m-0 mt-2">
               Empirical evaluation across transformations, look-alike queries,
@@ -333,7 +333,7 @@ export const ResultsDashboardPage: React.FC = () => {
 
       {/* Error state */}
       {error && !isLoading && (
-        <div className="p-4 bg-(--vermilion)/10 border border-(--vermilion)/30 rounded-xl text-(--vermilion) font-mono text-[13px]">
+        <div className="p-4 bg-(--vermilion)/10 border border-(--vermilion)/30 rounded-xl text-(--vermilion-text) font-mono text-[13px]">
           {error}
         </div>
       )}
@@ -364,7 +364,7 @@ export const ResultsDashboardPage: React.FC = () => {
                 label="CASCADE ACCURACY"
                 value={`${(summary.cascade.accuracy * 100).toFixed(1)}%`}
                 sublabel="Test-split accuracy"
-                valueClassName="text-(--sage)"
+                valueClassName="text-(--sage-text)"
               />
             </PaperCard>
 
@@ -391,7 +391,7 @@ export const ResultsDashboardPage: React.FC = () => {
           <PaperCard important className="flex flex-col gap-6 overflow-hidden">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-(--rule) pb-4">
               <div>
-                <span className="font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-(--cobalt)">
+                <span className="font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-(--cobalt-text)">
                   ATTACK MATRIX
                 </span>
                 <h3 className="font-display text-[24px] text-(--ink) m-0">
@@ -476,7 +476,7 @@ export const ResultsDashboardPage: React.FC = () => {
             <PaperCard important className="flex flex-col gap-4">
               <div className="flex flex-col gap-3 border-b border-(--rule) pb-3">
                 <div className="flex items-center justify-between">
-                  <span className="font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-(--cobalt)">
+                  <span className="font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-(--cobalt-text)">
                     ROBUSTNESS ANALYSIS
                   </span>
                   <Activity size={16} className="text-(--ink-soft)" />
@@ -636,7 +636,7 @@ export const ResultsDashboardPage: React.FC = () => {
             <PaperCard important className="flex flex-col gap-4">
               <div className="flex items-center justify-between border-b border-(--rule) pb-3">
                 <div>
-                  <span className="font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-(--cobalt)">
+                  <span className="font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-(--cobalt-text)">
                     DISCRIMINATION ABILITY
                   </span>
                   <h3 className="font-display text-[22px] text-(--ink) m-0">
@@ -651,7 +651,7 @@ export const ResultsDashboardPage: React.FC = () => {
                   Computing ROC curves in Web Worker...
                 </div>
               ) : workerError ? (
-                <div className="h-64 flex items-center justify-center font-mono text-[13px] text-(--vermilion)">
+                <div className="h-64 flex items-center justify-center font-mono text-[13px] text-(--vermilion-text)">
                   {workerError}
                 </div>
               ) : rocPrData ? (
@@ -711,7 +711,7 @@ export const ResultsDashboardPage: React.FC = () => {
             <PaperCard important className="flex flex-col gap-4">
               <div className="flex items-center justify-between border-b border-(--rule) pb-3">
                 <div>
-                  <span className="font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-(--sage)">
+                  <span className="font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-(--sage-text)">
                     RETRIEVAL ACCURACY
                   </span>
                   <h3 className="font-display text-[22px] text-(--ink) m-0">
@@ -726,7 +726,7 @@ export const ResultsDashboardPage: React.FC = () => {
                   Computing PR curves in Web Worker...
                 </div>
               ) : workerError ? (
-                <div className="h-64 flex items-center justify-center font-mono text-[13px] text-(--vermilion)">
+                <div className="h-64 flex items-center justify-center font-mono text-[13px] text-(--vermilion-text)">
                   {workerError}
                 </div>
               ) : rocPrData ? (

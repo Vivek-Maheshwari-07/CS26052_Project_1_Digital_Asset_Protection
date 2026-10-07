@@ -26,7 +26,7 @@ export const HammingPanel: React.FC<HammingPanelProps> = ({
       <div>
         <div className="flex items-center justify-between border-b border-(--rule) pb-3 mb-4">
           <div>
-            <div className="font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-(--cobalt)">
+            <div className="font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-(--cobalt-text)">
               CLASSICAL FINGERPRINTS
             </div>
             <h3 className="font-display text-[20px] font-normal text-(--ink) m-0">

@@ -84,7 +84,7 @@ export const VerifyPage: React.FC = () => {
         <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="flex flex-col gap-3 max-w-2xl">
             <h1 className="font-display text-[clamp(44px,8vw,96px)] leading-[0.95] tracking-[-0.02em] text-(--ink) m-0 font-normal">
-              Verify an <span className="italic text-(--cobalt)">image</span>.
+              Verify an <span className="italic text-(--cobalt-text)">image</span>.
             </h1>
             <p className="text-[18px] text-(--ink-soft) max-w-[34ch] leading-relaxed m-0">
               Test images across the 3-stage cascade: exact SHA-256, 4x perceptual hashes, and deep embeddings.
@@ -117,7 +117,7 @@ export const VerifyPage: React.FC = () => {
 
           {errorMsg && (
             <div
-              className="p-4 bg-(--vermilion)/10 border border-(--vermilion)/30 rounded-xl text-(--vermilion) font-mono text-[13px] flex items-center gap-2"
+              className="p-4 bg-(--vermilion)/10 border border-(--vermilion)/30 rounded-xl text-(--vermilion-text) font-mono text-[13px] flex items-center gap-2"
               role="alert"
             >
               <AlertCircle size={18} className="shrink-0" />
@@ -177,7 +177,7 @@ export const VerifyPage: React.FC = () => {
                   <button
                     type="button"
                     onClick={handleReset}
-                    className="inline-flex items-center gap-1 font-mono text-[12px] font-bold uppercase text-(--cobalt) hover:underline"
+                    className="inline-flex items-center gap-1 font-mono text-[12px] font-bold uppercase text-(--cobalt-text) hover:underline"
                   >
                     <RefreshCw size={13} />
                     <span>Verify another</span>

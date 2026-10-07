@@ -82,7 +82,7 @@ export const RecordModal: React.FC<RecordModalProps> = ({
           Retrieving registration record from index...
         </div>
       ) : error ? (
-        <div className="p-4 bg-(--vermilion)/10 border border-(--vermilion)/30 rounded-xl text-(--vermilion) font-mono text-[13px] flex items-center gap-2">
+        <div className="p-4 bg-(--vermilion)/10 border border-(--vermilion)/30 rounded-xl text-(--vermilion-text) font-mono text-[13px] flex items-center gap-2">
           <AlertCircle size={18} className="shrink-0" />
           <span>{error}</span>
         </div>
@@ -108,7 +108,7 @@ export const RecordModal: React.FC<RecordModalProps> = ({
                     <button
                       type="button"
                       onClick={() => handleCopySha(record.sha256)}
-                      className="p-1 rounded-sm hover:bg-(--paper) text-(--cobalt)"
+                      className="p-1 rounded-sm hover:bg-(--paper) text-(--cobalt-text)"
                       title="Copy SHA-256"
                     >
                       {copiedSha ? <Check size={14} /> : <Copy size={14} />}

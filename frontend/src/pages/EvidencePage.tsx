@@ -137,7 +137,7 @@ export const EvidencePage: React.FC = () => {
         <BackgroundCircle />
         <Kicker>SESSION EXPIRED</Kicker>
         <h1 className="font-display text-[48px] md:text-[64px] font-normal text-(--ink) m-0">
-          Evidence session <span className="italic text-(--cobalt)">expired</span>.
+          Evidence session <span className="italic text-(--cobalt-text)">expired</span>.
         </h1>
         <p className="text-[17px] text-(--ink-soft) max-w-[40ch] m-0">
           Evidence inspection requires query image context in memory. Please re-run
@@ -176,7 +176,7 @@ export const EvidencePage: React.FC = () => {
       {/* Hero Title */}
       <div className="flex flex-col gap-2">
         <h1 className="font-display text-[clamp(40px,7vw,84px)] leading-[0.95] tracking-[-0.02em] text-(--ink) m-0 font-normal">
-          The <span className="italic text-(--cobalt)">evidence</span>.
+          The <span className="italic text-(--cobalt-text)">evidence</span>.
         </h1>
         <p className="text-[17px] text-(--ink-soft) max-w-[44ch] m-0">
           Inspection and forensics: side-by-side comparison, interactive swipe
@@ -304,7 +304,7 @@ export const EvidencePage: React.FC = () => {
                 size={80}
               />
               <div>
-                <span className="font-mono text-[11px] font-bold uppercase text-(--cobalt)">
+                <span className="font-mono text-[11px] font-bold uppercase text-(--cobalt-text)">
                   VISUAL INSPECTION
                 </span>
                 <h3 className="font-display text-[24px] text-(--ink) m-0">
@@ -433,7 +433,7 @@ export const EvidencePage: React.FC = () => {
                 playTick();
                 setRecordModalOpen(true);
               }}
-              className="inline-flex items-center gap-1.5 font-mono text-[12px] font-bold uppercase text-(--cobalt) hover:underline"
+              className="inline-flex items-center gap-1.5 font-mono text-[12px] font-bold uppercase text-(--cobalt-text) hover:underline"
             >
               <FileText size={14} />
               <span>Inspect Full Record Sheet</span>

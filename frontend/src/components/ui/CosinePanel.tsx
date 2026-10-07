@@ -54,7 +54,7 @@ export const CosinePanel: React.FC<CosinePanelProps> = ({
         </div>
 
         {error ? (
-          <div className="p-4 bg-(--vermilion)/10 border border-(--vermilion)/30 rounded-xl text-(--vermilion) font-mono text-[12px] flex items-center gap-2">
+          <div className="p-4 bg-(--vermilion)/10 border border-(--vermilion)/30 rounded-xl text-(--vermilion-text) font-mono text-[12px] flex items-center gap-2">
             <AlertCircle size={18} className="shrink-0" />
             <span>{error}</span>
           </div>
@@ -109,7 +109,7 @@ export const CosinePanel: React.FC<CosinePanelProps> = ({
 
       <div className="mt-4 pt-3 border-t border-(--rule) font-mono text-[11px] text-(--ink-soft) flex items-center justify-between">
         {isOnDemand ? (
-          <span className="text-(--cobalt) font-semibold flex items-center gap-1">
+          <span className="text-(--cobalt-text) font-semibold flex items-center gap-1">
             <Sparkles size={13} />
             Computed on demand: does not change the verdict.
           </span>

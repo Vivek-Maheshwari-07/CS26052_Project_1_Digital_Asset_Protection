@@ -61,7 +61,7 @@ export const Seal: React.FC<SealProps> = ({ className = "", size = 140 }) => {
 
         {/* Center Glyph */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div className="w-10 h-10 rounded-full bg-(--paper) text-(--cobalt) flex items-center justify-center shadow-xs">
+          <div className="w-10 h-10 rounded-full bg-(--paper) text-(--cobalt-text) flex items-center justify-center shadow-xs">
             <FingerprintIcon size={22} />
           </div>
         </div>

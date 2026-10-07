@@ -31,7 +31,7 @@ export const StatusPill: React.FC<StatusPillProps> = ({
     pass: {
       icon: <CheckCircle2 size={13} strokeWidth={2.5} className="shrink-0" />,
       text: label || children || "Pass",
-      classes: "bg-(--sage)/15 text-(--sage) border border-(--sage)/30",
+      classes: "bg-(--sage)/15 text-(--sage-text) border border-(--sage)/30",
     },
     escalated: {
       icon: <AlertTriangle size={13} strokeWidth={2.5} className="shrink-0" />,
@@ -41,7 +41,7 @@ export const StatusPill: React.FC<StatusPillProps> = ({
     fail: {
       icon: <XCircle size={13} strokeWidth={2.5} className="shrink-0" />,
       text: label || children || "Fail",
-      classes: "bg-(--vermilion)/15 text-(--vermilion) border border-(--vermilion)/30",
+      classes: "bg-(--vermilion)/15 text-(--vermilion-text) border border-(--vermilion)/30",
     },
     neutral: {
       icon: <Info size={13} strokeWidth={2.5} className="shrink-0" />,

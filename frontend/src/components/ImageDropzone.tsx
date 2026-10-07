@@ -121,13 +121,13 @@ export const ImageDropzone: React.FC<ImageDropzoneProps> = ({
           </div>
         ) : (
           <div className="flex flex-col items-center gap-3 text-center">
-            <div className="w-12 h-12 rounded-full bg-(--paper) border border-(--rule) flex items-center justify-center text-(--cobalt) shadow-xs">
+            <div className="w-12 h-12 rounded-full bg-(--paper) border border-(--rule) flex items-center justify-center text-(--cobalt-text) shadow-xs">
               <Upload size={22} strokeWidth={2} />
             </div>
 
             <div className="flex flex-col gap-1">
               <span className="font-display text-[24px] font-normal text-(--ink)">
-                Drop an image or <span className="text-(--cobalt) italic">browse</span> ↗
+                Drop an image or <span className="text-(--cobalt-text) italic">browse</span> ↗
               </span>
               <span className="font-mono text-[12px] font-bold uppercase tracking-wider text-(--ink-soft)">
                 JPEG · PNG · WEBP · ≤ 10 MB
@@ -138,7 +138,7 @@ export const ImageDropzone: React.FC<ImageDropzoneProps> = ({
       </div>
 
       {errorMsg && (
-        <div className="mt-2 text-center font-mono text-[12px] font-bold text-(--vermilion)">
+        <div className="mt-2 text-center font-mono text-[12px] font-bold text-(--vermilion-text)">
           {errorMsg}
         </div>
       )}

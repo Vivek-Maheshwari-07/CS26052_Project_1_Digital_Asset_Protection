@@ -49,7 +49,7 @@ export const TicketStub: React.FC<TicketStubProps> = ({
       <div className="flex items-center justify-between gap-2 mb-2 font-mono">
         {number ? (
           <>
-            <span className="text-[12px] font-bold text-(--cobalt)">{number}</span>
+            <span className="text-[12px] font-bold text-(--cobalt-text)">{number}</span>
             <span className="text-[12px] font-bold uppercase tracking-wider text-(--ink)">
               {name}
             </span>
@@ -70,7 +70,7 @@ export const TicketStub: React.FC<TicketStubProps> = ({
             </Sticker>
           </div>
         ) : isMatch ? (
-          <div className="flex items-center gap-1.5 text-(--sage) font-mono text-[13px] font-bold">
+          <div className="flex items-center gap-1.5 text-(--sage-text) font-mono text-[13px] font-bold">
             <CheckCircle2 size={16} strokeWidth={2} />
             <span>Match</span>
           </div>
@@ -79,12 +79,12 @@ export const TicketStub: React.FC<TicketStubProps> = ({
             → Miss · next stage
           </div>
         ) : isNoMatch ? (
-          <div className="flex items-center gap-1.5 text-(--vermilion) font-mono text-[13px] font-bold">
+          <div className="flex items-center gap-1.5 text-(--vermilion-text) font-mono text-[13px] font-bold">
             <XCircle size={16} strokeWidth={2} />
             <span>No match</span>
           </div>
         ) : status === "running" ? (
-          <div className="flex items-center gap-1.5 text-(--cobalt) font-mono text-[13px] animate-pulse">
+          <div className="flex items-center gap-1.5 text-(--cobalt-text) font-mono text-[13px] animate-pulse">
             <Clock size={16} />
             <span>Running...</span>
           </div>

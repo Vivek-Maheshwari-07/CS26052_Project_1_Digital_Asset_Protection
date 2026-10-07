@@ -17,12 +17,12 @@ export const Stamp: React.FC<StampProps> = ({
   const config = {
     match: {
       text: "MATCH",
-      color: "border-(--sage) text-(--sage)",
+      color: "border-(--sage) text-(--sage-text)",
       bg: "bg-(--paper-2)",
     },
     no_match: {
       text: "NO MATCH",
-      color: "border-(--vermilion) text-(--vermilion)",
+      color: "border-(--vermilion) text-(--vermilion-text)",
       bg: "bg-(--paper-2)",
     },
     escalated: {

@@ -98,7 +98,7 @@ export const Navbar: React.FC = () => {
             </div>
             <span className="font-display text-[22px] tracking-tight font-normal text-(--ink)">
               ProvNet
-              <span className="font-mono text-(--cobalt) font-bold animate-pulse inline-block ml-0.5">
+              <span className="font-mono text-(--cobalt-text) font-bold animate-pulse inline-block ml-0.5">
                 _
               </span>
             </span>
@@ -160,7 +160,7 @@ export const Navbar: React.FC = () => {
               aria-label={soundOn ? "Sound on" : "Sound off"}
             >
               {soundOn ? (
-                <Volume2 size={16} strokeWidth={2} className="text-(--cobalt)" />
+                <Volume2 size={16} strokeWidth={2} className="text-(--cobalt-text)" />
               ) : (
                 <VolumeX size={16} strokeWidth={2} className="text-(--ink-soft)" />
               )}
