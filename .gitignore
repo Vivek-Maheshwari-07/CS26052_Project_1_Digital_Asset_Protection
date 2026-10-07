@@ -16,3 +16,12 @@ uploads/
 backend/uploads/
 legacy/backend/eval/data/
 node_modules/
+data/*
+!data/benchmark/
+data/benchmark/*
+!data/benchmark/README.md
+!data/benchmark/originals/
+!data/benchmark/originals/.gitkeep
+!data/benchmark/hard_negatives/
+!data/benchmark/hard_negatives/.gitkeep
+backend/data/

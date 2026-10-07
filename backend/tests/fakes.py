@@ -47,5 +47,13 @@ class FakeEmbedder:
 
         return clip_out, dino_out
 
+    def embed_batch(self, images: list[Image.Image]) -> tuple[np.ndarray, np.ndarray]:
+        clips, dinos = [], []
+        for img in images:
+            c, d = self.embed(img)
+            clips.append(c)
+            dinos.append(d)
+        return np.stack(clips, axis=0), np.stack(dinos, axis=0)
+
     def warm_up(self) -> None:
         self.embed(Image.new("RGB", (224, 224), (128, 128, 128)))
