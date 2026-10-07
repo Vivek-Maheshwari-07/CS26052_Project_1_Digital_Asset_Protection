@@ -130,3 +130,73 @@ ORDER BY method, category, transform, strength
 """).bindparams(
     bindparam("run_id", type_=String),
 )
+
+Q11_BENCHMARK_RUNS_LIST = text("""
+SELECT 
+    run_id,
+    MAX(created_at) AS created_at,
+    COUNT(*)::integer AS n_rows,
+    ARRAY_AGG(DISTINCT split ORDER BY split) AS splits
+FROM benchmark_runs
+GROUP BY run_id
+ORDER BY MAX(created_at) DESC
+""")
+
+Q12_BENCHMARK_RUN_EXISTS = text("""
+SELECT run_id 
+FROM benchmark_runs 
+WHERE run_id = :run_id 
+LIMIT 1
+""").bindparams(
+    bindparam("run_id", type_=String),
+)
+
+Q13_BENCHMARK_LATEST_RUN_ID = text("""
+SELECT run_id 
+FROM benchmark_runs 
+ORDER BY created_at DESC 
+LIMIT 1
+""")
+
+Q14_BENCHMARK_SUMMARY_COUNTS = text("""
+SELECT 
+    COUNT(DISTINCT original_id)::integer AS n_originals,
+    COUNT(DISTINCT split_part(query_file, '__', 1)) FILTER (WHERE category = 'hard_negative')::integer AS n_hard_negatives
+FROM benchmark_runs
+WHERE run_id = :run_id
+""").bindparams(
+    bindparam("run_id", type_=String),
+)
+
+Q15_BENCHMARK_CASCADE_STATS = text("""
+-- Rule: A query escalated iff its cascade latency_ms > its phash latency_ms for the same
+-- (query_file, original_id), because evaluate.py stores cascade_lat = hash_lat when it does not escalate.
+SELECT 
+    COALESCE(AVG(c.latency_ms), 0.0)::float AS mean_latency_ms,
+    COALESCE(
+        COUNT(*) FILTER (WHERE c.latency_ms > p.latency_ms)::float / NULLIF(COUNT(*), 0),
+        0.0
+    )::float AS escalation_rate
+FROM benchmark_runs c
+JOIN benchmark_runs p ON c.run_id = p.run_id 
+    AND c.query_file = p.query_file 
+    AND c.original_id = p.original_id 
+    AND p.method = 'phash'
+WHERE c.run_id = :run_id 
+  AND c.method = 'cascade' 
+  AND c.split = 'test'
+""").bindparams(
+    bindparam("run_id", type_=String),
+)
+
+Q16_BENCHMARK_STREAM_RUNS = text("""
+SELECT 
+    run_id, split, category, original_id, query_file, transform, strength,
+    is_true_copy, method, score, score_kind, latency_ms, created_at
+FROM benchmark_runs
+WHERE run_id = :run_id
+ORDER BY id
+""").bindparams(
+    bindparam("run_id", type_=String),
+)
+

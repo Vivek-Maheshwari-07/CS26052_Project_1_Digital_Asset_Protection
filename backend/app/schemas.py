@@ -279,6 +279,14 @@ class BenchmarkSummary(BaseModel):
     cascade: CascadeMetrics
 
 
+class BenchmarkRunInfo(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    run_id: str
+    created_at: UtcDatetime
+    n_rows: int
+    splits: list[str]
+
+
 class BenchmarkRow(BaseModel):
     model_config = ConfigDict(extra="forbid")
     run_id: str
