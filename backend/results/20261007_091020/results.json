@@ -1,0 +1,1730 @@
+{
+  "step3": [
+    {
+      "pair": "ORIGraw__MINIMAL",
+      "phash": 0.625,
+      "clip": 0.8025185664653859,
+      "dino": 0.9065147042274475,
+      "dino_patchmean": 0.9605725407600403,
+      "fused": 0.9917147629241132
+    },
+    {
+      "pair": "ORIGclean__MINIMAL",
+      "phash": 0.90625,
+      "clip": 0.8020107850480817,
+      "dino": 0.9113913774490356,
+      "dino_patchmean": 0.9639526605606079,
+      "fused": 0.9997863496346483
+    },
+    {
+      "pair": "ORIGraw__MEDIUM",
+      "phash": 0.59375,
+      "clip": 0.6933221270112675,
+      "dino": 0.562920093536377,
+      "dino_patchmean": 0.7256993055343628,
+      "fused": 0.7909882935469086
+    },
+    {
+      "pair": "ORIGclean__MEDIUM",
+      "phash": 0.59375,
+      "clip": 0.6923573262019034,
+      "dino": 0.5610657930374146,
+      "dino_patchmean": 0.7204414010047913,
+      "fused": 0.7865053088332544
+    },
+    {
+      "pair": "ORIGraw__HEAVY",
+      "phash": 0.46875,
+      "clip": 0.490109493633337,
+      "dino": 0.3691492974758148,
+      "dino_patchmean": 0.5558844804763794,
+      "fused": 0.0025433595854700004
+    },
+    {
+      "pair": "ORIGclean__HEAVY",
+      "phash": 0.53125,
+      "clip": 0.4906026174015593,
+      "dino": 0.36808958649635315,
+      "dino_patchmean": 0.5478666424751282,
+      "fused": 0.005822659077733055
+    },
+    {
+      "pair": "ORIGraw__SIBLING",
+      "phash": 0.5,
+      "clip": 0.8150409666769686,
+      "dino": 0.8465039730072021,
+      "dino_patchmean": 0.8784769773483276,
+      "fused": 0.9706464111900527
+    },
+    {
+      "pair": "ORIGclean__SIBLING",
+      "phash": 0.625,
+      "clip": 0.813104870071188,
+      "dino": 0.8494403958320618,
+      "dino_patchmean": 0.8805769681930542,
+      "fused": 0.9938196479379716
+    },
+    {
+      "pair": "ORIGclean__ORIGclean",
+      "phash": 1.0,
+      "clip": 1.0000000258382653,
+      "dino": 1.000000238418579,
+      "dino_patchmean": 0.9999999403953552,
+      "fused": 0.9999997492980293
+    },
+    {
+      "pair": "ORIGclean__crop_90",
+      "phash": 1.0,
+      "clip": 0.969951072701545,
+      "dino": 0.9756103754043579,
+      "dino_patchmean": 0.9846044778823853,
+      "fused": 0.9999994204570978
+    },
+    {
+      "pair": "ORIGclean__crop_50",
+      "phash": 0.59375,
+      "clip": 0.9131687509864755,
+      "dino": 0.8784711360931396,
+      "dino_patchmean": 0.8930176496505737,
+      "fused": 0.9994256836551857
+    },
+    {
+      "pair": "ORIGclean__crop_25",
+      "phash": 0.5,
+      "clip": 0.9014949282377361,
+      "dino": 0.7946414947509766,
+      "dino_patchmean": 0.7945852279663086,
+      "fused": 0.9972937705551247
+    },
+    {
+      "pair": "ORIGclean__crop_10",
+      "phash": 0.4375,
+      "clip": 0.812910237747534,
+      "dino": 0.5534907579421997,
+      "dino_patchmean": 0.6079758405685425,
+      "fused": 0.9322208610864523
+    },
+    {
+      "pair": "ORIGclean__crop_50_offset",
+      "phash": 0.5,
+      "clip": 0.9104485443071896,
+      "dino": 0.8437472581863403,
+      "dino_patchmean": 0.8827102184295654,
+      "fused": 0.9978904704382053
+    },
+    {
+      "pair": "ORIGclean__hflip",
+      "phash": 0.5,
+      "clip": 0.990894138461995,
+      "dino": 0.9234369993209839,
+      "dino_patchmean": 0.9355590343475342,
+      "fused": 0.9997757589806804
+    },
+    {
+      "pair": "ORIGclean__rot15",
+      "phash": 0.59375,
+      "clip": 0.9141668252901818,
+      "dino": 0.8541814684867859,
+      "dino_patchmean": 0.8056605458259583,
+      "fused": 0.999441439558042
+    },
+    {
+      "pair": "ORIGclean__bright_contrast",
+      "phash": 0.96875,
+      "clip": 0.9402963995451472,
+      "dino": 0.9822325706481934,
+      "dino_patchmean": 0.9904286861419678,
+      "fused": 0.9999980055484118
+    },
+    {
+      "pair": "ORIGclean__grayscale",
+      "phash": 1.0,
+      "clip": 0.881597966340223,
+      "dino": 0.9651326537132263,
+      "dino_patchmean": 0.9849033355712891,
+      "fused": 0.9999931900739526
+    },
+    {
+      "pair": "ORIGclean__noise_20",
+      "phash": 1.0,
+      "clip": 0.9159211652226796,
+      "dino": 0.9528020620346069,
+      "dino_patchmean": 0.9822086095809937,
+      "fused": 0.9999973851299334
+    },
+    {
+      "pair": "ORIGclean__blur_3",
+      "phash": 1.0,
+      "clip": 0.8646588568757272,
+      "dino": 0.9493865966796875,
+      "dino_patchmean": 0.9684401154518127,
+      "fused": 0.9999890782294609
+    },
+    {
+      "pair": "ORIGclean__jpeg30_resize50",
+      "phash": 1.0,
+      "clip": 0.9392215307680547,
+      "dino": 0.9915307760238647,
+      "dino_patchmean": 0.9953833222389221,
+      "fused": 0.999998634612373
+    },
+    {
+      "pair": "ORIGclean__text_banner",
+      "phash": 0.9375,
+      "clip": 0.9194288805148119,
+      "dino": 0.9232267141342163,
+      "dino_patchmean": 0.9049196243286133,
+      "fused": 0.9999946279773498
+    },
+    {
+      "pair": "ORIGclean__combo",
+      "phash": 0.59375,
+      "clip": 0.8800741464809032,
+      "dino": 0.876304566860199,
+      "dino_patchmean": 0.8933885097503662,
+      "fused": 0.9985559326292471
+    },
+    {
+      "pair": "MINIMAL__MEDIUM",
+      "phash": 0.625,
+      "clip": 0.8864309322166919,
+      "dino": 0.6329556703567505,
+      "dino_patchmean": 0.7235616445541382,
+      "fused": 0.9991959336734574
+    },
+    {
+      "pair": "MINIMAL__HEAVY",
+      "phash": 0.5,
+      "clip": 0.6122167825252502,
+      "dino": 0.41127708554267883,
+      "dino_patchmean": 0.5379371643066406,
+      "fused": 0.10362218119907318
+    },
+    {
+      "pair": "MINIMAL__SIBLING",
+      "phash": 0.65625,
+      "clip": 0.8008019041947912,
+      "dino": 0.8390283584594727,
+      "dino_patchmean": 0.8701516389846802,
+      "fused": 0.9942110233649615
+    },
+    {
+      "pair": "MEDIUM__HEAVY",
+      "phash": 0.5625,
+      "clip": 0.6990330331997655,
+      "dino": 0.5890002250671387,
+      "dino_patchmean": 0.7957316637039185,
+      "fused": 0.7467298366318369
+    },
+    {
+      "pair": "MEDIUM__SIBLING",
+      "phash": 0.53125,
+      "clip": 0.7032972532334025,
+      "dino": 0.5496264696121216,
+      "dino_patchmean": 0.7144812941551208,
+      "fused": 0.688101115655099
+    },
+    {
+      "pair": "HEAVY__SIBLING",
+      "phash": 0.40625,
+      "clip": 0.5420701031448971,
+      "dino": 0.4537545144557953,
+      "dino_patchmean": 0.642219066619873,
+      "fused": 0.004770559152584142
+    }
+  ],
+  "geom": [
+    {
+      "pair": "ORIGraw__MINIMAL",
+      "flipped": false,
+      "n_inliers": 493,
+      "inlier_ratio": 0.6224747474747475,
+      "cov_s": 0.5200771918100956,
+      "cov_o": 0.27674875899716367,
+      "spread_s": 0.625,
+      "spread_o": 0.4375,
+      "scale": 0.5082712162751664,
+      "rot": -1.15709672438499,
+      "persp": 4.194792485213612e-05,
+      "sane": true
+    },
+    {
+      "pair": "ORIGclean__MINIMAL",
+      "flipped": false,
+      "n_inliers": 493,
+      "inlier_ratio": 0.608641975308642,
+      "cov_s": 0.5062340494603152,
+      "cov_o": 0.4895956349490206,
+      "spread_s": 0.625,
+      "spread_o": 0.625,
+      "scale": 0.9421417401521291,
+      "rot": -0.32850391294870657,
+      "persp": 2.6686366069535147e-05,
+      "sane": true
+    },
+    {
+      "pair": "ORIGraw__MEDIUM",
+      "flipped": false,
+      "n_inliers": 149,
+      "inlier_ratio": 0.772020725388601,
+      "cov_s": 0.10252335696745847,
+      "cov_o": 0.062391091598799846,
+      "spread_s": 0.3125,
+      "spread_o": 0.3125,
+      "scale": 0.8205618491178297,
+      "rot": 13.486528740775176,
+      "persp": 0.0004764901514609061,
+      "sane": true
+    },
+    {
+      "pair": "ORIGclean__MEDIUM",
+      "flipped": false,
+      "n_inliers": 138,
+      "inlier_ratio": 0.711340206185567,
+      "cov_s": 0.08028887163673425,
+      "cov_o": 0.0926775059364492,
+      "spread_s": 0.3125,
+      "spread_o": 0.3125,
+      "scale": 1.553824244546482,
+      "rot": -0.30886695217987004,
+      "persp": 0.0005049129275425872,
+      "sane": true
+    },
+    {
+      "pair": "ORIGraw__HEAVY",
+      "flipped": false,
+      "n_inliers": 5,
+      "inlier_ratio": 0.22727272727272727,
+      "cov_s": 0.0,
+      "cov_o": 0.0,
+      "spread_s": 0.0,
+      "spread_o": 0.0,
+      "scale": 0.0,
+      "rot": 0.0,
+      "persp": 0.0,
+      "sane": false
+    },
+    {
+      "pair": "ORIGclean__HEAVY",
+      "flipped": false,
+      "n_inliers": 5,
+      "inlier_ratio": 0.23809523809523808,
+      "cov_s": 0.0,
+      "cov_o": 0.0,
+      "spread_s": 0.0,
+      "spread_o": 0.0,
+      "scale": 0.0,
+      "rot": 0.0,
+      "persp": 0.0,
+      "sane": false
+    },
+    {
+      "pair": "ORIGraw__SIBLING",
+      "flipped": false,
+      "n_inliers": 464,
+      "inlier_ratio": 0.6186666666666667,
+      "cov_s": 0.3202082146200933,
+      "cov_o": 0.21324418160258748,
+      "spread_s": 0.5,
+      "spread_o": 0.5625,
+      "scale": 0.5950946819175826,
+      "rot": 0.9973100015721147,
+      "persp": 4.440614248587837e-05,
+      "sane": true
+    },
+    {
+      "pair": "ORIGclean__SIBLING",
+      "flipped": false,
+      "n_inliers": 552,
+      "inlier_ratio": 0.6085997794928335,
+      "cov_s": 0.3210429946281466,
+      "cov_o": 0.3893577879244932,
+      "spread_s": 0.375,
+      "spread_o": 0.5,
+      "scale": 1.0708331235627557,
+      "rot": -0.29625643269343405,
+      "persp": 2.5659709803404603e-05,
+      "sane": true
+    },
+    {
+      "pair": "ORIGclean__ORIGclean",
+      "flipped": false,
+      "n_inliers": 3974,
+      "inlier_ratio": 1.0,
+      "cov_s": 0.8820861338024979,
+      "cov_o": 0.8820861338024979,
+      "spread_s": 0.9375,
+      "spread_o": 0.9375,
+      "scale": 1.0,
+      "rot": 0.0,
+      "persp": 0.0,
+      "sane": true
+    },
+    {
+      "pair": "ORIGclean__crop_90",
+      "flipped": false,
+      "n_inliers": 2834,
+      "inlier_ratio": 0.9926444833625219,
+      "cov_s": 0.8751510568552514,
+      "cov_o": 0.7873679765456142,
+      "spread_s": 0.9375,
+      "spread_o": 0.9375,
+      "scale": 0.9484671214686222,
+      "rot": 0.0013491707076251716,
+      "persp": 1.6972609288081255e-07,
+      "sane": true
+    },
+    {
+      "pair": "ORIGclean__crop_50",
+      "flipped": false,
+      "n_inliers": 1739,
+      "inlier_ratio": 0.9903189066059226,
+      "cov_s": 0.889294213760172,
+      "cov_o": 0.443594405395213,
+      "spread_s": 1.0,
+      "spread_o": 0.9375,
+      "scale": 0.7065187594678405,
+      "rot": 0.010686879266680145,
+      "persp": 3.9978428555094615e-07,
+      "sane": true
+    },
+    {
+      "pair": "ORIGclean__crop_25",
+      "flipped": false,
+      "n_inliers": 886,
+      "inlier_ratio": 0.9977477477477478,
+      "cov_s": 0.8847953823748244,
+      "cov_o": 0.22128550195089408,
+      "spread_s": 1.0,
+      "spread_o": 0.25,
+      "scale": 0.4999641672182629,
+      "rot": -0.007820688085150365,
+      "persp": 1.0729816545738349e-07,
+      "sane": true
+    },
+    {
+      "pair": "ORIGclean__crop_10",
+      "flipped": false,
+      "n_inliers": 263,
+      "inlier_ratio": 0.9962121212121212,
+      "cov_s": 0.8016118273268588,
+      "cov_o": 0.0797939340271908,
+      "spread_s": 1.0,
+      "spread_o": 0.25,
+      "scale": 0.3150783289843653,
+      "rot": -0.01720628444788205,
+      "persp": 3.6910709336974967e-07,
+      "sane": true
+    },
+    {
+      "pair": "ORIGclean__crop_50_offset",
+      "flipped": false,
+      "n_inliers": 1918,
+      "inlier_ratio": 0.9896800825593395,
+      "cov_s": 0.9085759299224557,
+      "cov_o": 0.45332439506301675,
+      "spread_s": 1.0,
+      "spread_o": 0.5625,
+      "scale": 0.7063051088023039,
+      "rot": 0.0011537295743766847,
+      "persp": 1.4528530856261284e-07,
+      "sane": true
+    },
+    {
+      "pair": "ORIGclean__hflip",
+      "flipped": true,
+      "n_inliers": 3974,
+      "inlier_ratio": 1.0,
+      "cov_s": 0.8820861338024979,
+      "cov_o": 0.8820861338024979,
+      "spread_s": 0.9375,
+      "spread_o": 0.9375,
+      "scale": 1.0,
+      "rot": 0.0,
+      "persp": 0.0,
+      "sane": true
+    },
+    {
+      "pair": "ORIGclean__rot15",
+      "flipped": false,
+      "n_inliers": 1383,
+      "inlier_ratio": 0.935723951285521,
+      "cov_s": 0.5321164369772752,
+      "cov_o": 0.8102834724649973,
+      "spread_s": 0.9375,
+      "spread_o": 0.9375,
+      "scale": 1.1744503736840817,
+      "rot": 15.003874938366929,
+      "persp": 2.897301892500831e-07,
+      "sane": true
+    },
+    {
+      "pair": "ORIGclean__bright_contrast",
+      "flipped": false,
+      "n_inliers": 2828,
+      "inlier_ratio": 0.9888111888111888,
+      "cov_s": 0.8610064090699201,
+      "cov_o": 0.8614362700609423,
+      "spread_s": 0.9375,
+      "spread_o": 0.9375,
+      "scale": 1.000020849539091,
+      "rot": 0.0008426438853657467,
+      "persp": 1.0364444602517088e-07,
+      "sane": true
+    },
+    {
+      "pair": "ORIGclean__grayscale",
+      "flipped": false,
+      "n_inliers": 3861,
+      "inlier_ratio": 0.9987066735644077,
+      "cov_s": 0.8802384053589892,
+      "cov_o": 0.8802457005132919,
+      "spread_s": 0.9375,
+      "spread_o": 0.9375,
+      "scale": 0.9999966292234044,
+      "rot": -0.00036246719269277764,
+      "persp": 2.2031499083196027e-08,
+      "sane": true
+    },
+    {
+      "pair": "ORIGclean__noise_20",
+      "flipped": false,
+      "n_inliers": 1087,
+      "inlier_ratio": 0.9560246262093228,
+      "cov_s": 0.8165594356890908,
+      "cov_o": 0.816326165975627,
+      "spread_s": 0.9375,
+      "spread_o": 0.9375,
+      "scale": 1.000917416301863,
+      "rot": 0.011279163947140724,
+      "persp": 1.0131322571445668e-06,
+      "sane": true
+    },
+    {
+      "pair": "ORIGclean__blur_3",
+      "flipped": false,
+      "n_inliers": 94,
+      "inlier_ratio": 0.9894736842105263,
+      "cov_s": 0.6618420710590256,
+      "cov_o": 0.6622326942128838,
+      "spread_s": 0.9375,
+      "spread_o": 0.9375,
+      "scale": 0.9987049451608978,
+      "rot": 0.026137354840992465,
+      "persp": 2.269243535482506e-06,
+      "sane": true
+    },
+    {
+      "pair": "ORIGclean__jpeg30_resize50",
+      "flipped": false,
+      "n_inliers": 1337,
+      "inlier_ratio": 0.9911045218680504,
+      "cov_s": 0.8544389929881526,
+      "cov_o": 0.8539314929543649,
+      "spread_s": 0.9375,
+      "spread_o": 0.9375,
+      "scale": 1.0004358121559564,
+      "rot": 0.011700439450320036,
+      "persp": 4.972712367712374e-07,
+      "sane": true
+    },
+    {
+      "pair": "ORIGclean__text_banner",
+      "flipped": false,
+      "n_inliers": 3040,
+      "inlier_ratio": 0.9986859395532195,
+      "cov_s": 0.8770956634994918,
+      "cov_o": 0.8770956634994918,
+      "spread_s": 0.9375,
+      "spread_o": 0.9375,
+      "scale": 1.0,
+      "rot": 2.2127164845043737e-15,
+      "persp": 3.064291166147998e-19,
+      "sane": true
+    },
+    {
+      "pair": "ORIGclean__combo",
+      "flipped": false,
+      "n_inliers": 1337,
+      "inlier_ratio": 0.9794871794871794,
+      "cov_s": 0.8728264143125005,
+      "cov_o": 0.43509185209154805,
+      "spread_s": 1.0,
+      "spread_o": 0.9375,
+      "scale": 0.7062752279455661,
+      "rot": -0.00024319770837704974,
+      "persp": 4.307896506505311e-07,
+      "sane": true
+    },
+    {
+      "pair": "MINIMAL__MEDIUM",
+      "flipped": false,
+      "n_inliers": 223,
+      "inlier_ratio": 0.7663230240549829,
+      "cov_s": 0.12099854847356928,
+      "cov_o": 0.13733278593596454,
+      "spread_s": 0.3125,
+      "spread_o": 0.3125,
+      "scale": 1.3852321679603725,
+      "rot": 5.237214057848078,
+      "persp": 0.0003979380727985521,
+      "sane": true
+    },
+    {
+      "pair": "MINIMAL__HEAVY",
+      "flipped": true,
+      "n_inliers": 7,
+      "inlier_ratio": 0.21875,
+      "cov_s": 0.0,
+      "cov_o": 0.0,
+      "spread_s": 0.0,
+      "spread_o": 0.0,
+      "scale": 0.0,
+      "rot": 0.0,
+      "persp": 0.0,
+      "sane": false
+    },
+    {
+      "pair": "MINIMAL__SIBLING",
+      "flipped": false,
+      "n_inliers": 199,
+      "inlier_ratio": 0.41286307053941906,
+      "cov_s": 0.12452460893839112,
+      "cov_o": 0.17184072136083037,
+      "spread_s": 0.3125,
+      "spread_o": 0.4375,
+      "scale": 1.2284671131608051,
+      "rot": 0.020369864053545392,
+      "persp": 4.957957043154166e-05,
+      "sane": true
+    },
+    {
+      "pair": "MEDIUM__HEAVY",
+      "flipped": true,
+      "n_inliers": 8,
+      "inlier_ratio": 0.25,
+      "cov_s": 0.019204553912491294,
+      "cov_o": 0.010782502284244029,
+      "spread_s": 0.1875,
+      "spread_o": 0.125,
+      "scale": 0.44372407134014985,
+      "rot": -110.39667634534801,
+      "persp": 0.002467582104272346,
+      "sane": false
+    },
+    {
+      "pair": "MEDIUM__SIBLING",
+      "flipped": false,
+      "n_inliers": 128,
+      "inlier_ratio": 0.6305418719211823,
+      "cov_s": 0.05338213255884893,
+      "cov_o": 0.06651341034448033,
+      "spread_s": 0.1875,
+      "spread_o": 0.25,
+      "scale": 0.7334640719175924,
+      "rot": -2.4635671613380525,
+      "persp": 0.0003193867547153968,
+      "sane": true
+    },
+    {
+      "pair": "HEAVY__SIBLING",
+      "flipped": true,
+      "n_inliers": 15,
+      "inlier_ratio": 0.24193548387096775,
+      "cov_s": 0.04606403714204511,
+      "cov_o": 0.0,
+      "spread_s": 0.125,
+      "spread_o": 0.0625,
+      "scale": 5.636604459511181e-07,
+      "rot": 47.297786841658564,
+      "persp": 0.03130672074397914,
+      "sane": false
+    }
+  ],
+  "dense": [
+    {
+      "pair": "ORIGraw__MINIMAL",
+      "resid_med": 14.0,
+      "resid_p90": 56.0,
+      "ncc_median": 0.043060963917882396,
+      "frac_ncc_gt_0.8": 0.03980099502487562,
+      "ssim": 0.49514387191964926,
+      "edge_corr": 0.41733940646984596,
+      "flow_median": 6.942704200744629,
+      "flow_p90": 27.787424087524414,
+      "frac_flow_gt_1px": 0.9715765103400807
+    },
+    {
+      "pair": "ORIGclean__MINIMAL",
+      "resid_med": 16.0,
+      "resid_p90": 49.0,
+      "ncc_median": 0.026061589421852348,
+      "frac_ncc_gt_0.8": 0.01282051282051282,
+      "ssim": 0.5386386877132627,
+      "edge_corr": 0.3530119064919922,
+      "flow_median": 12.083398818969727,
+      "flow_p90": 23.4346981048584,
+      "frac_flow_gt_1px": 0.9901041168472174
+    },
+    {
+      "pair": "ORIGraw__MEDIUM",
+      "resid_med": 36.0,
+      "resid_p90": 75.0,
+      "ncc_median": 0.00649607925386915,
+      "frac_ncc_gt_0.8": 0.0,
+      "ssim": 0.3963258708444964,
+      "edge_corr": 0.19782039937295062,
+      "flow_median": 19.544368743896484,
+      "flow_p90": 56.21778106689453,
+      "frac_flow_gt_1px": 0.994799374587169
+    },
+    {
+      "pair": "ORIGclean__MEDIUM",
+      "resid_med": 36.0,
+      "resid_p90": 66.0,
+      "ncc_median": -1.4041731249672424e-05,
+      "frac_ncc_gt_0.8": 0.0,
+      "ssim": 0.4940056440744363,
+      "edge_corr": 0.12012448725986988,
+      "flow_median": 38.1099853515625,
+      "flow_p90": 91.48037719726562,
+      "frac_flow_gt_1px": 0.9972191270069736
+    },
+    {
+      "pair": "ORIGraw__HEAVY",
+      "resid_med": -1,
+      "resid_p90": -1,
+      "ncc_median": -1,
+      "frac_ncc_gt_0.8": 0.0,
+      "ssim": -1.0,
+      "edge_corr": -1.0,
+      "flow_median": -1.0,
+      "flow_p90": -1.0,
+      "frac_flow_gt_1px": 0.0
+    },
+    {
+      "pair": "ORIGclean__HEAVY",
+      "resid_med": -1,
+      "resid_p90": -1,
+      "ncc_median": -1,
+      "frac_ncc_gt_0.8": 0.0,
+      "ssim": -1.0,
+      "edge_corr": -1.0,
+      "flow_median": -1.0,
+      "flow_p90": -1.0,
+      "frac_flow_gt_1px": 0.0
+    },
+    {
+      "pair": "ORIGraw__SIBLING",
+      "resid_med": 24.0,
+      "resid_p90": 69.0,
+      "ncc_median": 0.04339101491355242,
+      "frac_ncc_gt_0.8": 0.027906976744186046,
+      "ssim": 0.48883567528513117,
+      "edge_corr": 0.38163152566672115,
+      "flow_median": 12.95866870880127,
+      "flow_p90": 166.2873077392578,
+      "frac_flow_gt_1px": 0.9849033704016709
+    },
+    {
+      "pair": "ORIGclean__SIBLING",
+      "resid_med": 22.0,
+      "resid_p90": 62.0,
+      "ncc_median": 0.02233008051864857,
+      "frac_ncc_gt_0.8": 0.06129597197898424,
+      "ssim": 0.5643179346429049,
+      "edge_corr": 0.3637889741815332,
+      "flow_median": 16.033781051635742,
+      "flow_p90": 37.24026870727539,
+      "frac_flow_gt_1px": 0.9860649642856713
+    },
+    {
+      "pair": "ORIGclean__ORIGclean",
+      "resid_med": 0.0,
+      "resid_p90": 0.0,
+      "ncc_median": 1.0,
+      "frac_ncc_gt_0.8": 1.0,
+      "ssim": 1.0,
+      "edge_corr": 1.0,
+      "flow_median": 0.0,
+      "flow_p90": 0.0,
+      "frac_flow_gt_1px": 0.0
+    },
+    {
+      "pair": "ORIGclean__crop_90",
+      "resid_med": 1.0,
+      "resid_p90": 2.0,
+      "ncc_median": 0.9971177940471692,
+      "frac_ncc_gt_0.8": 1.0,
+      "ssim": 0.9896541628169063,
+      "edge_corr": 0.976239052532579,
+      "flow_median": 0.02987850457429886,
+      "flow_p90": 0.15928447246551514,
+      "frac_flow_gt_1px": 0.03408436761944727
+    },
+    {
+      "pair": "ORIGclean__crop_50",
+      "resid_med": 1.0,
+      "resid_p90": 2.0,
+      "ncc_median": 0.997576062061729,
+      "frac_ncc_gt_0.8": 1.0,
+      "ssim": 0.9875805307734028,
+      "edge_corr": 0.9830713908489815,
+      "flow_median": 0.03442845121026039,
+      "flow_p90": 0.1501399129629135,
+      "frac_flow_gt_1px": 0.02482201456917931
+    },
+    {
+      "pair": "ORIGclean__crop_25",
+      "resid_med": 1.0,
+      "resid_p90": 1.0,
+      "ncc_median": 0.9974848586312846,
+      "frac_ncc_gt_0.8": 0.8428571428571429,
+      "ssim": 0.9858035872255322,
+      "edge_corr": 0.9876676044640417,
+      "flow_median": 0.033570315688848495,
+      "flow_p90": 0.18985609710216522,
+      "frac_flow_gt_1px": 0.040116610685087775
+    },
+    {
+      "pair": "ORIGclean__crop_10",
+      "resid_med": 1.0,
+      "resid_p90": 2.0,
+      "ncc_median": 0.9960399761560192,
+      "frac_ncc_gt_0.8": 0.8823529411764706,
+      "ssim": 0.9769946717810744,
+      "edge_corr": 0.9782986915363215,
+      "flow_median": 0.03861182555556297,
+      "flow_p90": 0.20546989142894745,
+      "frac_flow_gt_1px": 0.041043307086614175
+    },
+    {
+      "pair": "ORIGclean__crop_50_offset",
+      "resid_med": 1.0,
+      "resid_p90": 2.0,
+      "ncc_median": 0.9976517840582302,
+      "frac_ncc_gt_0.8": 1.0,
+      "ssim": 0.9932838395610362,
+      "edge_corr": 0.9951687005917402,
+      "flow_median": 0.020410053431987762,
+      "flow_p90": 0.09086722135543823,
+      "frac_flow_gt_1px": 0.01803701838327877
+    },
+    {
+      "pair": "ORIGclean__hflip",
+      "resid_med": 0.0,
+      "resid_p90": 0.0,
+      "ncc_median": 1.0,
+      "frac_ncc_gt_0.8": 1.0,
+      "ssim": 0.9999999723107336,
+      "edge_corr": 0.9999999932592191,
+      "flow_median": 0.0,
+      "flow_p90": 0.0,
+      "frac_flow_gt_1px": 0.0
+    },
+    {
+      "pair": "ORIGclean__rot15",
+      "resid_med": 1.0,
+      "resid_p90": 7.0,
+      "ncc_median": 0.8863881901714386,
+      "frac_ncc_gt_0.8": 0.8479020979020979,
+      "ssim": 0.955653470462574,
+      "edge_corr": 0.9747841137591702,
+      "flow_median": 0.1251741349697113,
+      "flow_p90": 0.36608877778053284,
+      "frac_flow_gt_1px": 0.023641952740147784
+    },
+    {
+      "pair": "ORIGclean__bright_contrast",
+      "resid_med": 7.0,
+      "resid_p90": 17.0,
+      "ncc_median": 0.9801919488494777,
+      "frac_ncc_gt_0.8": 0.9100719424460432,
+      "ssim": 0.9382721441351326,
+      "edge_corr": 0.9360451478002971,
+      "flow_median": 0.26137208938598633,
+      "flow_p90": 7.331662654876709,
+      "frac_flow_gt_1px": 0.2250459417333744
+    },
+    {
+      "pair": "ORIGclean__grayscale",
+      "resid_med": 7.0,
+      "resid_p90": 25.0,
+      "ncc_median": 0.9994531457230741,
+      "frac_ncc_gt_0.8": 1.0,
+      "ssim": 0.9780709082417985,
+      "edge_corr": 0.9997912396858096,
+      "flow_median": 0.008730750530958176,
+      "flow_p90": 0.04274305701255798,
+      "frac_flow_gt_1px": 0.0
+    },
+    {
+      "pair": "ORIGclean__noise_20",
+      "resid_med": 10.0,
+      "resid_p90": 25.0,
+      "ncc_median": 0.6801842425856921,
+      "frac_ncc_gt_0.8": 0.1258741258741259,
+      "ssim": 0.4758224551801885,
+      "edge_corr": 0.8907301082103897,
+      "flow_median": 0.4696476459503174,
+      "flow_p90": 3.2384865283966064,
+      "frac_flow_gt_1px": 0.3122041448583744
+    },
+    {
+      "pair": "ORIGclean__blur_3",
+      "resid_med": 6.0,
+      "resid_p90": 29.0,
+      "ncc_median": 0.2452857031105456,
+      "frac_ncc_gt_0.8": 0.0,
+      "ssim": 0.6592914590167022,
+      "edge_corr": 0.45939840818785604,
+      "flow_median": 1.3796218633651733,
+      "flow_p90": 5.791150093078613,
+      "frac_flow_gt_1px": 0.624823208512931
+    },
+    {
+      "pair": "ORIGclean__jpeg30_resize50",
+      "resid_med": 3.0,
+      "resid_p90": 11.0,
+      "ncc_median": 0.8162386859921783,
+      "frac_ncc_gt_0.8": 0.6048951048951049,
+      "ssim": 0.8993533434780955,
+      "edge_corr": 0.921491818789866,
+      "flow_median": 0.3432113528251648,
+      "flow_p90": 3.175333023071289,
+      "frac_flow_gt_1px": 0.28875101023706895
+    },
+    {
+      "pair": "ORIGclean__text_banner",
+      "resid_med": 17.0,
+      "resid_p90": 42.0,
+      "ncc_median": 0.9977247983710427,
+      "frac_ncc_gt_0.8": 0.8968105065666041,
+      "ssim": 0.8558659126427827,
+      "edge_corr": 0.7642946186978239,
+      "flow_median": 0.2960856556892395,
+      "flow_p90": 10.945710182189941,
+      "frac_flow_gt_1px": 0.2723202259082512
+    },
+    {
+      "pair": "ORIGclean__combo",
+      "resid_med": 9.0,
+      "resid_p90": 23.0,
+      "ncc_median": 0.9188003803326132,
+      "frac_ncc_gt_0.8": 0.9775280898876404,
+      "ssim": 0.9108479185672581,
+      "edge_corr": 0.9663137195667622,
+      "flow_median": 0.1614818125963211,
+      "flow_p90": 2.5513832569122314,
+      "frac_flow_gt_1px": 0.19286131102898268
+    },
+    {
+      "pair": "MINIMAL__MEDIUM",
+      "resid_med": 42.0,
+      "resid_p90": 86.0,
+      "ncc_median": 0.0014510081475610657,
+      "frac_ncc_gt_0.8": 0.0,
+      "ssim": 0.4481923004829548,
+      "edge_corr": 0.21939610739003182,
+      "flow_median": 28.51715850830078,
+      "flow_p90": 85.80841064453125,
+      "frac_flow_gt_1px": 0.9931155212799746
+    },
+    {
+      "pair": "MINIMAL__HEAVY",
+      "resid_med": -1,
+      "resid_p90": -1,
+      "ncc_median": -1,
+      "frac_ncc_gt_0.8": 0.0,
+      "ssim": -1.0,
+      "edge_corr": -1.0,
+      "flow_median": -1.0,
+      "flow_p90": -1.0,
+      "frac_flow_gt_1px": 0.0
+    },
+    {
+      "pair": "MINIMAL__SIBLING",
+      "resid_med": 30.0,
+      "resid_p90": 81.0,
+      "ncc_median": 0.011670585844832545,
+      "frac_ncc_gt_0.8": 0.0016806722689075631,
+      "ssim": 0.471295716159606,
+      "edge_corr": 0.30086375309723584,
+      "flow_median": 22.394987106323242,
+      "flow_p90": 79.32210540771484,
+      "frac_flow_gt_1px": 0.9828340873824525
+    },
+    {
+      "pair": "MEDIUM__HEAVY",
+      "resid_med": 44.0,
+      "resid_p90": 88.0,
+      "ncc_median": 0.000427254849091866,
+      "frac_ncc_gt_0.8": 0.0,
+      "ssim": 0.4913325579358701,
+      "edge_corr": 0.061146658594653826,
+      "flow_median": 32.26936721801758,
+      "flow_p90": 69.4832763671875,
+      "frac_flow_gt_1px": 0.9989265997667086
+    },
+    {
+      "pair": "MEDIUM__SIBLING",
+      "resid_med": 44.0,
+      "resid_p90": 97.0,
+      "ncc_median": 0.006199068778120554,
+      "frac_ncc_gt_0.8": 0.0,
+      "ssim": 0.4809368536240689,
+      "edge_corr": 0.2260709234253478,
+      "flow_median": 36.855018615722656,
+      "flow_p90": 101.53902435302734,
+      "frac_flow_gt_1px": 0.9978492791891144
+    },
+    {
+      "pair": "HEAVY__SIBLING",
+      "resid_med": 43.0,
+      "resid_p90": 90.0,
+      "ncc_median": -0.004752416378600628,
+      "frac_ncc_gt_0.8": 0.0,
+      "ssim": 0.4957468266419166,
+      "edge_corr": 0.062015614119940034,
+      "flow_median": 51.69572830200195,
+      "flow_p90": 106.49819946289062,
+      "frac_flow_gt_1px": 0.999784083948161
+    }
+  ],
+  "locality": [
+    {
+      "pair": "ORIGclean__MINIMAL",
+      "R0C0": 11.414741516113281,
+      "R0C1": 7.774979591369629,
+      "R0C2": 6.273963928222656,
+      "R0C3": 7.00161075592041,
+      "R1C0": 16.572538375854492,
+      "R1C1": 16.398170471191406,
+      "R1C2": 16.265823364257812,
+      "R1C3": 15.585260391235352,
+      "R2C0": 19.663021087646484,
+      "R2C1": 9.02931022644043,
+      "R2C2": 8.020219802856445,
+      "R2C3": 11.865358352661133,
+      "R3C0": 7.6921796798706055,
+      "R3C1": 9.00830364227295,
+      "R3C2": 13.508747100830078,
+      "R3C3": 18.53064727783203
+    },
+    {
+      "pair": "ORIGclean__MEDIUM",
+      "R0C0": 73.11511993408203,
+      "R0C1": 30.650402069091797,
+      "R0C2": 55.5328483581543,
+      "R0C3": 97.86183166503906,
+      "R1C0": 75.17520141601562,
+      "R1C1": 12.66687297821045,
+      "R1C2": 9.614654541015625,
+      "R1C3": 55.07038116455078,
+      "R2C0": 47.321380615234375,
+      "R2C1": 8.942855834960938,
+      "R2C2": 7.201241493225098,
+      "R2C3": 28.374462127685547,
+      "R3C0": 50.583187103271484,
+      "R3C1": 47.01204299926758,
+      "R3C2": 43.996971130371094,
+      "R3C3": 46.235740661621094
+    },
+    {
+      "pair": "ORIGclean__SIBLING",
+      "R0C0": 9.6286039352417,
+      "R0C1": 3.9671292304992676,
+      "R0C2": 14.277627944946289,
+      "R0C3": 46.57942199707031,
+      "R1C0": 19.52452850341797,
+      "R1C1": 20.728153228759766,
+      "R1C2": 20.514392852783203,
+      "R1C3": 12.763025283813477,
+      "R2C0": 24.8682804107666,
+      "R2C1": 7.272832870483398,
+      "R2C2": 7.285959243774414,
+      "R2C3": 20.214134216308594,
+      "R3C0": 16.55514144897461,
+      "R3C1": 8.564244270324707,
+      "R3C2": 17.529396057128906,
+      "R3C3": 19.437944412231445
+    }
+  ],
+  "flow_robustness": [],
+  "ai_origin": [
+    {
+      "image": "ORIG",
+      "umm_maybe_asis": 0.9649529457092285,
+      "Ateeqq_asis": 0.32389116287231445,
+      "umm_maybe_recomp": 0.8851887583732605,
+      "Ateeqq_recomp": 0.017032993957400322
+    },
+    {
+      "image": "MINIMAL",
+      "umm_maybe_asis": 0.04635149613022804,
+      "Ateeqq_asis": 0.9873344898223877,
+      "umm_maybe_recomp": 0.048700250685214996,
+      "Ateeqq_recomp": 0.9952399730682373
+    },
+    {
+      "image": "MEDIUM",
+      "umm_maybe_asis": 0.0327514223754406,
+      "Ateeqq_asis": 0.9996961355209351,
+      "umm_maybe_recomp": 0.03704994171857834,
+      "Ateeqq_recomp": 0.9996185302734375
+    },
+    {
+      "image": "HEAVY",
+      "umm_maybe_asis": 0.03760099783539772,
+      "Ateeqq_asis": 0.9977903366088867,
+      "umm_maybe_recomp": 0.05598236992955208,
+      "Ateeqq_recomp": 0.9973145127296448
+    },
+    {
+      "image": "SIBLING",
+      "umm_maybe_asis": 0.04163964465260506,
+      "Ateeqq_asis": 0.9991021156311035,
+      "umm_maybe_recomp": 0.02894156612455845,
+      "Ateeqq_recomp": 0.9988082647323608
+    },
+    {
+      "image": "crop_90",
+      "umm_maybe_asis": 0.05876431614160538,
+      "Ateeqq_asis": 0.1087605431675911,
+      "umm_maybe_recomp": 0.01592128910124302,
+      "Ateeqq_recomp": 0.002326727146282792
+    },
+    {
+      "image": "crop_50",
+      "umm_maybe_asis": 0.16135680675506592,
+      "Ateeqq_asis": 0.996910035610199,
+      "umm_maybe_recomp": 0.11331984400749207,
+      "Ateeqq_recomp": 0.9004423022270203
+    },
+    {
+      "image": "crop_25",
+      "umm_maybe_asis": 0.207045778632164,
+      "Ateeqq_asis": 0.002708049491047859,
+      "umm_maybe_recomp": 0.1916399449110031,
+      "Ateeqq_recomp": 0.0009626265382394195
+    },
+    {
+      "image": "crop_10",
+      "umm_maybe_asis": 0.5508846640586853,
+      "Ateeqq_asis": 0.0019819187000393867,
+      "umm_maybe_recomp": 0.46753281354904175,
+      "Ateeqq_recomp": 0.0012348726158961654
+    },
+    {
+      "image": "crop_50_offset",
+      "umm_maybe_asis": 0.1639472097158432,
+      "Ateeqq_asis": 0.973904550075531,
+      "umm_maybe_recomp": 0.13790223002433777,
+      "Ateeqq_recomp": 0.7436531186103821
+    },
+    {
+      "image": "hflip",
+      "umm_maybe_asis": 0.011815630830824375,
+      "Ateeqq_asis": 0.8055188655853271,
+      "umm_maybe_recomp": 0.0069440449588000774,
+      "Ateeqq_recomp": 0.0073323785327374935
+    },
+    {
+      "image": "rot15",
+      "umm_maybe_asis": 0.053204964846372604,
+      "Ateeqq_asis": 0.9996665716171265,
+      "umm_maybe_recomp": 0.007795352954417467,
+      "Ateeqq_recomp": 0.9992676377296448
+    },
+    {
+      "image": "bright_contrast",
+      "umm_maybe_asis": 0.07306241989135742,
+      "Ateeqq_asis": 0.9994233846664429,
+      "umm_maybe_recomp": 0.12227223813533783,
+      "Ateeqq_recomp": 0.999150276184082
+    },
+    {
+      "image": "grayscale",
+      "umm_maybe_asis": 0.014611618593335152,
+      "Ateeqq_asis": 0.0019220910035073757,
+      "umm_maybe_recomp": 0.011803031899034977,
+      "Ateeqq_recomp": 0.0017483942210674286
+    },
+    {
+      "image": "noise_20",
+      "umm_maybe_asis": 0.07088744640350342,
+      "Ateeqq_asis": 0.0007047849940136075,
+      "umm_maybe_recomp": 0.016191216185688972,
+      "Ateeqq_recomp": 0.0004706770123448223
+    },
+    {
+      "image": "blur_3",
+      "umm_maybe_asis": 0.06316279619932175,
+      "Ateeqq_asis": 0.000901212333701551,
+      "umm_maybe_recomp": 0.018595999106764793,
+      "Ateeqq_recomp": 0.0005160716245882213
+    },
+    {
+      "image": "jpeg30_resize50",
+      "umm_maybe_asis": 0.007874472066760063,
+      "Ateeqq_asis": 0.0026169614866375923,
+      "umm_maybe_recomp": 0.02501998282968998,
+      "Ateeqq_recomp": 0.004859616979956627
+    },
+    {
+      "image": "text_banner",
+      "umm_maybe_asis": 0.05188341438770294,
+      "Ateeqq_asis": 0.9984171390533447,
+      "umm_maybe_recomp": 0.008695405907928944,
+      "Ateeqq_recomp": 0.9847330451011658
+    },
+    {
+      "image": "combo",
+      "umm_maybe_asis": 0.21771326661109924,
+      "Ateeqq_asis": 0.9962794184684753,
+      "umm_maybe_recomp": 0.2379717379808426,
+      "Ateeqq_recomp": 0.9968628883361816
+    },
+    {
+      "image": "phone_38906",
+      "umm_maybe_asis": 0.04450240731239319,
+      "Ateeqq_asis": 0.9998992681503296,
+      "umm_maybe_recomp": 0.04141325503587723,
+      "Ateeqq_recomp": 0.9998824596405029
+    },
+    {
+      "image": "phone_38915",
+      "umm_maybe_asis": 0.22255881130695343,
+      "Ateeqq_asis": 0.999968409538269,
+      "umm_maybe_recomp": 0.2616701126098633,
+      "Ateeqq_recomp": 0.999963641166687
+    },
+    {
+      "image": "phone_38927",
+      "umm_maybe_asis": 0.07935978472232819,
+      "Ateeqq_asis": 0.9999804496765137,
+      "umm_maybe_recomp": 0.08838210999965668,
+      "Ateeqq_recomp": 0.9999775886535645
+    },
+    {
+      "image": "phone_38930",
+      "umm_maybe_asis": 0.04027213528752327,
+      "Ateeqq_asis": 0.9999693632125854,
+      "umm_maybe_recomp": 0.04498406499624252,
+      "Ateeqq_recomp": 0.9999686479568481
+    },
+    {
+      "image": "phone_38936",
+      "umm_maybe_asis": 0.09909199178218842,
+      "Ateeqq_asis": 0.9999690055847168,
+      "umm_maybe_recomp": 0.06782866269350052,
+      "Ateeqq_recomp": 0.9999672174453735
+    },
+    {
+      "image": "phone_38942",
+      "umm_maybe_asis": 0.03044653683900833,
+      "Ateeqq_asis": 0.9997977614402771,
+      "umm_maybe_recomp": 0.023269545286893845,
+      "Ateeqq_recomp": 0.9998076558113098
+    },
+    {
+      "image": "phone_38948",
+      "umm_maybe_asis": 0.11994912475347519,
+      "Ateeqq_asis": 0.9998527765274048,
+      "umm_maybe_recomp": 0.14576826989650726,
+      "Ateeqq_recomp": 0.9998606443405151
+    },
+    {
+      "image": "phone_39686",
+      "umm_maybe_asis": 0.03653958439826965,
+      "Ateeqq_asis": 0.9999278783798218,
+      "umm_maybe_recomp": 0.023570941761136055,
+      "Ateeqq_recomp": 0.9999198913574219
+    },
+    {
+      "image": "phone_39692",
+      "umm_maybe_asis": 0.2910013198852539,
+      "Ateeqq_asis": 0.9999324083328247,
+      "umm_maybe_recomp": 0.22939427196979523,
+      "Ateeqq_recomp": 0.9999306201934814
+    },
+    {
+      "image": "phone_39695",
+      "umm_maybe_asis": 0.0869765430688858,
+      "Ateeqq_asis": 0.9998914003372192,
+      "umm_maybe_recomp": 0.0653245598077774,
+      "Ateeqq_recomp": 0.9998779296875
+    },
+    {
+      "image": "phone_39701",
+      "umm_maybe_asis": 0.12566904723644257,
+      "Ateeqq_asis": 0.9999656677246094,
+      "umm_maybe_recomp": 0.07597928494215012,
+      "Ateeqq_recomp": 0.9999603033065796
+    },
+    {
+      "image": "phone_39707",
+      "umm_maybe_asis": 0.08386477082967758,
+      "Ateeqq_asis": 0.9999833106994629,
+      "umm_maybe_recomp": 0.044039320200681686,
+      "Ateeqq_recomp": 0.9999840259552002
+    },
+    {
+      "image": "phone_39713",
+      "umm_maybe_asis": 0.14730054140090942,
+      "Ateeqq_asis": 0.9997336268424988,
+      "umm_maybe_recomp": 0.1662527620792389,
+      "Ateeqq_recomp": 0.9997410178184509
+    },
+    {
+      "image": "phone_39716",
+      "umm_maybe_asis": 0.06897594034671783,
+      "Ateeqq_asis": 0.9999420642852783,
+      "umm_maybe_recomp": 0.07351451367139816,
+      "Ateeqq_recomp": 0.999936580657959
+    },
+    {
+      "image": "phone_41076",
+      "umm_maybe_asis": 0.02152559533715248,
+      "Ateeqq_asis": 0.9999701976776123,
+      "umm_maybe_recomp": 0.02133934013545513,
+      "Ateeqq_recomp": 0.9999667406082153
+    },
+    {
+      "image": "phone_42623",
+      "umm_maybe_asis": 0.08061423152685165,
+      "Ateeqq_asis": 0.999663233757019,
+      "umm_maybe_recomp": 0.10082434117794037,
+      "Ateeqq_recomp": 0.999705970287323
+    },
+    {
+      "image": "phone_42638",
+      "umm_maybe_asis": 0.22421260178089142,
+      "Ateeqq_asis": 0.9999738931655884,
+      "umm_maybe_recomp": 0.23138190805912018,
+      "Ateeqq_recomp": 0.9999656677246094
+    },
+    {
+      "image": "phone_44365",
+      "umm_maybe_asis": 0.03799653798341751,
+      "Ateeqq_asis": 0.9999110698699951,
+      "umm_maybe_recomp": 0.03789186105132103,
+      "Ateeqq_recomp": 0.9999071359634399
+    },
+    {
+      "image": "phone_44368",
+      "umm_maybe_asis": 0.20835183560848236,
+      "Ateeqq_asis": 0.9999772310256958,
+      "umm_maybe_recomp": 0.14831095933914185,
+      "Ateeqq_recomp": 0.9999767541885376
+    },
+    {
+      "image": "phone_44371",
+      "umm_maybe_asis": 0.04080159217119217,
+      "Ateeqq_asis": 0.9999276399612427,
+      "umm_maybe_recomp": 0.06012813001871109,
+      "Ateeqq_recomp": 0.9999182224273682
+    },
+    {
+      "image": "phone_44378",
+      "umm_maybe_asis": 0.0817004069685936,
+      "Ateeqq_asis": 0.9999531507492065,
+      "umm_maybe_recomp": 0.06774783134460449,
+      "Ateeqq_recomp": 0.9999525547027588
+    },
+    {
+      "image": "phone_44381",
+      "umm_maybe_asis": 0.18802368640899658,
+      "Ateeqq_asis": 0.9999750852584839,
+      "umm_maybe_recomp": 0.12299460172653198,
+      "Ateeqq_recomp": 0.999976396560669
+    },
+    {
+      "image": "phone_44385",
+      "umm_maybe_asis": 0.03962092846632004,
+      "Ateeqq_asis": 0.9999634027481079,
+      "umm_maybe_recomp": 0.033889222890138626,
+      "Ateeqq_recomp": 0.9999644756317139
+    },
+    {
+      "image": "phone_47820",
+      "umm_maybe_asis": 0.04970209300518036,
+      "Ateeqq_asis": 0.9999587535858154,
+      "umm_maybe_recomp": 0.034189362078905106,
+      "Ateeqq_recomp": 0.9999591112136841
+    },
+    {
+      "image": "phone_47823",
+      "umm_maybe_asis": 0.1499258279800415,
+      "Ateeqq_asis": 0.9999163150787354,
+      "umm_maybe_recomp": 0.1534453183412552,
+      "Ateeqq_recomp": 0.9999117851257324
+    },
+    {
+      "image": "phone_47826",
+      "umm_maybe_asis": 0.2548675537109375,
+      "Ateeqq_asis": 0.9999127388000488,
+      "umm_maybe_recomp": 0.18551994860172272,
+      "Ateeqq_recomp": 0.9998894929885864
+    },
+    {
+      "image": "phone_47831",
+      "umm_maybe_asis": 0.13181206583976746,
+      "Ateeqq_asis": 0.9996883869171143,
+      "umm_maybe_recomp": 0.1560470014810562,
+      "Ateeqq_recomp": 0.9997431635856628
+    },
+    {
+      "image": "phone_47836",
+      "umm_maybe_asis": 0.14120233058929443,
+      "Ateeqq_asis": 0.9999481439590454,
+      "umm_maybe_recomp": 0.1538224220275879,
+      "Ateeqq_recomp": 0.9999507665634155
+    },
+    {
+      "image": "phone_47840",
+      "umm_maybe_asis": 0.019117606803774834,
+      "Ateeqq_asis": 0.9962467551231384,
+      "umm_maybe_recomp": 0.015945326536893845,
+      "Ateeqq_recomp": 0.9956768155097961
+    },
+    {
+      "image": "phone_47843",
+      "umm_maybe_asis": 0.10066216439008713,
+      "Ateeqq_asis": 0.9993574023246765,
+      "umm_maybe_recomp": 0.07090084254741669,
+      "Ateeqq_recomp": 0.9992014765739441
+    },
+    {
+      "image": "phone_47846",
+      "umm_maybe_asis": 0.08151436597108841,
+      "Ateeqq_asis": 0.9999685287475586,
+      "umm_maybe_recomp": 0.07149311155080795,
+      "Ateeqq_recomp": 0.999962568283081
+    },
+    {
+      "image": "phone_47849",
+      "umm_maybe_asis": 0.0240955613553524,
+      "Ateeqq_asis": 0.9999598264694214,
+      "umm_maybe_recomp": 0.018841195851564407,
+      "Ateeqq_recomp": 0.9999544620513916
+    },
+    {
+      "image": "phone_47851",
+      "umm_maybe_asis": 0.21282269060611725,
+      "Ateeqq_asis": 0.9999842643737793,
+      "umm_maybe_recomp": 0.2345934361219406,
+      "Ateeqq_recomp": 0.9999825954437256
+    },
+    {
+      "image": "phone_47854",
+      "umm_maybe_asis": 0.1185198649764061,
+      "Ateeqq_asis": 0.9999570846557617,
+      "umm_maybe_recomp": 0.09297336637973785,
+      "Ateeqq_recomp": 0.9999532699584961
+    },
+    {
+      "image": "phone_47857",
+      "umm_maybe_asis": 0.16080890595912933,
+      "Ateeqq_asis": 0.9999548196792603,
+      "umm_maybe_recomp": 0.057780396193265915,
+      "Ateeqq_recomp": 0.999950647354126
+    },
+    {
+      "image": "phone_47861",
+      "umm_maybe_asis": 0.08302634954452515,
+      "Ateeqq_asis": 0.9999840259552002,
+      "umm_maybe_recomp": 0.07442949712276459,
+      "Ateeqq_recomp": 0.9999837875366211
+    },
+    {
+      "image": "phone_47864",
+      "umm_maybe_asis": 0.11548244953155518,
+      "Ateeqq_asis": 0.9998881816864014,
+      "umm_maybe_recomp": 0.05158484727144241,
+      "Ateeqq_recomp": 0.9998925924301147
+    },
+    {
+      "image": "phone_47867",
+      "umm_maybe_asis": 0.07374058663845062,
+      "Ateeqq_asis": 0.9999785423278809,
+      "umm_maybe_recomp": 0.07354903221130371,
+      "Ateeqq_recomp": 0.9999780654907227
+    },
+    {
+      "image": "phone_47870",
+      "umm_maybe_asis": 0.07335151731967926,
+      "Ateeqq_asis": 0.9998606443405151,
+      "umm_maybe_recomp": 0.0476970300078392,
+      "Ateeqq_recomp": 0.9998329877853394
+    },
+    {
+      "image": "phone_47876",
+      "umm_maybe_asis": 0.013848870061337948,
+      "Ateeqq_asis": 0.9999209642410278,
+      "umm_maybe_recomp": 0.010041091591119766,
+      "Ateeqq_recomp": 0.999910831451416
+    },
+    {
+      "image": "phone_47879",
+      "umm_maybe_asis": 0.11986391246318817,
+      "Ateeqq_asis": 0.9999825954437256,
+      "umm_maybe_recomp": 0.06275086104869843,
+      "Ateeqq_recomp": 0.9999817609786987
+    },
+    {
+      "image": "phone_48164",
+      "umm_maybe_asis": 0.42856866121292114,
+      "Ateeqq_asis": 0.9996998310089111,
+      "umm_maybe_recomp": 0.4174124300479889,
+      "Ateeqq_recomp": 0.9996919631958008
+    },
+    {
+      "image": "phone_48423",
+      "umm_maybe_asis": 0.07652926445007324,
+      "Ateeqq_asis": 0.9999338388442993,
+      "umm_maybe_recomp": 0.051137588918209076,
+      "Ateeqq_recomp": 0.9999328851699829
+    },
+    {
+      "image": "phone_48429",
+      "umm_maybe_asis": 0.03164881840348244,
+      "Ateeqq_asis": 0.9999032020568848,
+      "umm_maybe_recomp": 0.027175072580575943,
+      "Ateeqq_recomp": 0.9998995065689087
+    },
+    {
+      "image": "phone_48435",
+      "umm_maybe_asis": 0.0954255610704422,
+      "Ateeqq_asis": 0.9999572038650513,
+      "umm_maybe_recomp": 0.08303371071815491,
+      "Ateeqq_recomp": 0.9999552965164185
+    },
+    {
+      "image": "phone_48438",
+      "umm_maybe_asis": 0.31048789620399475,
+      "Ateeqq_asis": 0.9999834299087524,
+      "umm_maybe_recomp": 0.2534533143043518,
+      "Ateeqq_recomp": 0.9999829530715942
+    },
+    {
+      "image": "phone_48442",
+      "umm_maybe_asis": 0.06787306070327759,
+      "Ateeqq_asis": 0.9999440908432007,
+      "umm_maybe_recomp": 0.06683669984340668,
+      "Ateeqq_recomp": 0.9999359846115112
+    },
+    {
+      "image": "phone_48449",
+      "umm_maybe_asis": 0.06843028962612152,
+      "Ateeqq_asis": 0.9999184608459473,
+      "umm_maybe_recomp": 0.048286981880664825,
+      "Ateeqq_recomp": 0.9999160766601562
+    },
+    {
+      "image": "phone_48476",
+      "umm_maybe_asis": 0.43006229400634766,
+      "Ateeqq_asis": 0.9999809265136719,
+      "umm_maybe_recomp": 0.3831275999546051,
+      "Ateeqq_recomp": 0.9999808073043823
+    },
+    {
+      "image": "phone_48479",
+      "umm_maybe_asis": 0.1358521282672882,
+      "Ateeqq_asis": 0.9999915361404419,
+      "umm_maybe_recomp": 0.1093321293592453,
+      "Ateeqq_recomp": 0.999990701675415
+    },
+    {
+      "image": "phone_48482",
+      "umm_maybe_asis": 0.2813229262828827,
+      "Ateeqq_asis": 0.9999682903289795,
+      "umm_maybe_recomp": 0.26543349027633667,
+      "Ateeqq_recomp": 0.9999661445617676
+    },
+    {
+      "image": "phone_48485",
+      "umm_maybe_asis": 0.15565240383148193,
+      "Ateeqq_asis": 0.9999622106552124,
+      "umm_maybe_recomp": 0.12853725254535675,
+      "Ateeqq_recomp": 0.99996018409729
+    },
+    {
+      "image": "phone_HEAVY",
+      "umm_maybe_asis": 0.03589780628681183,
+      "Ateeqq_asis": 0.9971734285354614,
+      "umm_maybe_recomp": 0.0377316027879715,
+      "Ateeqq_recomp": 0.9234797954559326
+    },
+    {
+      "image": "phone_MEDIUM",
+      "umm_maybe_asis": 0.02645108662545681,
+      "Ateeqq_asis": 0.9996916055679321,
+      "umm_maybe_recomp": 0.036039337515830994,
+      "Ateeqq_recomp": 0.9996284246444702
+    },
+    {
+      "image": "phone_MINIMAL",
+      "umm_maybe_asis": 0.043221402913331985,
+      "Ateeqq_asis": 0.9903440475463867,
+      "umm_maybe_recomp": 0.0444461964070797,
+      "Ateeqq_recomp": 0.9380461573600769
+    },
+    {
+      "image": "phone_ORIG",
+      "umm_maybe_asis": 0.9583094716072083,
+      "Ateeqq_asis": 0.2159850150346756,
+      "umm_maybe_recomp": 0.9418478012084961,
+      "Ateeqq_recomp": 0.01611573062837124
+    },
+    {
+      "image": "phone_SIBLING",
+      "umm_maybe_asis": 0.03545456752181053,
+      "Ateeqq_asis": 0.9990424513816833,
+      "umm_maybe_recomp": 0.022351613268256187,
+      "Ateeqq_recomp": 0.9988620281219482
+    }
+  ],
+  "failures": [
+    "Panel failed ORIGraw__MEDIUM: OpenCV(5.0.0) D:\\a\\opencv-python\\opencv-python\\opencv\\modules\\features\\src\\draw.cpp:242: error: (-215:Assertion failed) i2 >= 0 && i2 < static_cast<int>(keypoints2.size()) in function 'cv::drawMatches'\n\nTraceback (most recent call last):\n  File \"C:\\Users\\Anisha\\Desktop\\Aayush\\24CS051\\DigitalAsset\\backend\\eval\\spike\\run_spike.py\", line 404, in <module>\n    match_img = cv2.drawMatches(gray_O, kp_O, gray_work, kp_S_f if flipped else kp_S, good_matches[:80], None, flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)\ncv2.error: OpenCV(5.0.0) D:\\a\\opencv-python\\opencv-python\\opencv\\modules\\features\\src\\draw.cpp:242: error: (-215:Assertion failed) i2 >= 0 && i2 < static_cast<int>(keypoints2.size()) in function 'cv::drawMatches'\n\n",
+    "Panel failed ORIGclean__MEDIUM: OpenCV(5.0.0) D:\\a\\opencv-python\\opencv-python\\opencv\\modules\\features\\src\\draw.cpp:242: error: (-215:Assertion failed) i2 >= 0 && i2 < static_cast<int>(keypoints2.size()) in function 'cv::drawMatches'\n\nTraceback (most recent call last):\n  File \"C:\\Users\\Anisha\\Desktop\\Aayush\\24CS051\\DigitalAsset\\backend\\eval\\spike\\run_spike.py\", line 404, in <module>\n    match_img = cv2.drawMatches(gray_O, kp_O, gray_work, kp_S_f if flipped else kp_S, good_matches[:80], None, flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)\ncv2.error: OpenCV(5.0.0) D:\\a\\opencv-python\\opencv-python\\opencv\\modules\\features\\src\\draw.cpp:242: error: (-215:Assertion failed) i2 >= 0 && i2 < static_cast<int>(keypoints2.size()) in function 'cv::drawMatches'\n\n",
+    "Panel failed ORIGclean__blur_3: OpenCV(5.0.0) D:\\a\\opencv-python\\opencv-python\\opencv\\modules\\features\\src\\draw.cpp:242: error: (-215:Assertion failed) i2 >= 0 && i2 < static_cast<int>(keypoints2.size()) in function 'cv::drawMatches'\n\nTraceback (most recent call last):\n  File \"C:\\Users\\Anisha\\Desktop\\Aayush\\24CS051\\DigitalAsset\\backend\\eval\\spike\\run_spike.py\", line 404, in <module>\n    match_img = cv2.drawMatches(gray_O, kp_O, gray_work, kp_S_f if flipped else kp_S, good_matches[:80], None, flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)\ncv2.error: OpenCV(5.0.0) D:\\a\\opencv-python\\opencv-python\\opencv\\modules\\features\\src\\draw.cpp:242: error: (-215:Assertion failed) i2 >= 0 && i2 < static_cast<int>(keypoints2.size()) in function 'cv::drawMatches'\n\n",
+    "Flow Robustness fail ORIGclean__MINIMAL 512: OpenCV(5.0.0) D:\\a\\opencv-python\\opencv-python\\opencv\\modules\\geometry\\src\\ptsetreg.cpp:1155: error: (-5:Bad argument) Unknown or unsupported robust estimation method in function 'cv::estimateAffinePartial2D'\n\nTraceback (most recent call last):\n  File \"C:\\Users\\Anisha\\Desktop\\Aayush\\24CS051\\DigitalAsset\\backend\\eval\\spike\\run_spike.py\", line 483, in <module>\n    A, mask_A = cv2.estimateAffinePartial2D(src_pts, dst_pts, method=cv2.USAC_MAGSAC, ransacReprojThreshold=5.0, maxIters=1000, confidence=0.999)\n                ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\ncv2.error: OpenCV(5.0.0) D:\\a\\opencv-python\\opencv-python\\opencv\\modules\\geometry\\src\\ptsetreg.cpp:1155: error: (-5:Bad argument) Unknown or unsupported robust estimation method in function 'cv::estimateAffinePartial2D'\n\n",
+    "Flow Robustness fail ORIGclean__MINIMAL 1024: OpenCV(5.0.0) D:\\a\\opencv-python\\opencv-python\\opencv\\modules\\geometry\\src\\ptsetreg.cpp:1155: error: (-5:Bad argument) Unknown or unsupported robust estimation method in function 'cv::estimateAffinePartial2D'\n\nTraceback (most recent call last):\n  File \"C:\\Users\\Anisha\\Desktop\\Aayush\\24CS051\\DigitalAsset\\backend\\eval\\spike\\run_spike.py\", line 483, in <module>\n    A, mask_A = cv2.estimateAffinePartial2D(src_pts, dst_pts, method=cv2.USAC_MAGSAC, ransacReprojThreshold=5.0, maxIters=1000, confidence=0.999)\n                ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\ncv2.error: OpenCV(5.0.0) D:\\a\\opencv-python\\opencv-python\\opencv\\modules\\geometry\\src\\ptsetreg.cpp:1155: error: (-5:Bad argument) Unknown or unsupported robust estimation method in function 'cv::estimateAffinePartial2D'\n\n",
+    "Flow Robustness fail ORIGclean__MEDIUM 512: OpenCV(5.0.0) D:\\a\\opencv-python\\opencv-python\\opencv\\modules\\geometry\\src\\ptsetreg.cpp:1155: error: (-5:Bad argument) Unknown or unsupported robust estimation method in function 'cv::estimateAffinePartial2D'\n\nTraceback (most recent call last):\n  File \"C:\\Users\\Anisha\\Desktop\\Aayush\\24CS051\\DigitalAsset\\backend\\eval\\spike\\run_spike.py\", line 483, in <module>\n    A, mask_A = cv2.estimateAffinePartial2D(src_pts, dst_pts, method=cv2.USAC_MAGSAC, ransacReprojThreshold=5.0, maxIters=1000, confidence=0.999)\n                ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\ncv2.error: OpenCV(5.0.0) D:\\a\\opencv-python\\opencv-python\\opencv\\modules\\geometry\\src\\ptsetreg.cpp:1155: error: (-5:Bad argument) Unknown or unsupported robust estimation method in function 'cv::estimateAffinePartial2D'\n\n",
+    "Flow Robustness fail ORIGclean__MEDIUM 1024: OpenCV(5.0.0) D:\\a\\opencv-python\\opencv-python\\opencv\\modules\\geometry\\src\\ptsetreg.cpp:1155: error: (-5:Bad argument) Unknown or unsupported robust estimation method in function 'cv::estimateAffinePartial2D'\n\nTraceback (most recent call last):\n  File \"C:\\Users\\Anisha\\Desktop\\Aayush\\24CS051\\DigitalAsset\\backend\\eval\\spike\\run_spike.py\", line 483, in <module>\n    A, mask_A = cv2.estimateAffinePartial2D(src_pts, dst_pts, method=cv2.USAC_MAGSAC, ransacReprojThreshold=5.0, maxIters=1000, confidence=0.999)\n                ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\ncv2.error: OpenCV(5.0.0) D:\\a\\opencv-python\\opencv-python\\opencv\\modules\\geometry\\src\\ptsetreg.cpp:1155: error: (-5:Bad argument) Unknown or unsupported robust estimation method in function 'cv::estimateAffinePartial2D'\n\n",
+    "Flow Robustness fail ORIGclean__SIBLING 512: OpenCV(5.0.0) D:\\a\\opencv-python\\opencv-python\\opencv\\modules\\geometry\\src\\ptsetreg.cpp:1155: error: (-5:Bad argument) Unknown or unsupported robust estimation method in function 'cv::estimateAffinePartial2D'\n\nTraceback (most recent call last):\n  File \"C:\\Users\\Anisha\\Desktop\\Aayush\\24CS051\\DigitalAsset\\backend\\eval\\spike\\run_spike.py\", line 483, in <module>\n    A, mask_A = cv2.estimateAffinePartial2D(src_pts, dst_pts, method=cv2.USAC_MAGSAC, ransacReprojThreshold=5.0, maxIters=1000, confidence=0.999)\n                ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\ncv2.error: OpenCV(5.0.0) D:\\a\\opencv-python\\opencv-python\\opencv\\modules\\geometry\\src\\ptsetreg.cpp:1155: error: (-5:Bad argument) Unknown or unsupported robust estimation method in function 'cv::estimateAffinePartial2D'\n\n",
+    "Flow Robustness fail ORIGclean__SIBLING 1024: OpenCV(5.0.0) D:\\a\\opencv-python\\opencv-python\\opencv\\modules\\geometry\\src\\ptsetreg.cpp:1155: error: (-5:Bad argument) Unknown or unsupported robust estimation method in function 'cv::estimateAffinePartial2D'\n\nTraceback (most recent call last):\n  File \"C:\\Users\\Anisha\\Desktop\\Aayush\\24CS051\\DigitalAsset\\backend\\eval\\spike\\run_spike.py\", line 483, in <module>\n    A, mask_A = cv2.estimateAffinePartial2D(src_pts, dst_pts, method=cv2.USAC_MAGSAC, ransacReprojThreshold=5.0, maxIters=1000, confidence=0.999)\n                ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\ncv2.error: OpenCV(5.0.0) D:\\a\\opencv-python\\opencv-python\\opencv\\modules\\geometry\\src\\ptsetreg.cpp:1155: error: (-5:Bad argument) Unknown or unsupported robust estimation method in function 'cv::estimateAffinePartial2D'\n\n",
+    "Flow Robustness fail ORIGclean__crop_50 512: OpenCV(5.0.0) D:\\a\\opencv-python\\opencv-python\\opencv\\modules\\geometry\\src\\ptsetreg.cpp:1155: error: (-5:Bad argument) Unknown or unsupported robust estimation method in function 'cv::estimateAffinePartial2D'\n\nTraceback (most recent call last):\n  File \"C:\\Users\\Anisha\\Desktop\\Aayush\\24CS051\\DigitalAsset\\backend\\eval\\spike\\run_spike.py\", line 483, in <module>\n    A, mask_A = cv2.estimateAffinePartial2D(src_pts, dst_pts, method=cv2.USAC_MAGSAC, ransacReprojThreshold=5.0, maxIters=1000, confidence=0.999)\n                ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\ncv2.error: OpenCV(5.0.0) D:\\a\\opencv-python\\opencv-python\\opencv\\modules\\geometry\\src\\ptsetreg.cpp:1155: error: (-5:Bad argument) Unknown or unsupported robust estimation method in function 'cv::estimateAffinePartial2D'\n\n",
+    "Flow Robustness fail ORIGclean__crop_50 1024: OpenCV(5.0.0) D:\\a\\opencv-python\\opencv-python\\opencv\\modules\\geometry\\src\\ptsetreg.cpp:1155: error: (-5:Bad argument) Unknown or unsupported robust estimation method in function 'cv::estimateAffinePartial2D'\n\nTraceback (most recent call last):\n  File \"C:\\Users\\Anisha\\Desktop\\Aayush\\24CS051\\DigitalAsset\\backend\\eval\\spike\\run_spike.py\", line 483, in <module>\n    A, mask_A = cv2.estimateAffinePartial2D(src_pts, dst_pts, method=cv2.USAC_MAGSAC, ransacReprojThreshold=5.0, maxIters=1000, confidence=0.999)\n                ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\ncv2.error: OpenCV(5.0.0) D:\\a\\opencv-python\\opencv-python\\opencv\\modules\\geometry\\src\\ptsetreg.cpp:1155: error: (-5:Bad argument) Unknown or unsupported robust estimation method in function 'cv::estimateAffinePartial2D'\n\n",
+    "Flow Robustness fail ORIGclean__noise_20 512: OpenCV(5.0.0) D:\\a\\opencv-python\\opencv-python\\opencv\\modules\\geometry\\src\\ptsetreg.cpp:1155: error: (-5:Bad argument) Unknown or unsupported robust estimation method in function 'cv::estimateAffinePartial2D'\n\nTraceback (most recent call last):\n  File \"C:\\Users\\Anisha\\Desktop\\Aayush\\24CS051\\DigitalAsset\\backend\\eval\\spike\\run_spike.py\", line 483, in <module>\n    A, mask_A = cv2.estimateAffinePartial2D(src_pts, dst_pts, method=cv2.USAC_MAGSAC, ransacReprojThreshold=5.0, maxIters=1000, confidence=0.999)\n                ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\ncv2.error: OpenCV(5.0.0) D:\\a\\opencv-python\\opencv-python\\opencv\\modules\\geometry\\src\\ptsetreg.cpp:1155: error: (-5:Bad argument) Unknown or unsupported robust estimation method in function 'cv::estimateAffinePartial2D'\n\n",
+    "Flow Robustness fail ORIGclean__noise_20 1024: OpenCV(5.0.0) D:\\a\\opencv-python\\opencv-python\\opencv\\modules\\geometry\\src\\ptsetreg.cpp:1155: error: (-5:Bad argument) Unknown or unsupported robust estimation method in function 'cv::estimateAffinePartial2D'\n\nTraceback (most recent call last):\n  File \"C:\\Users\\Anisha\\Desktop\\Aayush\\24CS051\\DigitalAsset\\backend\\eval\\spike\\run_spike.py\", line 483, in <module>\n    A, mask_A = cv2.estimateAffinePartial2D(src_pts, dst_pts, method=cv2.USAC_MAGSAC, ransacReprojThreshold=5.0, maxIters=1000, confidence=0.999)\n                ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\ncv2.error: OpenCV(5.0.0) D:\\a\\opencv-python\\opencv-python\\opencv\\modules\\geometry\\src\\ptsetreg.cpp:1155: error: (-5:Bad argument) Unknown or unsupported robust estimation method in function 'cv::estimateAffinePartial2D'\n\n",
+    "Flow Robustness fail ORIGclean__blur_3 512: OpenCV(5.0.0) D:\\a\\opencv-python\\opencv-python\\opencv\\modules\\geometry\\src\\ptsetreg.cpp:1155: error: (-5:Bad argument) Unknown or unsupported robust estimation method in function 'cv::estimateAffinePartial2D'\n\nTraceback (most recent call last):\n  File \"C:\\Users\\Anisha\\Desktop\\Aayush\\24CS051\\DigitalAsset\\backend\\eval\\spike\\run_spike.py\", line 483, in <module>\n    A, mask_A = cv2.estimateAffinePartial2D(src_pts, dst_pts, method=cv2.USAC_MAGSAC, ransacReprojThreshold=5.0, maxIters=1000, confidence=0.999)\n                ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\ncv2.error: OpenCV(5.0.0) D:\\a\\opencv-python\\opencv-python\\opencv\\modules\\geometry\\src\\ptsetreg.cpp:1155: error: (-5:Bad argument) Unknown or unsupported robust estimation method in function 'cv::estimateAffinePartial2D'\n\n",
+    "Flow Robustness fail ORIGclean__blur_3 1024: OpenCV(5.0.0) D:\\a\\opencv-python\\opencv-python\\opencv\\modules\\geometry\\src\\ptsetreg.cpp:1155: error: (-5:Bad argument) Unknown or unsupported robust estimation method in function 'cv::estimateAffinePartial2D'\n\nTraceback (most recent call last):\n  File \"C:\\Users\\Anisha\\Desktop\\Aayush\\24CS051\\DigitalAsset\\backend\\eval\\spike\\run_spike.py\", line 483, in <module>\n    A, mask_A = cv2.estimateAffinePartial2D(src_pts, dst_pts, method=cv2.USAC_MAGSAC, ransacReprojThreshold=5.0, maxIters=1000, confidence=0.999)\n                ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\ncv2.error: OpenCV(5.0.0) D:\\a\\opencv-python\\opencv-python\\opencv\\modules\\geometry\\src\\ptsetreg.cpp:1155: error: (-5:Bad argument) Unknown or unsupported robust estimation method in function 'cv::estimateAffinePartial2D'\n\n",
+    "Missing panels: ['ORIGclean__MEDIUM', 'ORIGraw__MEDIUM', 'ORIGclean__blur_3']"
+  ],
+  "wall_clocks": {
+    "ORIGraw__MINIMAL_G1": 0.3431878089904785,
+    "ORIGraw__MINIMAL_G2": 0.3488585948944092,
+    "ORIGraw__MINIMAL_G3": 1.5518712997436523,
+    "ORIGraw__MINIMAL_Panels": 0.42714858055114746,
+    "ORIGclean__MINIMAL_G1": 0.46593260765075684,
+    "ORIGclean__MINIMAL_G2": 1.7642219066619873,
+    "ORIGclean__MINIMAL_G3": 2.063481330871582,
+    "ORIGclean__MINIMAL_Panels": 0.7731029987335205,
+    "ORIGraw__MEDIUM_G1": 0.13294649124145508,
+    "ORIGraw__MEDIUM_G2": 0.531095027923584,
+    "ORIGraw__MEDIUM_G3": 1.1219735145568848,
+    "ORIGraw__MEDIUM_Panels": 0.04651975631713867,
+    "ORIGclean__MEDIUM_G1": 0.19357872009277344,
+    "ORIGclean__MEDIUM_G2": 0.8652961254119873,
+    "ORIGclean__MEDIUM_G3": 2.275447368621826,
+    "ORIGclean__MEDIUM_Panels": 0.015491247177124023,
+    "ORIGraw__HEAVY_G1": 0.13496088981628418,
+    "ORIGraw__HEAVY_G2": 0.0007941722869873047,
+    "ORIGraw__HEAVY_G3": 0.004895448684692383,
+    "ORIGraw__HEAVY_Panels": 3.647804260253906e-05,
+    "ORIGclean__HEAVY_G1": 0.14027857780456543,
+    "ORIGclean__HEAVY_G2": 0.0005476474761962891,
+    "ORIGclean__HEAVY_G3": 0.0034813880920410156,
+    "ORIGclean__HEAVY_Panels": 1.2636184692382812e-05,
+    "ORIGraw__SIBLING_G1": 0.2739224433898926,
+    "ORIGraw__SIBLING_G2": 0.16071057319641113,
+    "ORIGraw__SIBLING_G3": 1.08211350440979,
+    "ORIGraw__SIBLING_Panels": 0.3906567096710205,
+    "ORIGclean__SIBLING_G1": 0.30217528343200684,
+    "ORIGclean__SIBLING_G2": 0.5732777118682861,
+    "ORIGclean__SIBLING_G3": 2.4579410552978516,
+    "ORIGclean__SIBLING_Panels": 0.8412895202636719,
+    "ORIGclean__ORIGclean_G1": 0.3722355365753174,
+    "ORIGclean__ORIGclean_G2": 0.09667754173278809,
+    "ORIGclean__ORIGclean_G3": 1.913006067276001,
+    "ORIGclean__ORIGclean_Panels": 8.106231689453125e-06,
+    "ORIGclean__crop_90_G1": 0.27460622787475586,
+    "ORIGclean__crop_90_G2": 0.10287809371948242,
+    "ORIGclean__crop_90_G3": 1.7753918170928955,
+    "ORIGclean__crop_90_Panels": 9.775161743164062e-06,
+    "ORIGclean__crop_50_G1": 0.1746516227722168,
+    "ORIGclean__crop_50_G2": 0.08134126663208008,
+    "ORIGclean__crop_50_G3": 1.6273446083068848,
+    "ORIGclean__crop_50_Panels": 0.5927367210388184,
+    "ORIGclean__crop_25_G1": 0.10540580749511719,
+    "ORIGclean__crop_25_G2": 0.1812269687652588,
+    "ORIGclean__crop_25_G3": 2.021908760070801,
+    "ORIGclean__crop_25_Panels": 1.0251998901367188e-05,
+    "ORIGclean__crop_10_G1": 0.04374504089355469,
+    "ORIGclean__crop_10_G2": 0.09104442596435547,
+    "ORIGclean__crop_10_G3": 1.7074737548828125,
+    "ORIGclean__crop_10_Panels": 1.239776611328125e-05,
+    "ORIGclean__crop_50_offset_G1": 0.21222829818725586,
+    "ORIGclean__crop_50_offset_G2": 0.09491920471191406,
+    "ORIGclean__crop_50_offset_G3": 1.842756986618042,
+    "ORIGclean__crop_50_offset_Panels": 1.8596649169921875e-05,
+    "ORIGclean__hflip_G1": 0.3049311637878418,
+    "ORIGclean__hflip_G2": 0.11400866508483887,
+    "ORIGclean__hflip_G3": 2.0758681297302246,
+    "ORIGclean__hflip_Panels": 0.7523014545440674,
+    "ORIGclean__rot15_G1": 0.5823547840118408,
+    "ORIGclean__rot15_G2": 0.23580145835876465,
+    "ORIGclean__rot15_G3": 2.4065821170806885,
+    "ORIGclean__rot15_Panels": 1.0728836059570312e-05,
+    "ORIGclean__bright_contrast_G1": 0.26956868171691895,
+    "ORIGclean__bright_contrast_G2": 0.11434769630432129,
+    "ORIGclean__bright_contrast_G3": 2.100574016571045,
+    "ORIGclean__bright_contrast_Panels": 7.152557373046875e-06,
+    "ORIGclean__grayscale_G1": 0.322312593460083,
+    "ORIGclean__grayscale_G2": 0.14409780502319336,
+    "ORIGclean__grayscale_G3": 1.7824816703796387,
+    "ORIGclean__grayscale_Panels": 3.719329833984375e-05,
+    "ORIGclean__noise_20_G1": 0.3847231864929199,
+    "ORIGclean__noise_20_G2": 0.14024901390075684,
+    "ORIGclean__noise_20_G3": 2.18807315826416,
+    "ORIGclean__noise_20_Panels": 1.097822904586792,
+    "ORIGclean__blur_3_G1": 0.015933990478515625,
+    "ORIGclean__blur_3_G2": 0.24596095085144043,
+    "ORIGclean__blur_3_G3": 2.060974359512329,
+    "ORIGclean__blur_3_Panels": 0.01017904281616211,
+    "ORIGclean__jpeg30_resize50_G1": 0.20371580123901367,
+    "ORIGclean__jpeg30_resize50_G2": 0.09685134887695312,
+    "ORIGclean__jpeg30_resize50_G3": 1.9608759880065918,
+    "ORIGclean__jpeg30_resize50_Panels": 1.71661376953125e-05,
+    "ORIGclean__text_banner_G1": 0.42060327529907227,
+    "ORIGclean__text_banner_G2": 0.5134000778198242,
+    "ORIGclean__text_banner_G3": 2.0293843746185303,
+    "ORIGclean__text_banner_Panels": 9.5367431640625e-06,
+    "ORIGclean__combo_G1": 0.21002650260925293,
+    "ORIGclean__combo_G2": 0.09007143974304199,
+    "ORIGclean__combo_G3": 2.060528039932251,
+    "ORIGclean__combo_Panels": 1.1444091796875e-05,
+    "MINIMAL__MEDIUM_G1": 0.16495060920715332,
+    "MINIMAL__MEDIUM_G2": 0.6549818515777588,
+    "MINIMAL__MEDIUM_G3": 2.541127920150757,
+    "MINIMAL__MEDIUM_Panels": 1.049041748046875e-05,
+    "MINIMAL__HEAVY_G1": 0.15852737426757812,
+    "MINIMAL__HEAVY_G2": 0.0010514259338378906,
+    "MINIMAL__HEAVY_G3": 0.004629611968994141,
+    "MINIMAL__HEAVY_Panels": 8.940696716308594e-05,
+    "MINIMAL__SIBLING_G1": 0.35002946853637695,
+    "MINIMAL__SIBLING_G2": 0.8042953014373779,
+    "MINIMAL__SIBLING_G3": 2.2094688415527344,
+    "MINIMAL__SIBLING_Panels": 8.58306884765625e-06,
+    "MEDIUM__HEAVY_G1": 0.10198831558227539,
+    "MEDIUM__HEAVY_G2": 0.8415110111236572,
+    "MEDIUM__HEAVY_G3": 1.8848581314086914,
+    "MEDIUM__HEAVY_Panels": 1.0013580322265625e-05,
+    "MEDIUM__SIBLING_G1": 0.15104246139526367,
+    "MEDIUM__SIBLING_G2": 0.5596251487731934,
+    "MEDIUM__SIBLING_G3": 2.104564905166626,
+    "MEDIUM__SIBLING_Panels": 9.298324584960938e-06,
+    "HEAVY__SIBLING_G1": 0.15743017196655273,
+    "HEAVY__SIBLING_G2": 0.6811013221740723,
+    "HEAVY__SIBLING_G3": 1.8048481941223145,
+    "HEAVY__SIBLING_Panels": 1.6450881958007812e-05
+  },
+  "regression_diffs": {
+    "MINIMAL": 0.004185237075886805,
+    "MEDIUM": 0.006311706453091426,
+    "HEAVY": 0.00285664041453,
+    "SIBLING": 0.004546411190052724
+  }
+}
