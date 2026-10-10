@@ -6,6 +6,17 @@ export const VERDICTS = {
 
 export const verdictMeta = (v) => VERDICTS[v] || VERDICTS.no_match;
 
+// Geometric-verification claims. Only `evidence` grade may be called proof of derivation;
+// `lead` grade always needs a person to look at the images.
+export const GATE_CLAIMS = {
+  TIER1: { label: 'Pixel evidence of copying', tone: 'bad', grade: 'evidence' },
+  TIER2: { label: 'Structural evidence of derivation', tone: 'bad', grade: 'evidence' },
+  RELATED_DIFFERENT_CAPTURE: { label: 'Related image, review needed', tone: 'warn', grade: 'lead' },
+  TIER3: { label: 'Similar content, review needed', tone: 'warn', grade: 'lead' },
+};
+
+export const gateMeta = (classification) => GATE_CLAIMS[classification] || null;
+
 export const pct = (x, digits = 1) => `${(x * 100).toFixed(digits)}%`;
 
 export const formatDate = (iso, opts = { dateStyle: 'medium', timeStyle: 'short' }) =>

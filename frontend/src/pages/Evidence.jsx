@@ -4,7 +4,7 @@ import { apiClient, mediaUrl, certificateUrl, verifyPath, API_BASE } from '../ap
 import ScoreRing from '../components/ScoreRing';
 import { useToast } from '../components/Toast';
 import { IconArrowLeft, IconAlert, IconDownload, IconShield, IconCopy, IconFingerprint, IconSparkle } from '../components/Icons';
-import { verdictMeta, pct, formatDate } from '../lib/format';
+import { verdictMeta, gateMeta, pct, formatDate } from '../lib/format';
 
 const hexToBits = (hex) =>
   hex.split('').flatMap((h) => parseInt(h, 16).toString(2).padStart(4, '0').split('').map(Number));
@@ -64,6 +64,61 @@ function CompareView({ copy, original }) {
   );
 }
 
+const EVIDENCE_IMAGES = [
+  ['overlay', 'Aligned overlay', '50/50 blend of your original and the suspected copy after alignment.'],
+  ['heatmap', 'Difference heatmap', 'Where the aligned images still differ (red is a large difference).'],
+  ['changes', 'Changed regions', 'Areas that differ strongly after alignment are tinted red.'],
+  ['matches', 'Matched points', 'Points matched between the two images that agree on one transform.'],
+];
+
+/** Geometric verification: what the alignment found, with the images and numbers behind it. */
+function GatePanel({ gate, claim, candidate, showImages }) {
+  const m = candidate?.metrics || {};
+  const gm = claim && gateMeta(claim.classification);
+  return (
+    <section className="panel">
+      <h3 className="panel-title"><IconShield size={16} /> Geometric verification</h3>
+      {gm ? (
+        <>
+          <p className="explain"><strong>{gm.label}.</strong> {claim.statement}</p>
+          {claim.human_review_required && (
+            <p className="muted small">This is a lead, not proof. A person should compare the images before acting on it.</p>
+          )}
+        </>
+      ) : (
+        <p className="muted small">
+          {m.credible
+            ? 'The images align, but the differences were not enough to report a match.'
+            : 'No consistent alignment between the two images was found.'}
+        </p>
+      )}
+      {m.credible && (
+        <ul className="explainer">
+          <li><span>Matched points: <b>{m.inlier_count}</b> ({pct(m.tight_inlier_frac ?? 0, 0)} fit tightly){m.flipped ? ', copy is mirrored' : ''}</span></li>
+          {m.residual_p90 !== undefined && <li><span>Pixel difference (90th percentile): <b>{m.residual_p90.toFixed(0)}</b> of 255</span></li>}
+          {m.flow_median_px !== undefined && <li><span>Median leftover shift: <b>{m.flow_median_px.toFixed(2)} px</b></span></li>}
+          {m.edge_corr_fine !== undefined && <li><span>Edge structure agreement: <b>{pct(m.edge_corr_fine, 0)}</b></span></li>}
+        </ul>
+      )}
+      {showImages && (
+        <div className="gate-images">
+          {EVIDENCE_IMAGES.filter(([k]) => gate.evidence_urls?.[k]).map(([k, title, note]) => (
+            <figure key={k}>
+              <img src={mediaUrl(gate.evidence_urls[k])} alt={title} loading="lazy" style={{ width: '100%' }} />
+              <figcaption><strong>{title}.</strong> <span className="muted small">{note}</span></figcaption>
+            </figure>
+          ))}
+        </div>
+      )}
+      {gate.origin && (
+        <p className="muted small">
+          Origin metadata: {gate.origin.details?.join('; ')}. This is only what the file declares, and absence of metadata does not mean the image is real.
+        </p>
+      )}
+    </section>
+  );
+}
+
 function ScoreBar({ label, value, color, children }) {
   return (
     <div className="score-bar">
@@ -90,27 +145,37 @@ export default function Evidence() {
   if (!check) return <div className="full-loader inline"><span className="spinner" /></div>;
   if (!match) return <div className="empty-state"><h3>This match isn't part of that check</h3><Link className="btn btn-ghost" to={`/check/${checkId}`}>Back to results</Link></div>;
 
-  const meta = verdictMeta(match.verdict);
+  const gate = check.gate && !check.gate.error ? check.gate : null;
+  const claim = gate?.claims?.find((c) => c.candidate_work_id === matchWorkId) || null;
+  const candidate = gate?.candidates?.find((c) => c.work_id === matchWorkId) || null;
+  const gm = claim && gateMeta(claim.classification);
+  const meta = gm || verdictMeta(match.verdict);
   const verifyLink = `${window.location.origin}${verifyPath(match.work_id)}`;
 
+  // Wording follows the evidence grade: only evidence-grade findings are described as evidence.
+  const gateLines = !gm ? [] : gm.grade === 'evidence'
+    ? ['', `Geometric verification: ${gm.label}.`, claim.statement]
+    : ['', `Geometric verification: ${gm.label}.`, claim.statement,
+       'NOTE: this is a lead for human review, not proof that the image was copied.'];
   const summary = [
-    'IMAGE SIMILARITY EVIDENCE',
+    gm?.grade === 'evidence' ? 'IMAGE COMPARISON EVIDENCE' : 'IMAGE SIMILARITY REPORT (LEAD, NOT PROOF)',
     `Registered work: "${match.title}" by ${match.owner_name}`,
     `Registered on: ${formatDate(match.registered_at, { dateStyle: 'long', timeStyle: 'long' })}`,
     `Registry hash: ${match.entry_hash}`,
     `Public record: ${verifyLink}`,
     '',
     `Suspected copy checked: ${formatDate(check.created_at, { dateStyle: 'long', timeStyle: 'long' })}`,
-    `Verdict: ${meta.label} (${pct(match.confidence)} confidence)`,
-    `Perceptual hash similarity: ${pct(match.phash_score)}`,
-    `AI embedding similarity: ${pct(match.embedding_score)}`,
-    `Assessment: ${explain(match.phash_score, match.embedding_score)}`,
+    `Similarity score: ${pct(match.confidence)} (perceptual hash ${pct(match.phash_score)}, AI embedding ${pct(match.embedding_score)})`,
+    `Reading of the scores: ${explain(match.phash_score, match.embedding_score)}`,
+    ...gateLines,
   ].join('\n');
 
   const copySummary = async () => {
     try {
       await navigator.clipboard.writeText(summary);
-      toast('Evidence summary copied. Paste it into a takedown request.');
+      toast(gm?.grade === 'evidence'
+        ? 'Evidence summary copied. Paste it into a takedown request.'
+        : 'Report copied. It is a lead for review, not proof of copying.');
     } catch {
       toast('Could not copy to clipboard', 'error');
     }
@@ -139,6 +204,10 @@ export default function Evidence() {
         <CompareView copy={mediaUrl(check.query_image_url)} original={mediaUrl(match.image_url)} />
 
         <aside className="evidence-side">
+          {gate && (
+            <GatePanel gate={gate} claim={claim} candidate={candidate}
+              showImages={gate.evidence_work_id === matchWorkId} />
+          )}
           <section className="panel">
             <h3 className="panel-title"><IconSparkle size={16} /> Why this was flagged</h3>
             <p className="explain">{explain(match.phash_score, match.embedding_score)}</p>

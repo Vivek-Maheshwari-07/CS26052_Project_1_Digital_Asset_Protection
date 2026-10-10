@@ -10,6 +10,8 @@ torch
 numpy
 fpdf2
 pytest
+pytest-timeout
+PyYAML
 PyJWT
 bcrypt
 mongomock-motor
@@ -17,3 +19,9 @@ pytest-asyncio
 qrcode
 httpx
 matplotlib  # optional: charts in eval/evaluate.py
+opencv-python-headless==4.14.0.94
+transformers
+scikit-image
+pandas
+tabulate
+c2pa-python

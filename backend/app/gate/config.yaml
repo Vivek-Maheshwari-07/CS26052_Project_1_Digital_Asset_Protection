@@ -1,0 +1,35 @@
+version: "1.1.0"
+modes:
+  tier1: "active"
+  related: "active"
+  tier2: "shadow"
+  tier3: "shadow"
+  ml_detector: "shadow"
+  c2pa: "active"
+  watermark: "stub"
+
+# UNCALIBRATED STARTING VALUES
+sift_nfeatures: 4000
+working_long_side: 1024
+ratio_test: 0.70
+ransac_reproj_px: 5.0
+min_inliers: 30
+min_inlier_coverage: 0.15
+min_spread_cells: 6
+# Repeated-pattern guard: after the homography is fitted, this fraction of the
+# inliers must reproject within reproj_tight_px (a real copy fits tightly;
+# a carpet/tile mismatch only fits loosely).
+reproj_tight_px: 2.0
+min_tight_inlier_frac: 0.5
+tier1_flow_median_max_px: 3.0
+tier1_residual_p90_max: 20.0
+tier2_flow_median_max_px: 10.0
+tier2_edge_corr_min: 0.3
+tier3_lead_score_min: 0.85
+tier3_margin_min: 0.05
+k_candidates: 5
+ecc_downscale: 0.5
+evidence_max_side: 1600
+uniform_std_max: 2.0
+uniform_light_min: 240.0
+uniform_dark_max: 15.0

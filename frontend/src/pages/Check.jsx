@@ -4,18 +4,38 @@ import { apiClient, mediaUrl } from '../api/client';
 import Dropzone from '../components/Dropzone';
 import ScoreRing from '../components/ScoreRing';
 import { IconScan, IconAlert, IconArrowRight, IconShield, IconCheck, IconArrowLeft } from '../components/Icons';
-import { verdictMeta, pct, formatDate, relativeTime } from '../lib/format';
+import { verdictMeta, gateMeta, pct, formatDate, relativeTime } from '../lib/format';
 
 function Summary({ check }) {
   const top = check.results[0];
   const meta = verdictMeta(check.top_verdict);
+  const claim = check.gate_claim;
+  const gm = claim && gateMeta(claim.classification);
+  const claimed = gm && check.results.find((r) => r.work_id === claim.candidate_work_id);
+  if (gm && claimed) {
+    return (
+      <div className={`verdict-banner tone-${gm.tone}`}>
+        <span className="vb-icon"><IconAlert size={22} /></span>
+        <div>
+          <strong>{gm.label}: “{claimed.title}”{claimed.is_own ? ' (your work)' : ` by ${claimed.owner_name}`}</strong>
+          <p>{claim.statement} Registered {formatDate(claimed.registered_at)}.</p>
+        </div>
+        <Link className="btn btn-primary" to={`/evidence/${check.id}/${claimed.work_id}`}>
+          View evidence <IconArrowRight size={16} />
+        </Link>
+      </div>
+    );
+  }
   if (!top || check.top_verdict === 'no_match') {
     return (
       <div className="verdict-banner tone-ok">
         <span className="vb-icon"><IconCheck size={22} /></span>
         <div>
           <strong>No registered work matches this image</strong>
-          <p>The closest entry scored {top ? pct(top.confidence) : '0%'}, below the match threshold.</p>
+          <p>
+            The closest entry scored {top ? pct(top.confidence) : '0%'}, below the match threshold.
+            {check.gate?.error && ' Geometric verification was unavailable for this check, so only similarity scores were used.'}
+          </p>
         </div>
       </div>
     );
@@ -34,8 +54,8 @@ function Summary({ check }) {
   );
 }
 
-function MatchCard({ match, checkId, rank }) {
-  const meta = verdictMeta(match.verdict);
+function MatchCard({ match, checkId, rank, claim }) {
+  const meta = (claim && gateMeta(claim.classification)) || verdictMeta(match.verdict);
   return (
     <Link to={`/evidence/${checkId}/${match.work_id}`} className="match-row" style={{ animationDelay: `${rank * 50}ms` }}>
       <span className="match-rank">{rank + 1}</span>
@@ -101,7 +121,8 @@ export default function Check() {
   };
 
   if (check) {
-    const relevant = check.results.filter((r) => r.verdict !== 'no_match');
+    const claimedId = check.gate_claim?.candidate_work_id;
+    const relevant = check.results.filter((r) => r.verdict !== 'no_match' || r.work_id === claimedId);
     const shown = relevant.length ? relevant : check.results.slice(0, 3);
     return (
       <div className="page-enter">
@@ -118,7 +139,10 @@ export default function Check() {
               {relevant.length ? `${relevant.length} potential match${relevant.length > 1 ? 'es' : ''}` : 'Closest registry entries'}
             </h3>
             <div className="match-list">
-              {shown.map((m, i) => <MatchCard key={m.work_id} match={m} checkId={check.id} rank={i} />)}
+              {shown.map((m, i) => (
+                <MatchCard key={m.work_id} match={m} checkId={check.id} rank={i}
+                  claim={m.work_id === claimedId ? check.gate_claim : null} />
+              ))}
               {shown.length === 0 && <p className="muted">The registry is empty.</p>}
             </div>
           </section>

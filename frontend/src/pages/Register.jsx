@@ -126,6 +126,12 @@ export default function Register() {
               Fingerprinted and added to the registry on {formatDate(result.created_at)}. Its hash is being
               timestamped in Bitcoin through OpenTimestamps.
             </p>
+            {result.gate_notices?.length > 0 && (
+              <div className="alert alert-warn">
+                <IconAlert />
+                <span>{result.gate_notices.join(' ')}</span>
+              </div>
+            )}
             <div className="hash-value static" onClick={copyHash} title="Copy hash" role="button">
               <code>{result.entry_hash}</code><IconCopy size={14} />
             </div>

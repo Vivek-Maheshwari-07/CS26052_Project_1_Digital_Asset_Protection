@@ -52,6 +52,10 @@ class Settings(BaseSettings):
     DUPLICATE_EMBEDDING: float = 0.95
     DUPLICATE_PHASH: float = 0.9
 
+    # Geometric verification gate (app/gate): SIFT+MAGSAC alignment, dense evidence, tiered verdicts.
+    # Needs the DINOv2/CLIP weights; set False to run with the fingerprint scores only.
+    GATE_ENABLED: bool = True
+
     # OpenTimestamps anchoring of registry hashes (Bitcoin-backed, free)
     OTS_ENABLED: bool = True
     OTS_CALENDARS: str = "https://a.pool.opentimestamps.org,https://b.pool.opentimestamps.org"

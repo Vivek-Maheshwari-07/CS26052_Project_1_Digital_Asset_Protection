@@ -14,6 +14,7 @@ from app.api.check import router as check_router
 from app.api.public import router as public_router
 from app.api.auth import router as auth_router, ensure_auth_indexes
 from app.certificate.generate import router as certificate_router
+from app.gate.features import ensure_gate_indexes
 from app.registry.index import index
 from app.registry.anchor import anchor_missing
 
@@ -26,6 +27,7 @@ async def lifespan(app: FastAPI):
     await db.works.create_index("user_id")
     await db.works.create_index("id", unique=True)
     await db.checks.create_index([("user_id", 1), ("created_at", -1)])
+    await ensure_gate_indexes(db)
     await index.sync(db)
     logger.info("Similarity index loaded with %d works.", len(index))
     anchor_task = asyncio.create_task(anchor_missing(db))

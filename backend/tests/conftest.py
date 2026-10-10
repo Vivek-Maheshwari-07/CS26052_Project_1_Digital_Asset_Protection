@@ -13,6 +13,8 @@ def isolated_settings(tmp_path, monkeypatch):
     from app.config import settings
     monkeypatch.setattr(settings, "UPLOAD_DIR", str(tmp_path / "uploads"))
     monkeypatch.setattr(settings, "OTS_ENABLED", False)
+    # The gate needs DINOv2 weights; tests that exercise it switch it on and stub run_gate.
+    monkeypatch.setattr(settings, "GATE_ENABLED", False)
 
 
 @pytest.fixture

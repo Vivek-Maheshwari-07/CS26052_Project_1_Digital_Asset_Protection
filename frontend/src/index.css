@@ -336,6 +336,11 @@ img { display: block; max-width: 100%; }
 }
 .alert svg { flex-shrink: 0; margin-top: 1px; }
 .alert-error { background: var(--bad-soft); color: #a5162b; }
+.alert-warn { background: color-mix(in srgb, var(--warn) 14%, transparent); color: #8a5a00; }
+.gate-images { display: grid; gap: .9rem; margin: .8rem 0; }
+.gate-images figure { margin: 0; }
+.gate-images img { border-radius: 10px; display: block; }
+.gate-images figcaption { margin-top: .3rem; font-size: .85rem; }
 
 .shake { animation: shake .4s ease; }
 @keyframes shake { 20%, 60% { transform: translateX(-6px); } 40%, 80% { transform: translateX(6px); } }

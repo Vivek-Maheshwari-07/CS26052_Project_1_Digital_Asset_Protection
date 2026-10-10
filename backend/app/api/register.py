@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from typing import List, Optional
 from datetime import datetime, timezone
 import io
+import logging
 from PIL import Image
 
 from app.config import settings
@@ -12,8 +13,11 @@ from app.registry.index import index
 from app.registry.anchor import anchor_work
 from app.fingerprint.combine import fingerprint, PIPELINE_VERSION
 from app.api.auth import get_current_user
+from app.gate.features import compute_for_registration
+from app.gate.pipeline import run_gate
 from app import storage, ingestion
 
+logger = logging.getLogger("uvicorn.error")
 router = APIRouter()
 
 MAX_UPLOAD_BYTES = 20 * 1024 * 1024
@@ -32,6 +36,7 @@ class RegisterResponse(BaseModel):
     image_url: Optional[str] = None
     anchor_status: Optional[str] = None
     low_detail: Optional[bool] = None
+    gate_notices: List[str] = []
 
 
 def iso_utc(dt) -> str:
@@ -59,6 +64,14 @@ def to_response(doc: dict) -> dict:
     }
 
 
+async def read_limited(upload: UploadFile) -> bytes:
+    """Read an upload, refusing anything over the limit without buffering the rest of it."""
+    data = await upload.read(MAX_UPLOAD_BYTES + 1)
+    if len(data) > MAX_UPLOAD_BYTES:
+        raise HTTPException(413, "Images must be 20 MB or smaller.")
+    return data
+
+
 def read_upload(image_bytes: bytes) -> tuple:
     """Validate size, decode via the ingestion pipeline (bomb guard, EXIF
     orientation, RGB). Returns (normalized_image, original_format); the
@@ -76,6 +89,53 @@ def read_upload(image_bytes: bytes) -> tuple:
     except Exception:
         original_format = None  # non-critical: storage.save_image falls back to .jpg
     return normalized, original_format
+
+
+def duplicate_error(work: dict, is_own: bool, confidence: float) -> HTTPException:
+    """409 for a registration that matches an existing work. Reveals nothing of another creator's work."""
+    return HTTPException(409, {
+        "message": ("You've already registered a near-identical image." if is_own else
+                    "This image matches a work another creator has already registered."),
+        "is_own": is_own,
+        "can_override": is_own,
+        "match": {
+            "id": work["id"],
+            "title": work["title"] if is_own else None,
+            "owner_name": work["owner_name"],
+            "created_at": iso_utc(work["created_at"]),
+            "image_url": storage.image_url(work.get("image_path")) if is_own else None,
+            "confidence": round(confidence, 4),
+        },
+    })
+
+
+async def gate_registration_check(db, image_bytes: bytes, user_id: str, allow_similar_own: bool) -> List[str]:
+    """Run the gate on a new upload. Returns notices for the response; raises 409 on a Tier 1 hit.
+
+    A gate failure never blocks a registration: the fingerprint duplicate check above still applies.
+    """
+    if not settings.GATE_ENABLED:
+        return []
+    try:
+        verdict = await run_gate(image_bytes, db, with_evidence=False)
+    except Exception:
+        logger.exception("Gate check failed during registration; continuing without it.")
+        return []
+
+    notices: List[str] = []
+    for claim in verdict.claims:
+        work = await db.works.find_one({"id": claim.candidate_work_id}, {"embedding": 0, "ots_proof": 0})
+        if not work:
+            continue
+        is_own = work.get("user_id") == user_id
+        if claim.classification == "TIER1" and not (is_own and allow_similar_own):
+            raise duplicate_error(work, is_own, 1.0)
+        if is_own:
+            notices.append(f"Looks related to your registered work \"{work['title']}\".")
+        else:
+            notices.append("This image looks related to a work another creator has registered. "
+                           "It was still registered, and both records are kept.")
+    return notices
 
 
 async def find_duplicate(db, fp: dict) -> Optional[dict]:
@@ -103,7 +163,7 @@ async def register_work(
         raise HTTPException(400, "Title or owner name is too long.")
 
     # 1. Read, bomb-guard, EXIF-orient and RGB-normalize the upload
-    image_bytes = await image.read()
+    image_bytes = await read_limited(image)
     normalized, fmt = read_upload(image_bytes)
     width, height = normalized.size
 
@@ -117,20 +177,11 @@ async def register_work(
         work = await db.works.find_one({"id": dup["work_id"]}, {"embedding": 0, "ots_proof": 0})
         is_own = dup["user_id"] == user_id
         if not (is_own and allow_similar_own):
-            raise HTTPException(409, {
-                "message": ("You've already registered a near-identical image." if is_own else
-                            "This image matches a work another creator has already registered."),
-                "is_own": is_own,
-                "can_override": is_own,
-                "match": {
-                    "id": work["id"],
-                    "title": work["title"] if is_own else None,
-                    "owner_name": work["owner_name"],
-                    "created_at": iso_utc(work["created_at"]),
-                    "image_url": storage.image_url(work.get("image_path")) if is_own else None,
-                    "confidence": round(dup["confidence"], 4),
-                },
-            })
+            raise duplicate_error(work, is_own, dup["confidence"])
+
+    # 3b. Geometric gate: pixel evidence that this is a copy of a registered work blocks it
+    # (never against another creator's work); weaker leads only produce a notice.
+    notices = await gate_registration_check(db, image_bytes, user_id, allow_similar_own)
 
     # 4. Save the original upload bytes, then append to the registry
     image_path = storage.save_image(image_bytes, fmt)
@@ -150,8 +201,11 @@ async def register_work(
 
     # 5. Timestamp the entry hash in Bitcoin via OpenTimestamps (after responding)
     background.add_task(anchor_work, db, record.id, record.entry_hash)
+    # ...and compute the gate's per-work features (DINOv2 vector + SIFT cache) so the new work is searchable
+    if settings.GATE_ENABLED:
+        background.add_task(compute_for_registration, db, record.id, image_bytes)
 
-    return to_response(record.model_dump())
+    return {**to_response(record.model_dump()), "gate_notices": notices}
 
 
 @router.get("", response_model=List[RegisterResponse])
