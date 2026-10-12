@@ -11,6 +11,7 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import ForgotPassword from './pages/ForgotPassword';
 import Verify from './pages/Verify';
+import Landing from './pages/Landing';
 
 const FullPageLoader = () => (
     <div className="full-loader"><Logo size={40} /><span className="spinner" /></div>
@@ -76,7 +77,7 @@ function AppShell({ children }) {
                 <div className="topbar-inner">
                     <NavLink to="/dashboard" className="brand"><Logo /> <span>Provenance</span></NavLink>
                     <nav className="nav-pills">
-                        <NavLink to="/dashboard"><IconGrid size={16} /> <span>Portfolio</span></NavLink>
+                        <NavLink to="/dashboard"><IconGrid size={16} /> <span>Dashboard</span></NavLink>
                         <NavLink to="/works/new"><IconPlus size={16} /> <span>Register</span></NavLink>
                         <NavLink to="/check"><IconScan size={16} /> <span>Check copies</span></NavLink>
                     </nav>
@@ -94,7 +95,7 @@ function App() {
       <AuthProvider>
         <BrowserRouter>
             <Routes>
-                <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                <Route path="/" element={<Landing />} />
                 <Route element={<GuestRoute />}>
                     <Route path="/login" element={<Login />} />
                     <Route path="/signup" element={<Signup />} />
@@ -109,7 +110,7 @@ function App() {
                 </Route>
                 <Route path="/verify/:workId" element={<Verify />} />
                 <Route path="/register" element={<Navigate to="/works/new" replace />} />
-                <Route path="*" element={<Navigate to="/dashboard" replace />} />
+                <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
         </BrowserRouter>
       </AuthProvider>

@@ -37,6 +37,7 @@ class Timings(BaseModel):
     g3_dense: float = 0.0
     g4_classify: float = 0.0
     g5_evidence: float = 0.0
+    candidates_wall: float = 0.0  # wall-clock for all candidates (they run concurrently; g2-g4 are sums)
     total: float = 0.0
 
 

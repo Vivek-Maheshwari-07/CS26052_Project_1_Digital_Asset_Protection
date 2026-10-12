@@ -1,6 +1,31 @@
+# Environment & Secrets
 .env
+**/.env
+*.env
+!.env.example
+!**/.env.example
+
+# Python & Virtual Environments
 venv/
+**/venv/
 __pycache__/
-uploads/
+**/__pycache__/
+*.pyc
 .pytest_cache/
+**/.pytest_cache/
+
+# Node & Frontend
+node_modules/
+**/node_modules/
+frontend/dist/
+
+# Evaluation Data & Large Datasets (Local artifacts)
+dataset/
+**/dataset/
 backend/eval/data/
+**/_work/
+
+# Uploads & Caches
+uploads/
+**/uploads/
+backend/backend/

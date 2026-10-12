@@ -28,8 +28,29 @@ class InvalidImageError(ValueError):
     """Raised for anything that isn't a safe, decodable image."""
 
 
+FLATTEN_BACKGROUND = (255, 255, 255)
+
+
+def to_rgb(img: Image.Image) -> Image.Image:
+    """RGB with any transparency composited onto white.
+
+    A plain convert("RGB") drops alpha and exposes whatever colour the transparent pixels happen to
+    store (usually black), so a transparent sprite would be registered as "sprite on black" while
+    every repost (WhatsApp, Instagram, screenshots) shows it on white. White is what platforms
+    produce; the gate's dense stage additionally ignores pixels that are transparent in the original.
+    """
+    if img.mode == "P" and "transparency" in img.info:
+        img = img.convert("RGBA")
+    if img.mode in ("RGBA", "LA", "PA"):
+        rgba = img.convert("RGBA")
+        canvas = Image.new("RGB", rgba.size, FLATTEN_BACKGROUND)
+        canvas.paste(rgba, mask=rgba.getchannel("A"))
+        return canvas
+    return img.convert("RGB")
+
+
 def normalize(image_bytes: bytes) -> Image.Image:
-    """Decode, bomb-guard, auto-rotate, and force RGB. Raises InvalidImageError."""
+    """Decode, bomb-guard, auto-rotate, and force RGB (transparency on white). Raises InvalidImageError."""
     try:
         with Image.open(io.BytesIO(image_bytes)) as probe:
             probe.verify()
@@ -41,7 +62,7 @@ def normalize(image_bytes: bytes) -> Image.Image:
     try:
         img = Image.open(io.BytesIO(image_bytes))
         img = ImageOps.exif_transpose(img)  # also loads the image, undoing verify()'s close
-        return img.convert("RGB")
+        return to_rgb(img)
     except Image.DecompressionBombError:
         raise InvalidImageError("Image is too large to process.")
     except (UnidentifiedImageError, OSError, SyntaxError):

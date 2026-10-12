@@ -97,10 +97,11 @@ def test_portfolios_are_isolated_per_user(client, signup):
     assert [w["title"] for w in client.get("/api/works", headers=alice).json()] == ["Alice's piece"]
     assert client.get("/api/works", headers=bob).json() == []
 
-    # Bob's checks don't appear in Alice's history, and matches are not "his own"
+    # Bob's checks don't appear in Alice's history, and a check only searches the caller's own works:
+    # Alice's registered image is invisible to Bob.
     check = client.post("/api/works/check", files={"image": ("x.jpg", generate_sample_image(), "image/jpeg")},
                         headers=bob).json()
-    assert check["results"][0]["is_own"] is False
+    assert check["results"] == []
     assert client.get("/api/checks", headers=alice).json() == []
     assert client.get(f"/api/checks/{check['id']}", headers=alice).status_code == 404
 

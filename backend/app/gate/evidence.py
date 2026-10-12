@@ -18,7 +18,6 @@ from app.gate.verify import VerifyResult
 logger = logging.getLogger(__name__)
 
 _SAFE_ID = re.compile(r"^[A-Za-z0-9_-]{1,64}$")
-CHANGE_THRESHOLD = 40  # gray levels of residual treated as a changed pixel
 
 
 def evidence_root() -> Path:
@@ -71,7 +70,7 @@ def generate_evidence(check_id: str, dense: DenseResult, verify: VerifyResult) -
     paths["heatmap"] = f"{rel_dir}/heatmap.jpg"
 
     # 3. Changed-region mask: where the aligned query still differs strongly from the original
-    changed = ((dense.residual_image > CHANGE_THRESHOLD) & valid).astype(np.uint8) * 255
+    changed = ((dense.residual_image > settings.change_threshold) & valid).astype(np.uint8) * 255
     changed = cv2.morphologyEx(changed, cv2.MORPH_OPEN, np.ones((5, 5), np.uint8))
     changed = cv2.dilate(changed, np.ones((9, 9), np.uint8))
     tint = target.copy()
@@ -79,7 +78,10 @@ def generate_evidence(check_id: str, dense: DenseResult, verify: VerifyResult) -
     _write_jpeg(out_dir / "changes.jpg", tint)
     paths["changes"] = f"{rel_dir}/changes.jpg"
 
-    # 4. Match lines between the query and the original (seeded so output is reproducible)
+    # 4. Match lines between the query and the original (seeded so output is reproducible).
+    # The whole-image ECC fallback has no point matches, so it has no such image.
+    if len(verify.q_inliers) == 0:
+        return paths
     n = min(80, len(verify.q_inliers))
     rng = np.random.default_rng(42)
     idx = rng.choice(len(verify.q_inliers), n, replace=False) if len(verify.q_inliers) > n else np.arange(len(verify.q_inliers))

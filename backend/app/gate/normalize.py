@@ -6,12 +6,13 @@ identically.
 """
 import io
 import logging
-from typing import Tuple
+from typing import Optional, Tuple
 
 import numpy as np
 from PIL import Image, ImageOps, UnidentifiedImageError
 
 from app.gate.settings import settings
+from app.ingestion import to_rgb
 
 logger = logging.getLogger(__name__)
 
@@ -40,11 +41,27 @@ def decode_rgb(image_bytes: bytes) -> Image.Image:
 
     try:
         img = ImageOps.exif_transpose(Image.open(io.BytesIO(image_bytes)))
-        return img.convert("RGB")
+        return to_rgb(img)  # transparency composited onto white (see app.ingestion.to_rgb)
     except Image.DecompressionBombError as e:
         raise InvalidImageError("Image is too large to process.") from e
     except Exception as e:
         raise InvalidImageError("Failed to decode image.") from e
+
+
+def alpha_mask(image_bytes: bytes, crop_box: Tuple[int, int, int, int]) -> Optional[np.ndarray]:
+    """Boolean opacity mask (True = opaque) in the frame `normalize_image` returned, or None when
+    the image has no transparency. Transparent pixels carry no content, so the dense comparison
+    ignores them: a repost may show them on any background."""
+    try:
+        with Image.open(io.BytesIO(image_bytes)) as im:
+            if not (im.mode in ("RGBA", "LA", "PA") or (im.mode == "P" and "transparency" in im.info)):
+                return None
+            alpha = ImageOps.exif_transpose(im.convert("RGBA")).getchannel("A")
+    except Exception:
+        return None
+    if alpha.getextrema()[0] == 255:
+        return None
+    return np.asarray(alpha.crop(crop_box)) >= 128
 
 
 def normalize_image(image_bytes: bytes, trim: bool = True) -> Tuple[Image.Image, Tuple[int, int, int, int], bool]:

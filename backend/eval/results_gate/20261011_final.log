@@ -1,0 +1,384 @@
+Registry: 713 works (0 originals excluded, 365 duplicate distractors skipped)
+Reusing registry cache (713 works)
+  registry 10/713  (0.0s/work)
+  registry 20/713  (0.0s/work)
+  registry 30/713  (0.0s/work)
+  registry 40/713  (0.0s/work)
+  registry 50/713  (0.0s/work)
+C:\Users\Anisha\Desktop\Aayush\24CS051\DigitalAsset\backend\venv\Lib\site-packages\PIL\Image.py:3578: DecompressionBombWarning: Image size (100000000 pixels) exceeds limit of 89478485 pixels, could be decompression bomb DOS attack.
+  warnings.warn(
+  registry 60/713  (0.0s/work)
+  registry 70/713  (0.0s/work)
+  registry 80/713  (0.0s/work)
+  registry 90/713  (0.0s/work)
+  registry 100/713  (0.0s/work)
+  registry 110/713  (0.0s/work)
+  registry 120/713  (0.0s/work)
+  registry 130/713  (0.0s/work)
+  registry 140/713  (0.0s/work)
+  registry 150/713  (0.0s/work)
+  registry 160/713  (0.0s/work)
+  registry 170/713  (0.0s/work)
+  registry 180/713  (0.0s/work)
+  registry 190/713  (0.0s/work)
+  registry 200/713  (0.0s/work)
+  registry 210/713  (0.0s/work)
+  registry 220/713  (0.0s/work)
+  registry 230/713  (0.0s/work)
+  registry 240/713  (0.0s/work)
+  registry 250/713  (0.0s/work)
+  registry 260/713  (0.0s/work)
+  registry 270/713  (0.0s/work)
+  registry 280/713  (0.0s/work)
+  registry 290/713  (0.0s/work)
+  registry 300/713  (0.0s/work)
+  registry 310/713  (0.0s/work)
+  registry 320/713  (0.0s/work)
+  registry 330/713  (0.0s/work)
+  registry 340/713  (0.0s/work)
+  registry 350/713  (0.0s/work)
+  registry 360/713  (0.0s/work)
+  registry 370/713  (0.0s/work)
+  registry 380/713  (0.0s/work)
+  registry 390/713  (0.0s/work)
+  registry 400/713  (0.0s/work)
+  registry 410/713  (0.0s/work)
+  registry 420/713  (0.0s/work)
+  registry 430/713  (0.0s/work)
+  registry 440/713  (0.0s/work)
+  registry 450/713  (0.0s/work)
+  registry 460/713  (0.0s/work)
+  registry 470/713  (0.0s/work)
+  registry 480/713  (0.0s/work)
+  registry 490/713  (0.0s/work)
+  registry 500/713  (0.0s/work)
+  registry 510/713  (0.0s/work)
+  registry 520/713  (0.0s/work)
+  registry 530/713  (0.0s/work)
+  registry 540/713  (0.0s/work)
+  registry 550/713  (0.0s/work)
+  registry 560/713  (0.0s/work)
+  registry 570/713  (0.0s/work)
+  registry 580/713  (0.0s/work)
+  registry 590/713  (0.0s/work)
+  registry 600/713  (0.0s/work)
+  registry 610/713  (0.0s/work)
+  registry 620/713  (0.0s/work)
+  registry 630/713  (0.0s/work)
+  registry 640/713  (0.0s/work)
+  registry 650/713  (0.0s/work)
+  registry 660/713  (0.0s/work)
+  registry 670/713  (0.0s/work)
+  registry 680/713  (0.0s/work)
+  registry 690/713  (0.0s/work)
+  registry 700/713  (0.0s/work)
+  registry 710/713  (0.0s/work)
+  registry 713/713  (0.0s/work)
+Resuming: 151 suspects already done
+Running 1248 suspects against a registry of 713 works
+Loading weights:   0%|          | 0/223 [00:00<?, ?it/s]Loading weights:  20%|#9        | 44/223 [00:00<00:00, 435.24it/s]Loading weights: 100%|##########| 223/223 [00:00<00:00, 1502.24it/s]
+  10/1248  last=platform/orig_018__platform__whatsapp.jpg.jpeg  eta 219.3 min
+  20/1248  last=platform/orig_046__platform__whatsapp.jpg.jpeg  eta 138.8 min
+  30/1248  last=platform/orig_072__platform__whatsapp.jpg.jpeg  eta 128.1 min
+  40/1248  last=ai_edits/orig_001__ai_heavy__gemini__3d_clay.png  eta 120.9 min
+  50/1248  last=ai_edits/orig_007__ai_light__gemini__yellow_green_pie.png  eta 114.1 min
+  60/1248  last=ai_edits/orig_013__ai_medium__gemini__cyberpunk_neon.png  eta 110.0 min
+  70/1248  last=ai_edits/orig_083__ai_heavy__gemini__neon_alleyway.png  eta 109.4 min
+  80/1248  last=ai_edits/orig_086__ai_light__gemini__creamy.png  eta 109.2 min
+  90/1248  last=ai_edits/orig_091__ai_medium__gemini__snow.png  eta 110.4 min
+  100/1248  last=ai_edits/orig_096__ai_heavy__gemini__glass_monument.png  eta 109.7 min
+  110/1248  last=ai_edits/orig_099__ai_light__gemini__state_8.png  eta 108.3 min
+  120/1248  last=classical/orig_054__classical_edit__rotate_90.jpg  eta 108.3 min
+C:\Users\Anisha\Desktop\Aayush\24CS051\DigitalAsset\backend\venv\Lib\site-packages\PIL\Image.py:3578: DecompressionBombWarning: Image size (100000000 pixels) exceeds limit of 89478485 pixels, could be decompression bomb DOS attack.
+  warnings.warn(
+  130/1248  last=classical/orig_004__classical_edit__blur_gaussian.png  eta 105.5 min
+  140/1248  last=classical/orig_045__classical_edit__jpeg_q30.jpg  eta 103.8 min
+  150/1248  last=classical/orig_003__classical_edit__resize_50.png  eta 103.3 min
+  160/1248  last=classical/orig_070__classical_edit__jpeg_q10.jpg  eta 101.8 min
+  170/1248  last=classical/orig_017__classical_edit__jpeg_q10.jpg  eta 100.1 min
+  180/1248  last=classical/orig_028__classical_edit__crop_30.png  eta 98.1 min
+  190/1248  last=classical/orig_016__classical_edit__jpeg_q10.jpg  eta 97.4 min
+  200/1248  last=classical/orig_076__classical_edit__jpeg_q10.jpg  eta 98.6 min
+  210/1248  last=classical/orig_002__classical_edit__crop_30.png  eta 97.8 min
+  220/1248  last=classical/orig_014__classical_edit__jpeg_q10.jpg  eta 94.9 min
+  230/1248  last=classical/orig_094__classical_edit__screenshot_frame.jpg  eta 94.4 min
+  240/1248  last=classical/orig_046__classical_edit__screenshot_frame.jpg  eta 93.9 min
+  250/1248  last=classical/orig_077__classical_edit__rotate_90.jpg  eta 92.4 min
+  260/1248  last=classical/orig_102__classical_edit__blur_gaussian.jpg  eta 92.0 min
+  270/1248  last=classical/orig_072__classical_edit__rotate_90.jpg  eta 90.0 min
+  280/1248  last=classical/orig_008__classical_edit__blur_gaussian.png  eta 89.1 min
+  290/1248  last=classical/orig_020__classical_edit__grayscale.jpg  eta 87.7 min
+  300/1248  last=classical/orig_048__classical_edit__rotate_90.jpg  eta 86.6 min
+  310/1248  last=classical/orig_021__classical_edit__hflip.png  eta 85.4 min
+  320/1248  last=classical/orig_101__classical_edit__blur_gaussian.jpg  eta 84.1 min
+  330/1248  last=classical/orig_074__classical_edit__blur_gaussian.jpg  eta 83.0 min
+  340/1248  last=classical/orig_028__classical_edit__rotate_90.png  eta 81.4 min
+  350/1248  last=classical/orig_061__classical_edit__blur_gaussian.jpg  eta 81.5 min
+  360/1248  last=classical/orig_104__classical_edit__screenshot_frame.jpg  eta 80.5 min
+  370/1248  last=classical/orig_029__classical_edit__blur_gaussian.png  eta 79.6 min
+  380/1248  last=classical/orig_024__classical_edit__rotate_90.png  eta 78.0 min
+  390/1248  last=classical/orig_099__classical_edit__rotate_90.jpg  eta 77.3 min
+  400/1248  last=classical/orig_004__classical_edit__resize_50.png  eta 76.6 min
+  410/1248  last=classical/orig_053__classical_edit__crop_50.jpg  eta 76.3 min
+  420/1248  last=classical/orig_062__classical_edit__hflip.jpg  eta 75.4 min
+  430/1248  last=classical/orig_034__classical_edit__jpeg_q30.jpg  eta 74.2 min
+  440/1248  last=classical/orig_065__classical_edit__blur_gaussian.jpg  eta 73.2 min
+  450/1248  last=classical/orig_008__classical_edit__hflip.png  eta 72.6 min
+  460/1248  last=classical/orig_037__classical_edit__screenshot_frame.png  eta 71.6 min
+  470/1248  last=classical/orig_075__classical_edit__resize_50.jpg  eta 70.7 min
+  480/1248  last=classical/orig_101__classical_edit__jpeg_q10.jpg  eta 70.1 min
+  490/1248  last=classical/orig_060__classical_edit__blur_gaussian.jpg  eta 69.1 min
+  500/1248  last=classical/orig_051__classical_edit__crop_50.jpg  eta 68.3 min
+  510/1248  last=classical/orig_065__classical_edit__screenshot_frame.jpg  eta 67.3 min
+  520/1248  last=classical/orig_053__classical_edit__rotate_90.jpg  eta 66.7 min
+  530/1248  last=classical/orig_093__classical_edit__grayscale.jpg  eta 65.8 min
+  540/1248  last=classical/orig_024__classical_edit__hflip.png  eta 64.9 min
+  550/1248  last=classical/orig_049__classical_edit__screenshot_frame.jpg  eta 64.4 min
+  560/1248  last=classical/orig_001__classical_edit__rotate_180.png  eta 63.7 min
+  570/1248  last=classical/orig_057__classical_edit__crop_10.jpg  eta 63.0 min
+  580/1248  last=classical/orig_091__classical_edit__crop_30.jpg  eta 62.0 min
+  590/1248  last=classical/orig_086__classical_edit__resize_50.jpg  eta 60.8 min
+  600/1248  last=classical/orig_026__classical_edit__crop_30.png  eta 59.5 min
+  610/1248  last=classical/orig_015__classical_edit__hflip.png  eta 58.5 min
+  620/1248  last=classical/orig_035__classical_edit__crop_30.png  eta 57.7 min
+  630/1248  last=classical/orig_094__classical_edit__grayscale.jpg  eta 56.8 min
+  640/1248  last=classical/orig_083__classical_edit__crop_10.jpg  eta 55.7 min
+  650/1248  last=classical/orig_033__classical_edit__crop_30.png  eta 54.7 min
+  660/1248  last=classical/orig_098__classical_edit__jpeg_q30.jpg  eta 53.6 min
+  670/1248  last=classical/orig_024__classical_edit__screenshot_frame.png  eta 52.7 min
+  680/1248  last=classical/orig_071__classical_edit__rotate_90.jpg  eta 51.8 min
+  690/1248  last=classical/orig_030__classical_edit__rotate_90.png  eta 50.8 min
+  700/1248  last=classical/orig_048__classical_edit__screenshot_frame.jpg  eta 49.9 min
+  710/1248  last=classical/orig_027__classical_edit__jpeg_q10.jpg  eta 48.8 min
+  720/1248  last=classical/orig_098__classical_edit__screenshot_frame.jpg  eta 47.8 min
+  730/1248  last=classical/orig_040__classical_edit__jpeg_q10.jpg  eta 46.7 min
+  740/1248  last=classical/orig_026__classical_edit__jpeg_q10.jpg  eta 45.8 min
+  750/1248  last=classical/orig_032__classical_edit__hflip.png  eta 44.7 min
+  760/1248  last=classical/orig_027__classical_edit__hflip.png  eta 43.7 min
+  770/1248  last=classical/orig_098__classical_edit__rotate_180.jpg  eta 42.7 min
+  780/1248  last=classical/orig_033__classical_edit__hflip.png  eta 41.7 min
+  790/1248  last=classical/orig_092__classical_edit__resize_50.jpg  eta 40.6 min
+  800/1248  last=classical/orig_064__classical_edit__crop_50.jpg  eta 39.7 min
+  810/1248  last=classical/orig_070__classical_edit__rotate_90.jpg  eta 38.8 min
+  820/1248  last=classical/orig_040__classical_edit__hflip.png  eta 37.9 min
+  830/1248  last=classical/orig_050__classical_edit__rotate_180.jpg  eta 37.2 min
+  840/1248  last=classical/orig_067__classical_edit__jpeg_q30.jpg  eta 36.3 min
+  850/1248  last=classical/orig_090__classical_edit__jpeg_q30.jpg  eta 35.4 min
+  860/1248  last=classical/orig_070__classical_edit__hflip.jpg  eta 34.5 min
+  870/1248  last=classical/orig_093__classical_edit__resize_50.jpg  eta 33.6 min
+  880/1248  last=classical/orig_070__classical_edit__resize_50.jpg  eta 32.8 min
+  890/1248  last=classical/orig_093__classical_edit__jpeg_q10.jpg  eta 32.1 min
+  900/1248  last=classical/orig_080__classical_edit__jpeg_q10.jpg  eta 31.1 min
+  910/1248  last=classical/orig_002__classical_edit__crop_50.png  eta 30.2 min
+  920/1248  last=classical/orig_057__classical_edit__rotate_180.jpg  eta 29.3 min
+C:\Users\Anisha\Desktop\Aayush\24CS051\DigitalAsset\backend\venv\Lib\site-packages\PIL\Image.py:3578: DecompressionBombWarning: Image size (115000000 pixels) exceeds limit of 89478485 pixels, could be decompression bomb DOS attack.
+  warnings.warn(
+  930/1248  last=classical/orig_067__classical_edit__resize_50.jpg  eta 28.6 min
+  940/1248  last=classical/orig_104__classical_edit__rotate_180.jpg  eta 27.7 min
+  950/1248  last=classical/orig_062__classical_edit__blur_gaussian.jpg  eta 26.9 min
+  960/1248  last=classical/orig_046__classical_edit__crop_30.jpg  eta 26.0 min
+  970/1248  last=classical/orig_034__classical_edit__hflip.png  eta 25.0 min
+  980/1248  last=classical/orig_028__classical_edit__grayscale.png  eta 24.1 min
+  990/1248  last=classical/orig_096__classical_edit__crop_10.jpg  eta 23.2 min
+  1000/1248  last=classical/orig_075__classical_edit__crop_50.jpg  eta 22.3 min
+  1010/1248  last=classical/orig_097__classical_edit__resize_50.jpg  eta 21.4 min
+  1020/1248  last=classical/orig_060__classical_edit__jpeg_q10.jpg  eta 20.5 min
+  1030/1248  last=classical/orig_021__classical_edit__jpeg_q30.jpg  eta 19.5 min
+  1040/1248  last=classical/orig_069__classical_edit__rotate_90.jpg  eta 18.7 min
+  1050/1248  last=classical/orig_104__classical_edit__crop_50.jpg  eta 17.8 min
+  1060/1248  last=classical/orig_089__classical_edit__crop_30.jpg  eta 16.8 min
+  1070/1248  last=classical/orig_053__classical_edit__rotate_180.jpg  eta 15.9 min
+  1080/1248  last=classical/orig_007__classical_edit__crop_50.png  eta 15.0 min
+  1090/1248  last=classical/orig_038__classical_edit__crop_10.png  eta 14.0 min
+  1100/1248  last=classical/orig_005__classical_edit__screenshot_frame.png  eta 13.2 min
+  1110/1248  last=classical/orig_091__classical_edit__resize_50.jpg  eta 12.3 min
+  1120/1248  last=classical/orig_026__classical_edit__rotate_180.png  eta 11.4 min
+  1130/1248  last=classical/orig_018__classical_edit__jpeg_q30.jpg  eta 10.6 min
+  1140/1248  last=classical/orig_040__classical_edit__grayscale.png  eta 9.7 min
+  1150/1248  last=classical/orig_101__classical_edit__hflip.jpg  eta 8.8 min
+  1160/1248  last=classical/orig_033__classical_edit__crop_50.png  eta 7.8 min
+  1170/1248  last=classical/orig_014__classical_edit__blur_gaussian.png  eta 7.0 min
+  1180/1248  last=classical/orig_016__classical_edit__jpeg_q30.jpg  eta 6.1 min
+  1190/1248  last=classical/orig_015__classical_edit__rotate_180.png  eta 5.2 min
+  1200/1248  last=classical/orig_047__classical_edit__grayscale.jpg  eta 4.3 min
+  1210/1248  last=classical/orig_013__classical_edit__jpeg_q10.jpg  eta 3.4 min
+  1220/1248  last=classical/orig_054__classical_edit__screenshot_frame.jpg  eta 2.5 min
+  1230/1248  last=classical/orig_078__classical_edit__jpeg_q30.jpg  eta 1.6 min
+  1240/1248  last=classical/orig_012__classical_edit__grayscale.png  eta 0.7 min
+  1248/1248  last=classical/orig_060__classical_edit__screenshot_frame.jpg  eta 0.0 min
+Applied 1 relabels and 1 work aliases (see label_fixes_applied.md)
+# Gate evaluation (2026-10-11T18:49:13)
+
+1399 suspects (0 errored) against a registry of 713 works. Gate config `59d26cfa7b1c`, pipeline 1.3.0.
+
+## Alterations that must be caught (copy / classical / platform)
+
+| relation | n | retrieved (in top-k) | Tier 1 (natural) | Tier 1/2 (natural) | any claim reported | evidence claim reported | evidence on WRONG work |
+|---|---|---|---|---|---|---|---|
+| classical | 1200 | 99.7% | 86.5% | 95.2% | 95.4% | 86.4% | 0.9% |
+| copy | 13 | 100.0% | 92.3% | 100.0% | 100.0% | 92.3% | 0.0% |
+| platform | 41 | 100.0% | 97.6% | 100.0% | 100.0% | 97.6% | 0.0% |
+
+### Per edit (worst first)
+
+| edit | n | retrieved | Tier 1 | any claim | main reasons for not Tier 1 |
+|---|---|---|---|---|---|
+| blur_gaussian | 100 | 100.0% | 25.0% | 98.0% | graded_TIER2 x73; not_credible:not_enough_matches x2 |
+| crop_10 | 100 | 97.0% | 62.0% | 65.0% | not_credible:not_enough_matches x22; not_credible:insufficient_coverage x8 |
+| jpeg_q10 | 100 | 100.0% | 87.0% | 100.0% | graded_TIER2 x13 |
+| crop_30 | 100 | 100.0% | 90.0% | 91.0% | not_credible:not_enough_matches x4; not_credible:insufficient_coverage x3 |
+| rotate_180 | 100 | 100.0% | 90.0% | 100.0% | graded_TIER2 x10 |
+| screenshot_frame | 100 | 100.0% | 95.0% | 96.0% | not_credible:insufficient_coverage x3; not_credible:not_enough_matches x1 |
+| rotate_90 | 100 | 99.0% | 95.0% | 99.0% | graded_TIER2 x4; not_retrieved x1 |
+| crop_50 | 100 | 100.0% | 96.0% | 97.0% | not_credible:insufficient_coverage x2; not_credible:not_enough_inliers x1 |
+| whatsapp_roundtrip | 41 | 100.0% | 97.6% | 100.0% | graded_TIER2 x1 |
+| resize_50 | 100 | 100.0% | 98.0% | 99.0% | not_credible:not_enough_inliers x1; graded_RELATED_DIFFERENT_CAPTURE x1 |
+| jpeg_q30 | 100 | 100.0% | 100.0% | 100.0% |  |
+| grayscale | 100 | 100.0% | 100.0% | 100.0% |  |
+| hflip | 100 | 100.0% | 100.0% | 100.0% |  |
+| byte_identical_reupload | 12 | 100.0% | 100.0% | 100.0% |  |
+
+### Per platform (worst first)
+
+| platform | n | retrieved | Tier 1 | any claim | main reasons for not Tier 1 |
+|---|---|---|---|---|---|
+| whatsapp | 49 | 100.0% | 98.0% | 100.0% | graded_TIER2 x1 |
+
+### Per image category (worst first)
+
+| category | n | retrieved | Tier 1 | any claim | main reasons for not Tier 1 |
+|---|---|---|---|---|---|
+| unrelated | 1 | 100.0% | 0.0% | 100.0% | graded_TIER2 x1 |
+| photo_pattern | 13 | 100.0% | 38.5% | 92.3% | graded_TIER2 x7; not_credible:not_enough_matches x1 |
+| perfume | 12 | 100.0% | 75.0% | 91.7% | graded_TIER2 x2; not_credible:not_enough_matches x1 |
+| book | 12 | 100.0% | 75.0% | 100.0% | graded_TIER2 x3 |
+| photo_lowlight | 12 | 100.0% | 75.0% | 91.7% | graded_TIER2 x2; not_credible:not_enough_matches x1 |
+| whitebackground | 63 | 100.0% | 76.2% | 84.1% | not_credible:not_enough_matches x6; graded_TIER2 x5 |
+| alphatransparent | 187 | 97.9% | 78.1% | 92.5% | graded_TIER2 x26; not_credible:not_enough_matches x6 |
+| illustration | 188 | 100.0% | 79.8% | 89.4% | graded_TIER2 x17; not_credible:not_enough_matches x9 |
+| photo_document | 51 | 100.0% | 86.3% | 98.0% | graded_TIER2 x5; graded_RELATED_DIFFERENT_CAPTURE x1 |
+| logo | 63 | 100.0% | 87.3% | 93.7% | graded_TIER2 x4; not_credible:not_enough_matches x3 |
+| photo_night | 52 | 100.0% | 90.4% | 98.1% | graded_TIER2 x4; not_credible:not_enough_matches x1 |
+| ball | 12 | 100.0% | 91.7% | 100.0% | graded_TIER2 x1 |
+| steel | 12 | 100.0% | 91.7% | 100.0% | graded_TIER2 x1 |
+| photo_architecture | 25 | 100.0% | 92.0% | 100.0% | graded_TIER2 x2 |
+| photo_portrait | 38 | 100.0% | 92.1% | 100.0% | graded_TIER2 x3 |
+| photo_studio | 13 | 100.0% | 92.3% | 100.0% | graded_TIER2 x1 |
+| heavyart | 462 | 100.0% | 95.0% | 99.6% | graded_TIER2 x21; not_credible:insufficient_coverage x1 |
+| photo_landscape | 25 | 100.0% | 96.0% | 100.0% | graded_TIER2 x1 |
+| photopastaportrait | 13 | 100.0% | 100.0% | 100.0% |  |
+
+### Why positives were not Tier 1
+
+| reason | count |
+|---|---|
+| graded_TIER2 | 106 |
+| not_credible:not_enough_matches | 29 |
+| not_credible:insufficient_coverage | 16 |
+| not_retrieved | 4 |
+| not_credible:not_enough_inliers | 3 |
+| not_credible:inconsistent_matches | 2 |
+| graded_RELATED_DIFFERENT_CAPTURE | 2 |
+| not_credible:insufficient_spread | 1 |
+| low_information | 1 |
+
+## AI-edited copies
+
+| relation | n | retrieved | evidence claim | lead claim | no claim |
+|---|---|---|---|---|---|
+| ai_heavy | 25 | 44.0% | 0.0% | 0.0% | 100.0% |
+| ai_light | 25 | 100.0% | 72.0% | 28.0% | 0.0% |
+| ai_medium | 25 | 88.0% | 0.0% | 40.0% | 60.0% |
+
+Heavy regeneration is expected to end as *no claim* (an information limit); a hit there is a bonus.
+
+## What must NOT be claimed as evidence (false-evidence rate, 95% upper bound)
+
+| relation | n | false evidence claims | upper bound | natural Tier1/2 on any candidate | lead claims |
+|---|---|---|---|---|---|
+| sibling | 20 | 0 (0.0%) | <= 13.9% | 5 | 9 (45.0%) |
+| unrelated | 50 | 0 (0.0%) | <= 5.8% | 0 | 0 (0.0%) |
+| **all negatives** | 70 | 0 (0.0%) | <= 4.2% |  |  |
+
+A *lead* on a sibling / same-template pair is acceptable (it asks a human to look); a lead on an `unrelated` image is a false lead.
+
+## Gate vs classic fingerprint scores
+
+Positives = copy/classical/platform + ai_light/ai_medium (1303); negatives = siblings, templates, hard and unrelated (70). TPR at a fixed false-positive rate on those negatives:
+
+| score | TPR @ 1% FPR | TPR @ 0.1% FPR | n negatives |
+|---|---|---|---|
+| pHash | 44.3% | 44.3% | 70 |
+| CLIP embedding | 34.1% | 29.5% | 70 |
+| fused confidence | 36.1% | 29.5% | 70 |
+
+Operating points as deployed (positives = copy/classical/platform):
+
+| system | detects positives | fires on hard negatives | fires on unrelated |
+|---|---|---|---|
+| classic fused >= likely (0.996) | 72.6% | 70.0% | 0.0% |
+| classic fused >= possible (0.27) | 95.1% | 100.0% | 46.0% |
+| gate: evidence claim (Tier 1/2) on the right work | 86.8% | 0.0% | 0.0% |
+| gate: any claim (evidence or lead) on the right work | 95.6% | 45.0% | 0.0% |
+
+## Latency (seconds, CPU)
+
+| stage | p50 | p95 | max |
+|---|---|---|---|
+| g0_normalize | 0.15 | 0.68 | 2.73 |
+| g1_retrieve | 1.25 | 2.77 | 9.42 |
+| g2_verify | 3.80 | 10.66 | 24.24 |
+| g3_dense | 1.79 | 4.19 | 9.40 |
+| g4_classify | 0.00 | 0.00 | 0.00 |
+| candidates_wall | 2.63 | 5.70 | 12.07 |
+| g5_evidence | 0.00 | 0.00 | 0.18 |
+| total | 4.30 | 8.68 | 23.81 |
+
+Candidates verified per check: median 4, max 6. g2-g4 are sums over candidates; `candidates_wall` is the elapsed time (they run concurrently).
+
+Per-candidate metrics: `per_candidate.csv`. Every false-evidence case, false lead and missed positive: `failures.csv`.
+
+# Tier 1 threshold sweep
+
+1254 positives (copy/classical/platform), 70 negatives (siblings, templates, hard, unrelated); 3000 threshold combinations. A negative counts as a false Tier 1 if *any* of its candidates passes.
+
+**Current settings** (p90<=20.0, flow<=3.0, median<=4.0, changed<=0.15, hp>=0.1): recall 83.7%, false Tier 1 on 0 of 70 negatives.
+
+## Best combinations with zero false Tier 1 on this data
+
+| thresholds | recall |
+|---|---|
+| p90<=40, flow<=5.0, median<=4, changed<=0.1, hp>=0.0 | 88.3% |
+| p90<=40, flow<=5.0, median<=4, changed<=0.1, hp>=0.1 | 88.3% |
+| p90<=40, flow<=5.0, median<=4, changed<=0.15, hp>=0.0 | 88.3% |
+| p90<=40, flow<=5.0, median<=4, changed<=0.15, hp>=0.1 | 88.3% |
+| p90<=40, flow<=5.0, median<=4, changed<=0.25, hp>=0.0 | 88.3% |
+| p90<=40, flow<=5.0, median<=4, changed<=0.25, hp>=0.1 | 88.3% |
+| p90<=40, flow<=5.0, median<=4, changed<=0.4, hp>=0.0 | 88.3% |
+| p90<=40, flow<=5.0, median<=4, changed<=0.4, hp>=0.1 | 88.3% |
+| p90<=40, flow<=2.0, median<=4, changed<=0.05, hp>=0.0 | 88.2% |
+| p90<=40, flow<=2.0, median<=4, changed<=0.05, hp>=0.1 | 88.2% |
+| p90<=40, flow<=2.0, median<=4, changed<=0.1, hp>=0.0 | 88.2% |
+| p90<=40, flow<=2.0, median<=4, changed<=0.1, hp>=0.1 | 88.2% |
+
+## Grouped 5-fold cross-validation (thresholds chosen on train folds only)
+
+Held-out recall: 89.2% mean; held-out false Tier 1: 3 of 70 negatives (upper 95% bound 10.7%).
+
+Chosen per fold: p90<=40, flow<=5.0, median<=4, changed<=0.25, hp>=0.0 | p90<=40, flow<=3.0, median<=4, changed<=0.15, hp>=0.1 | p90<=40, flow<=5.0, median<=16, changed<=0.1, hp>=0.0 | p90<=40, flow<=5.0, median<=4, changed<=0.25, hp>=0.0 | p90<=40, flow<=5.0, median<=4, changed<=0.25, hp>=0.0
+
+## Metric distributions (5th / 50th / 95th percentile, credible candidates only)
+
+| metric | positives (true work) | negatives (all candidates) |
+|---|---|---|
+| residual_p90 | 1.00 / 6.00 / 28.00 | 20.40 / 55.00 / 94.60 |
+| residual_median | 0.00 / 1.00 / 5.00 | 5.80 / 10.00 / 30.40 |
+| changed_frac | 0.00 / 0.00 / 0.01 | 0.00 / 0.08 / 0.33 |
+| flow_median_px | 0.01 / 0.05 / 0.61 | 1.38 / 3.50 / 26.36 |
+| hp_ncc | 0.36 / 0.98 / 1.00 | 0.00 / 0.05 / 0.53 |
+| noise_ncc | 0.37 / 0.87 / 1.00 | -0.01 / -0.00 / 0.01 |
+
+A metric helps only if these ranges barely overlap. `noise_ncc` is logged but not used by the classifier.
+
+
+Results in C:/Users/Anisha/Desktop/Aayush/24CS051/DigitalAsset/backend/eval/results_gate/20261011_final

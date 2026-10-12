@@ -87,6 +87,35 @@ def _find_values(obj: Any, key: str) -> List[str]:
     return found
 
 
+def _failure_codes(data: dict) -> List[str]:
+    codes = {s.get("code") for s in (data.get("validation_status") or []) if isinstance(s, dict)}
+    active = (data.get("validation_results") or {}).get("activeManifest") or {}
+    codes |= {s.get("code") for s in (active.get("failure") or []) if isinstance(s, dict)}
+    return sorted(c for c in codes if c)
+
+
+def _manifest_verdict(state: Optional[str], codes: List[str]) -> str:
+    """One of: valid | tampered | credential_invalid.
+
+    "Not on a trust list" (signingCredential.untrusted) alone still counts as valid: no trust list is
+    configured here, so that code is always present and says nothing about the file.
+    """
+    if any("mismatch" in c or c.startswith("assertion.") or c.startswith("claimSignature.") for c in codes):
+        return "tampered"
+    if any(c.startswith(("signingCredential.", "timeStamp.")) and c != "signingCredential.untrusted" for c in codes):
+        return "credential_invalid"
+    if state and state.lower() == "invalid":
+        return "tampered"
+    return "valid"
+
+
+_VERDICT_TEXT = {
+    "valid": "C2PA manifest verified (signer not checked against a trust list)",
+    "tampered": "C2PA manifest present but the content no longer matches it (edited or corrupted after signing)",
+    "credential_invalid": "C2PA manifest intact but its signing certificate is invalid or expired",
+}
+
+
 def check_c2pa(image_bytes: bytes) -> Dict[str, Any]:
     """Read a C2PA manifest from the file. {"found": False} when there is none or it can't be read."""
     if c2pa is None:
@@ -112,9 +141,12 @@ def check_c2pa(image_bytes: bytes) -> Dict[str, Any]:
         except Exception:
             state = None
         active = (data.get("manifests") or {}).get(data.get("active_manifest"), {})
+        codes = _failure_codes(data)
         return {
             "found": True,
             "validation_state": state,
+            "failure_codes": codes,
+            "verdict": _manifest_verdict(state, codes),
             "claim_generator": active.get("claim_generator"),
             "digital_source_types": source_types,
             "ai_declared": any(s.lower() in AI_SOURCE_TYPES for s in source_types),
@@ -160,9 +192,10 @@ def check_origin(image_bytes: bytes) -> OriginResult:
     if settings.modes.c2pa == "active":
         c2pa_info = check_c2pa(image_bytes)
         if c2pa_info.get("found"):
-            state = c2pa_info.get("validation_state")
-            details.append("C2PA manifest found" + (f" (validation: {state})." if state else "."))
-            if c2pa_info.get("ai_declared"):
+            verdict = c2pa_info.get("verdict")
+            details.append(_VERDICT_TEXT.get(verdict, "C2PA manifest found") + ".")
+            # Only a verified manifest may vouch for "AI-generated"; a tampered one proves nothing.
+            if c2pa_info.get("ai_declared") and verdict in ("valid", "credential_invalid"):
                 ai_declared = True
         elif c2pa_info.get("error"):
             notes.append(f"C2PA check could not run: {c2pa_info['error']}")

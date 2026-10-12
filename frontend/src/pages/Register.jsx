@@ -1,35 +1,17 @@
-import { useState, useContext, useEffect } from 'react';
+import { useState, useContext, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { apiClient, certificateUrl, mediaUrl, verifyPath } from '../api/client';
+import { certificateUrl, mediaUrl, verifyPath } from '../api/client';
 import { AuthContext } from '../AuthContext';
 import Dropzone from '../components/Dropzone';
 import { Field } from '../components/FormControls';
 import { useToast } from '../components/Toast';
+import PipelineLive from '../components/PipelineLive';
+import useJob from '../lib/useJob';
 import {
   IconFingerprint, IconShield, IconClock, IconAlert, IconDownload, IconCheck, IconPlus, IconGrid, IconCopy,
 } from '../components/Icons';
 
-const STAGES = ['Reading image', 'Computing fingerprints', 'Checking the registry for duplicates', 'Writing to the hash chain'];
-
 const formatDate = (iso) => new Date(iso).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
-
-function Progress() {
-  const [stage, setStage] = useState(0);
-  useEffect(() => {
-    const id = setInterval(() => setStage((s) => Math.min(s + 1, STAGES.length - 1)), 900);
-    return () => clearInterval(id);
-  }, []);
-  return (
-    <ul className="progress-steps">
-      {STAGES.map((s, i) => (
-        <li key={s} className={i < stage ? 'done' : i === stage ? 'active' : ''}>
-          <span className="ps-dot">{i < stage ? <IconCheck size={12} /> : i === stage ? <span className="spinner spinner-sm" /> : null}</span>
-          {s}
-        </li>
-      ))}
-    </ul>
-  );
-}
 
 function DuplicateNotice({ conflict, onOverride, loading }) {
   const m = conflict.match;
@@ -72,9 +54,12 @@ export default function Register() {
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
   const [conflict, setConflict] = useState(null);
+  const job = useJob();
+  const busy = useRef(false);
 
   const submit = async (allowSimilarOwn = false) => {
-    if (!imageFile || !ownerName.trim() || !title.trim()) return;
+    if (!imageFile || !ownerName.trim() || !title.trim() || busy.current) return;
+    busy.current = true;
     setLoading(true);
     setError(null);
     setConflict(null);
@@ -84,15 +69,27 @@ export default function Register() {
       formData.append('title', title.trim());
       formData.append('image', imageFile);
       if (allowSimilarOwn) formData.append('allow_similar_own', 'true');
-      const data = await apiClient('/api/works/register', { method: 'POST', body: formData });
-      setResult(data);
-      toast('Work registered and fingerprinted');
+      // The work is registered by a server job; the live view below shows each stage as it runs.
+      const r = await job.start('/api/works/register/start', formData);
+      if (!r || r.status === 'error') {
+        busy.current = false;
+        setLoading(false);
+        const e = r?.error;
+        if (e?.status === 409 && e.detail?.match) setConflict(e.detail);
+        else setError(typeof e?.detail === 'string' ? e.detail : e?.detail?.message || 'Registration failed. Please try again.');
+      }
     } catch (err) {
-      if (err.status === 409 && err.data?.match) setConflict(err.data);
-      else setError(err.message);
-    } finally {
+      busy.current = false;
       setLoading(false);
+      setError(err.message);
     }
+  };
+
+  const finish = () => {
+    busy.current = false;
+    setResult(job.result);
+    setLoading(false);
+    toast('Work registered and fingerprinted');
   };
 
   const reset = () => {
@@ -159,7 +156,11 @@ export default function Register() {
         <p className="page-subtitle">Upload the original file. We fingerprint it, timestamp it, and add it to your portfolio.</p>
       </header>
 
-      <div className="split">
+      {loading && imageFile && (
+        <PipelineLive kind="register" file={imageFile} events={job.events} status={job.status} elapsed={job.elapsed} onComplete={finish} />
+      )}
+
+      <div className="split" style={loading ? { display: 'none' } : undefined}>
         <div className="split-main">
           <Dropzone file={imageFile} onFile={(f) => { setImageFile(f); setConflict(null); }} disabled={loading}>
             {loading && <div className="scan-overlay"><span className="scan-line" /></div>}
@@ -175,14 +176,14 @@ export default function Register() {
           {error && <div className="alert alert-error"><IconAlert /> {error}</div>}
           {conflict && <DuplicateNotice conflict={conflict} loading={loading} onOverride={() => submit(true)} />}
 
-          {loading ? <Progress /> : (
+          {(
             <button className="btn btn-primary btn-block" disabled={!imageFile || !title.trim() || !ownerName.trim()}>
               <IconShield size={17} /> Register & fingerprint
             </button>
           )}
 
           <ul className="explainer">
-            <li><IconFingerprint size={16} /> <span><strong>Two fingerprints:</strong> a perceptual hash and an AI embedding that survive crops, filters and edits.</span></li>
+            <li><IconFingerprint size={16} /> <span><strong>Six fingerprint layers:</strong> file hash, perceptual hash, CLIP and DINOv2 embeddings, SIFT features and the registry hash, all listed on your certificate.</span></li>
             <li><IconShield size={16} /> <span><strong>Tamper-evident:</strong> each entry is hashed together with the one before it.</span></li>
             <li><IconClock size={16} /> <span><strong>Timestamped:</strong> the hash is anchored in Bitcoin via OpenTimestamps.</span></li>
           </ul>

@@ -5,6 +5,8 @@ import Dropzone from '../components/Dropzone';
 import ScoreRing from '../components/ScoreRing';
 import { IconScan, IconAlert, IconArrowRight, IconShield, IconCheck, IconArrowLeft } from '../components/Icons';
 import { verdictMeta, gateMeta, pct, formatDate, relativeTime } from '../lib/format';
+import PipelineLive from '../components/PipelineLive';
+import useJob from '../lib/useJob';
 
 function Summary({ check }) {
   const top = check.results[0];
@@ -31,9 +33,9 @@ function Summary({ check }) {
       <div className="verdict-banner tone-ok">
         <span className="vb-icon"><IconCheck size={22} /></span>
         <div>
-          <strong>No registered work matches this image</strong>
+          <strong>{check.results.length === 0 ? 'No registered work to compare against, or nothing close' : 'No registered work matches this image'}</strong>
           <p>
-            The closest entry scored {top ? pct(top.confidence) : '0%'}, below the match threshold.
+            {top ? `The closest of your works scored ${pct(top.confidence)}, below the match threshold.` : 'Only your own registered works are searched. Register a work first to be able to check copies of it.'}
             {check.gate?.error && ' Geometric verification was unavailable for this check, so only similarity scores were used.'}
           </p>
         </div>
@@ -85,6 +87,8 @@ export default function Check() {
   const [loading, setLoading] = useState(false);
   const [check, setCheck] = useState(null);
   const [error, setError] = useState(null);
+  const [running, setRunning] = useState(false);
+  const job = useJob();
 
   // Load a past check from history
   useEffect(() => {
@@ -99,19 +103,30 @@ export default function Check() {
 
   const scan = async () => {
     if (!imageFile) return;
-    setLoading(true);
     setError(null);
+    setRunning(true);
     try {
       const formData = new FormData();
       formData.append('image', imageFile);
-      const data = await apiClient('/api/works/check', { method: 'POST', body: formData });
-      setCheck(data);
-      navigate(`/check/${data.id}`, { replace: true });
+      // The check runs as a server job; the live view shows each pipeline stage working on the photo.
+      const r = await job.start('/api/works/check/start', formData);
+      if (!r || r.status === 'error') {
+        setRunning(false);
+        const d = r?.error?.detail;
+        setError(typeof d === 'string' ? d : d?.message || 'The check failed. Please try again.');
+      }
     } catch (err) {
+      setRunning(false);
       setError(err.message);
-    } finally {
-      setLoading(false);
     }
+  };
+
+  const finishScan = () => {
+    const data = job.result;
+    setRunning(false);
+    if (!data) return;
+    setCheck(data);
+    navigate(`/check/${data.id}`, { replace: true });
   };
 
   const startOver = () => {
@@ -157,12 +172,16 @@ export default function Check() {
         <p className="eyebrow">Copy detection</p>
         <h1 className="page-title">Check a suspected copy</h1>
         <p className="page-subtitle">
-          Found your work somewhere else? Upload the image you found and we'll compare it against every registered work,
-          even if it was cropped, filtered or AI-edited.
+          Found your work somewhere else? Upload the image you found and we will compare it against your own registered works,
+          even if it was cropped, filtered or AI-edited. Your portfolio is never searched by anyone else.
         </p>
       </header>
 
-      <div className="split">
+      {running && imageFile && (
+        <PipelineLive kind="check" file={imageFile} events={job.events} status={job.status} elapsed={job.elapsed} onComplete={finishScan} />
+      )}
+
+      <div className="split" style={running ? { display: 'none' } : undefined}>
         <div className="split-main">
           <Dropzone file={imageFile} onFile={setImageFile} disabled={loading}>
             {loading && <div className="scan-overlay"><span className="scan-line" /><span className="scan-label">Scanning registry…</span></div>}

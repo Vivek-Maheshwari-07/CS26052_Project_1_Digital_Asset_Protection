@@ -113,7 +113,25 @@ def test_c2pa_absent_is_reported_as_not_found():
 
 
 def test_c2pa_manifest_with_ai_source_type_sets_declared(monkeypatch):
-    monkeypatch.setattr(origin, "check_c2pa", lambda b: {"found": True, "validation_state": "Valid",
+    monkeypatch.setattr(origin, "check_c2pa", lambda b: {"found": True, "validation_state": "Valid", "verdict": "valid",
                                                          "ai_declared": True, "digital_source_types": ["trainedAlgorithmicMedia"]})
     r = origin.check_origin(_png())
     assert r.provenance_found and r.ai_generated_declared is True
+
+
+def test_tampered_manifest_does_not_vouch_for_ai(monkeypatch):
+    monkeypatch.setattr(origin, "check_c2pa", lambda b: {"found": True, "validation_state": "Invalid", "verdict": "tampered",
+                                                         "ai_declared": True})
+    r = origin.check_origin(_png())
+    assert r.provenance_found and r.ai_generated_declared is None
+    assert "no longer matches" in r.details[0]
+
+
+@pytest.mark.parametrize("state,codes,verdict", [
+    ("Valid", ["signingCredential.untrusted"], "valid"),
+    ("Invalid", ["signingCredential.untrusted", "signingCredential.invalid"], "credential_invalid"),
+    ("Invalid", ["assertion.dataHash.mismatch"], "tampered"),
+    ("Invalid", [], "tampered"),
+])
+def test_manifest_verdicts(state, codes, verdict):
+    assert origin._manifest_verdict(state, codes) == verdict

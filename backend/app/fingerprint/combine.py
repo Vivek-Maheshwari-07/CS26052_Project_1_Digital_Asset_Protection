@@ -7,7 +7,7 @@ from app.config import settings
 from app.fingerprint.phash import compute_phash, is_low_detail
 from app.fingerprint.embedding import compute_embedding, compute_embedding_async
 
-PIPELINE_VERSION = "phash+clip-vitb32-centercrop-v2"  # bump when hashing/embedding logic changes
+PIPELINE_VERSION = "phash+clip-vitb32-centercrop-v3"  # bump when hashing/embedding logic changes (v3: alpha on white)
 
 
 def fingerprint_sync(image: Image.Image) -> dict:

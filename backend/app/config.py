@@ -52,6 +52,9 @@ class Settings(BaseSettings):
     DUPLICATE_EMBEDDING: float = 0.95
     DUPLICATE_PHASH: float = 0.9
 
+    # Folder of sample images shown in the dashboard Discover feed (default: <repo>/dataset/distractors)
+    SHOWCASE_DIR: str = ""
+
     # Geometric verification gate (app/gate): SIFT+MAGSAC alignment, dense evidence, tiered verdicts.
     # Needs the DINOv2/CLIP weights; set False to run with the fingerprint scores only.
     GATE_ENABLED: bool = True

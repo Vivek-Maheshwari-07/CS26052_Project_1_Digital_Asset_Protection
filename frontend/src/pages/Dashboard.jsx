@@ -10,6 +10,7 @@ import {
   IconScan, IconArrowRight,
 } from '../components/Icons';
 import { relativeTime, verdictMeta } from '../lib/format';
+import '../features.css';
 
 const greeting = () => {
   const h = new Date().getHours();
@@ -59,6 +60,60 @@ function PinCard({ work, ratio, onOpen, onMeasured, index }) {
         <p>{relativeTime(work.created_at)}</p>
       </div>
     </article>
+  );
+}
+
+function SamplePin({ item, index }) {
+  const [loaded, setLoaded] = useState(false);
+  return (
+    <article className="pin" style={{ animationDelay: `${Math.min(index, 12) * 45}ms` }}>
+      <a className="pin-media" href={mediaUrl(item.image_url)} target="_blank" rel="noreferrer"
+        style={{ aspectRatio: `${item.width} / ${item.height}` }} aria-label={`Open ${item.title}`}>
+        {!loaded && <span className="pin-shimmer" />}
+        <img src={mediaUrl(item.image_url)} alt={item.title} loading="lazy" className={loaded ? 'loaded' : ''} onLoad={() => setLoaded(true)} />
+      </a>
+      <div className="pin-caption">
+        <h3 title={item.title}>{item.title}</h3>
+        <p className="pin-creator"><span className="dot-av" />{item.creator}</p>
+      </div>
+    </article>
+  );
+}
+
+function Discover() {
+  const [feed, setFeed] = useState({ items: [], next: 0, total: 0 });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const more = useCallback(async (offset) => {
+    setLoading(true);
+    try {
+      const r = await apiClient(`/api/discover?offset=${offset}&limit=40`);
+      setFeed((f) => ({ items: offset === 0 ? r.items : [...f.items, ...r.items], next: r.next_offset, total: r.total }));
+      setError(null);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+  useEffect(() => { more(0); }, [more]);
+
+  if (error && feed.items.length === 0) {
+    return <div className="empty-state"><span className="empty-icon error"><IconAlert size={28} /></span><h3>Couldn't load the sample library</h3><p>{error}</p><button className="btn btn-ghost" onClick={() => more(0)}>Try again</button></div>;
+  }
+  if (loading && feed.items.length === 0) return <SkeletonGrid />;
+  return (
+    <>
+      <div className="sample-banner"><IconImage size={16} /> Sample library: {feed.total} placeholder works we use to test the registry at scale. Titles and creators are generated labels.</div>
+      <Masonry items={feed.items} getRatio={(w) => w.height / w.width}
+        renderItem={(w, i) => <SamplePin key={w.id} item={w} index={i} />} />
+      {feed.next !== null && (
+        <div className="load-more">
+          <button className="btn btn-ghost btn-lg" onClick={() => more(feed.next)} disabled={loading}>{loading ? 'Loading…' : 'Show more works'}</button>
+        </div>
+      )}
+    </>
   );
 }
 
@@ -127,7 +182,7 @@ function History({ checks }) {
 export default function Dashboard() {
   const { user } = useContext(AuthContext);
   const [params, setParams] = useSearchParams();
-  const tab = params.get('tab') === 'checks' ? 'checks' : 'works';
+  const tab = ['works', 'checks'].includes(params.get('tab')) ? params.get('tab') : 'discover';
   const [works, setWorks] = useState([]);
   const [checks, setChecks] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -175,19 +230,31 @@ export default function Dashboard() {
   const openIndex = visible.findIndex((w) => w.id === openId);
   const openWork = openIndex >= 0 ? visible[openIndex] : null;
   const firstName = (user?.full_name || user?.username || '').split(' ')[0];
-  const setTab = (t) => setParams(t === 'checks' ? { tab: 'checks' } : {}, { replace: true });
+  const setTab = (t) => setParams(t === 'discover' ? {} : { tab: t }, { replace: true });
 
   return (
     <div className="dashboard page-enter">
       <header className="dash-hero">
         <div>
           <p className="eyebrow">{greeting()}{firstName ? `, ${firstName}` : ''}</p>
-          <h1 className="dash-title">Your portfolio</h1>
-          <p className="dash-sub">Every piece here is fingerprinted and anchored in the provenance registry.</p>
+          <h1 className="dash-title">Your dashboard</h1>
+          <p className="dash-sub">Register originals, check suspected copies, and browse the sample library.</p>
           <RegistryBadge />
         </div>
-        <Link to="/works/new" className="btn btn-primary btn-lg"><IconPlus size={18} /> Register new work</Link>
       </header>
+
+      <section className="action-cards" aria-label="Main actions">
+        <Link to="/works/new" className="action-card">
+          <span className="ac-icon"><IconPlus size={26} /></span>
+          <div><h3>Register your work</h3><p>Upload an original, watch it fingerprinted six ways, and get a certificate of proof.</p></div>
+          <IconArrowRight size={20} className="ac-go" />
+        </Link>
+        <Link to="/check" className="action-card">
+          <span className="ac-icon"><IconScan size={26} /></span>
+          <div><h3>Check a suspected copy</h3><p>Compare an image against your own registered works and get a detailed evidence report.</p></div>
+          <IconArrowRight size={20} className="ac-go" />
+        </Link>
+      </section>
 
       <section className="stats">
         <div className="stat">
@@ -206,8 +273,11 @@ export default function Dashboard() {
 
       <div className="toolbar">
         <div className="tabs" role="tablist">
+          <button role="tab" aria-selected={tab === 'discover'} className={tab === 'discover' ? 'active' : ''} onClick={() => setTab('discover')}>
+            <IconSearch size={16} /> Discover
+          </button>
           <button role="tab" aria-selected={tab === 'works'} className={tab === 'works' ? 'active' : ''} onClick={() => setTab('works')}>
-            <IconGrid size={16} /> Works <span className="count">{works.length}</span>
+            <IconGrid size={16} /> My works <span className="count">{works.length}</span>
           </button>
           <button role="tab" aria-selected={tab === 'checks'} className={tab === 'checks' ? 'active' : ''} onClick={() => setTab('checks')}>
             <IconScan size={16} /> Match history <span className="count">{checks.length}</span>
@@ -231,7 +301,9 @@ export default function Dashboard() {
         )}
       </div>
 
-      {loading ? (
+      {tab === 'discover' ? (
+        <Discover />
+      ) : loading ? (
         <SkeletonGrid />
       ) : error ? (
         <div className="empty-state">

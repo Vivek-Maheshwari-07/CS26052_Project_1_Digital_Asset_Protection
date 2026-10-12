@@ -45,10 +45,13 @@ class _Collection:
 
 
 class _Db:
-    def __init__(self, work_id, width, height, clip_vec, dino_vec, image_path):
+    def __init__(self, work_id, width, height, clip_vec, dino_vec, image_path, crop_vecs=None):
         self.works = _Collection([{"id": work_id, "width": width, "height": height,
                                    "embedding": clip_vec, "image_path": image_path}])
-        self.gate_features = _Collection([{"work_id": work_id, "model": "dinov2-small", "vector": dino_vec}])
+        feature = {"work_id": work_id, "model": "dinov2-small", "vector": dino_vec}
+        if crop_vecs is not None:
+            feature["crop_vectors"] = crop_vecs
+        self.gate_features = _Collection([feature])
 
 
 async def main():
@@ -66,7 +69,8 @@ async def main():
     from app import storage
     from app.gate.normalize import normalize_image
     from app.gate.pipeline import run_gate
-    from app.gate.retrieve import embed_clip, embed_dino
+    from app.gate.retrieve import embed_clip, embed_dino, embed_dino_crops
+    from app.gate.settings import settings as gate_settings
     from app.gate.verify import FEATURE_VERSION, get_cached_features
 
     work_id = "cli-original"
@@ -74,7 +78,8 @@ async def main():
     storage.save_image(orig_bytes, "JPEG", name=work_id)
     img, _, _ = normalize_image(orig_bytes)
     get_cached_features(work_id, FEATURE_VERSION, img)
-    db = _Db(work_id, *img.size, embed_clip(img).tolist(), embed_dino(img).tolist(), f"{work_id}.jpg")
+    crops = embed_dino_crops(img).tolist() if gate_settings.index_crops else None
+    db = _Db(work_id, *img.size, embed_clip(img).tolist(), embed_dino(img).tolist(), f"{work_id}.jpg", crops)
 
     verdict = await run_gate(Path(args.suspect).read_bytes(), db)
     print(verdict.model_dump_json(indent=2))

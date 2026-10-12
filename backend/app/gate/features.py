@@ -11,7 +11,10 @@ from typing import Optional
 from PIL import Image
 
 from app import storage
-from app.gate.normalize import InvalidImageError, normalize_image
+import numpy as np
+
+from app.gate.normalize import InvalidImageError, alpha_mask, normalize_image
+from app.gate.settings import settings
 from app.gate.verify import FEATURE_VERSION, cache_dir, get_cached_features
 
 logger = logging.getLogger(__name__)
@@ -28,33 +31,45 @@ def has_sift(work_id: str) -> bool:
 
 
 async def has_dino(db, work_id: str) -> bool:
-    return await db.gate_features.count_documents({"work_id": work_id, "model": DINO_MODEL}) > 0
+    """True if the work has every DINOv2 vector the current settings call for (crops included)."""
+    query = {"work_id": work_id, "model": DINO_MODEL}
+    if settings.index_crops:
+        query["crop_vectors"] = {"$exists": True}
+    return await db.gate_features.count_documents(query) > 0
 
 
 def load_target(image_path: Optional[str]) -> Optional[Image.Image]:
     """A registered work's stored image, normalised exactly like a suspect. None if unreadable."""
+    return load_target_with_alpha(image_path)[0]
+
+
+def load_target_with_alpha(image_path: Optional[str]) -> tuple[Optional[Image.Image], Optional[np.ndarray]]:
+    """(normalised image, opacity mask in the same frame or None if fully opaque); (None, None) if unreadable."""
     raw = storage.read_image(image_path) if image_path else None
     if not raw:
-        return None
+        return None, None
     try:
-        return normalize_image(raw)[0]
+        img, crop_box, _ = normalize_image(raw)
     except InvalidImageError:
-        return None
+        return None, None
+    return img, alpha_mask(raw, crop_box)
 
 
 async def compute_and_store(db, work_id: str, image_bytes: bytes, *, dino: bool = True, sift: bool = True) -> dict:
     """Compute and persist the DINOv2 vector and/or SIFT cache for one work."""
-    from app.gate.retrieve import embed_dino  # lazy: importing it pulls in torch/transformers
+    from app.gate.retrieve import embed_dino, embed_dino_crops  # lazy: pulls in torch/transformers
 
     img, _, _ = normalize_image(image_bytes)
     done = {"dino": False, "sift": False}
     if dino:
-        vec = await asyncio.to_thread(embed_dino, img)
-        await db.gate_features.update_one(
-            {"work_id": work_id, "model": DINO_MODEL},
-            {"$set": {"vector": vec.tolist(), "feature_version": FEATURE_VERSION}},
-            upsert=True,
-        )
+        def embed():
+            return embed_dino(img), (embed_dino_crops(img) if settings.index_crops else None)
+
+        vec, crops = await asyncio.to_thread(embed)
+        fields = {"vector": vec.tolist(), "feature_version": FEATURE_VERSION}
+        if crops is not None:
+            fields["crop_vectors"] = crops.tolist()
+        await db.gate_features.update_one({"work_id": work_id, "model": DINO_MODEL}, {"$set": fields}, upsert=True)
         done["dino"] = True
     if sift:
         await asyncio.to_thread(get_cached_features, work_id, FEATURE_VERSION, img)

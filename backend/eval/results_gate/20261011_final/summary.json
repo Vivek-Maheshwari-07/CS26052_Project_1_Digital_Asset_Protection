@@ -1,0 +1,18 @@
+{
+  "suspects": 1399,
+  "errors": 0,
+  "registry": 713,
+  "positive": {
+    "n": 1254,
+    "tier1": 1090,
+    "retrieved": 1250,
+    "any_claim": 1199
+  },
+  "negatives": {
+    "n": 70,
+    "false_evidence": 0,
+    "upper95": 0.04189334406688858
+  },
+  "latency_p50_total": 4.297035200000209,
+  "latency_p95_total": 8.684443099999953
+}

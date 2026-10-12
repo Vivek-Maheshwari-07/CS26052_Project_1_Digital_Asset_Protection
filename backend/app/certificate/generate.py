@@ -51,7 +51,7 @@ def _label_value(pdf: FPDF, x: float, y: float, w: float, label: str, value: str
     pdf.multi_cell(w, 5, latin1(value))
 
 
-def build_certificate(record: dict, check: dict) -> bytes:
+def build_certificate(record: dict, check: dict, stack: dict | None = None) -> bytes:
     pdf = FPDF(orientation="L", unit="mm", format="A4")
     pdf.set_auto_page_break(False)
     pdf.add_page()
@@ -173,7 +173,71 @@ def build_certificate(record: dict, check: dict) -> bytes:
         "entry before it. Changing any registered detail after the fact would change this hash and break every later link "
         "in the chain. Scan the QR code or open the link beside it to verify this certificate.",
     )
+    if stack:
+        _stack_page(pdf, record, stack)
     return bytes(pdf.output())
+
+
+def _stack_page(pdf: FPDF, record: dict, stack: dict) -> None:
+    """Page 2: one row per fingerprinting technique, then the composite over all of them."""
+    W, H = 297, 210
+    pdf.add_page()
+    pdf.set_fill_color(*SOFT)
+    pdf.rect(0, 0, W, H, "F")
+    pdf.set_fill_color(255, 255, 255)
+    pdf.set_draw_color(*LINE)
+    pdf.set_line_width(0.4)
+    pdf.rect(10, 10, W - 20, H - 20, "DF")
+    left = 24
+
+    pdf.set_xy(left, 24)
+    pdf.set_font("Helvetica", "B", 9)
+    pdf.set_text_color(*BRAND)
+    pdf.cell(200, 5, "FINGERPRINT STACK", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+    pdf.set_xy(left, 31)
+    pdf.set_font("Helvetica", "B", 20)
+    pdf.set_text_color(*INK)
+    pdf.cell(W - 48, 9, latin1(record["title"]), new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+    pdf.set_xy(left, 42)
+    pdf.set_font("Helvetica", "", 10)
+    pdf.set_text_color(*MUTED)
+    pdf.multi_cell(W - 48, 5, "Six independent techniques describe this work. A copy that defeats one of them (a crop breaks the "
+                              "perceptual hash, a recolour moves the embeddings) is still described by the others.")
+
+    y = 60
+    for layer in stack["layers"]:
+        pdf.set_fill_color(*SOFT)
+        pdf.rect(left, y, W - 48, 15, "F")
+        pdf.set_xy(left + 3, y + 2)
+        pdf.set_font("Helvetica", "B", 10)
+        pdf.set_text_color(*INK)
+        pdf.cell(52, 5, latin1(layer["name"]))
+        pdf.set_font("Helvetica", "", 8)
+        pdf.set_text_color(*MUTED)
+        pdf.cell(150, 5, latin1(layer["technique"]), new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.set_xy(left + 3, y + 8.5)
+        pdf.set_font("Courier", "", 8.5)
+        pdf.set_text_color(*(INK if layer["digest"] else MUTED))
+        pdf.cell(W - 54, 5, latin1(layer["digest"] or "pending (computed in the background after registration)"))
+        y += 17.5
+
+    y += 2
+    pdf.set_fill_color(*BRAND)
+    pdf.rect(left, y, W - 48, 20, "F")
+    pdf.set_xy(left + 3, y + 3)
+    pdf.set_font("Helvetica", "B", 10)
+    pdf.set_text_color(255, 255, 255)
+    pdf.cell(W - 54, 5, "COMPOSITE FINGERPRINT  (SHA-256 over all six digests)")
+    pdf.set_xy(left + 3, y + 11)
+    pdf.set_font("Courier", "B", 10)
+    pdf.cell(W - 54, 6, latin1(stack["composite"] or "available once every layer has been computed"))
+
+    pdf.set_xy(left, H - 33)
+    pdf.set_font("Helvetica", "", 7.5)
+    pdf.set_text_color(*MUTED)
+    pdf.multi_cell(W - 48, 3.8, "Digests are derived from the stored original and its stored vectors when this certificate is issued. The "
+                                "registry entry hash is the tamper-evident part: it commits to the record and the entry before it and is "
+                                "timestamped in Bitcoin, which is what proves the work existed at registration time.")
 
 
 @router.get("/{work_id}/certificate")
@@ -181,7 +245,8 @@ async def generate_certificate(work_id: str, db = Depends(get_db)):
     record = await db.works.find_one({"id": work_id}, {"ots_proof": 0})
     if not record:
         raise HTTPException(status_code=404, detail="Work not found")
-    pdf_bytes = build_certificate(record, await verify_record(db, record))
+    from app.certificate.stack import build_stack
+    pdf_bytes = build_certificate(record, await verify_record(db, record), await build_stack(db, record))
     return Response(
         pdf_bytes,
         media_type="application/pdf",

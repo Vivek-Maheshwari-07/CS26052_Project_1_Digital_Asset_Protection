@@ -1,85 +1,104 @@
-"""G1: Retrieval from CLIP and DINOv2 indices."""
+"""G1: Retrieval from CLIP and DINOv2 indices.
+
+Each query is embedded in three orientations (as-is, mirrored, flipped) in one batched pass, and a
+work's score is the best over orientations. When crop indexing is on, every registered work also
+carries five DINOv2 crop vectors (four quadrants + centre) so a small crop of a large work can still
+be retrieved.
+"""
 import asyncio
 import logging
+import threading
 from dataclasses import dataclass
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 import numpy as np
-import open_clip
 import torch
-from PIL import Image, ImageOps
-from transformers import AutoImageProcessor, AutoModel
+from PIL import Image
 
+from app.fingerprint import embedding as clip_embedding
 from app.gate.settings import settings
+from app.gate.verify import apply_flip
 
 logger = logging.getLogger(__name__)
 
+# Orientations the query is embedded in. Embeddings are not rotation invariant, so (unlike the SIFT
+# stage) a top-bottom flip needs its own view here.
+QUERY_VIEWS = ("", "h", "v")
 
-# -----------------------------------------------------------------------------
-# Model Loaders (cached globally)
-# -----------------------------------------------------------------------------
-_clip_model = None
-_clip_preprocess = None
+N_CROPS = 5
+DINO_DIM = 384
+CLIP_DIM = 512
+
 _dino_model = None
 _dino_processor = None
+_dino_lock = threading.Lock()
 _inference_semaphore = asyncio.Semaphore(2)
 
 
 def get_clip_model():
-    global _clip_model, _clip_preprocess
-    if _clip_model is None:
-        _clip_model, _, _clip_preprocess = open_clip.create_model_and_transforms('ViT-B-32', pretrained='laion2b_s34b_b79k')
-        _clip_model.eval()
-    return _clip_model, _clip_preprocess
+    """The CLIP model shared with the classic fingerprint (loaded once, on first use)."""
+    return clip_embedding.get_model()
 
 
 def get_dino_model():
     global _dino_model, _dino_processor
     if _dino_model is None:
-        _dino_processor = AutoImageProcessor.from_pretrained("facebook/dinov2-small")
-        # Ensure it does short-side 224 bicubic and center crop, which is default for DINOv2 processor
-        _dino_model = AutoModel.from_pretrained("facebook/dinov2-small")
-        _dino_model.eval()
+        with _dino_lock:
+            if _dino_model is None:
+                from transformers import AutoImageProcessor, AutoModel
+                _dino_processor = AutoImageProcessor.from_pretrained("facebook/dinov2-small")
+                model = AutoModel.from_pretrained("facebook/dinov2-small")
+                model.eval()
+                _dino_model = model
     return _dino_model, _dino_processor
 
 
 # -----------------------------------------------------------------------------
-# Embedding Extraction
+# Embedding extraction (batched)
 # -----------------------------------------------------------------------------
-def embed_clip(image: Image.Image) -> np.ndarray:
-    model, preprocess = get_clip_model()
-    image_input = preprocess(image).unsqueeze(0)
+def embed_clip_batch(images: List[Image.Image]) -> np.ndarray:
+    return clip_embedding.compute_embeddings(images)
+
+
+def embed_dino_batch(images: List[Image.Image]) -> np.ndarray:
+    """L2-normalised DINOv2-small CLS embeddings, shape (n, 384)."""
+    model, processor = get_dino_model()
+    inputs = processor(images=images, return_tensors="pt")
     with torch.no_grad():
-        features = model.encode_image(image_input)
-        features /= features.norm(dim=-1, keepdim=True)
-    return features[0].float().cpu().numpy()
+        cls = model(**inputs).last_hidden_state[:, 0, :]
+        cls = cls / cls.norm(dim=-1, keepdim=True)
+    return cls.float().cpu().numpy()
+
+
+def embed_clip(image: Image.Image) -> np.ndarray:
+    return embed_clip_batch([image])[0]
 
 
 def embed_dino(image: Image.Image) -> np.ndarray:
-    model, processor = get_dino_model()
-    inputs = processor(images=image, return_tensors="pt")
-    with torch.no_grad():
-        outputs = model(**inputs)
-        # Use CLS token (index 0 of last_hidden_state)
-        cls_token = outputs.last_hidden_state[:, 0, :]
-        cls_token /= cls_token.norm(dim=-1, keepdim=True)
-    return cls_token[0].float().cpu().numpy()
+    return embed_dino_batch([image])[0]
+
+
+def crop_views(image: Image.Image) -> List[Image.Image]:
+    """The five crops indexed per work: four quadrants and the centre (each a quarter of the area)."""
+    w, h = image.size
+    boxes = [(0, 0, w // 2, h // 2), (w // 2, 0, w, h // 2), (0, h // 2, w // 2, h), (w // 2, h // 2, w, h),
+             (w // 4, h // 4, 3 * w // 4, 3 * h // 4)]
+    return [image.crop(b) for b in boxes]
+
+
+def embed_dino_crops(image: Image.Image) -> np.ndarray:
+    return embed_dino_batch(crop_views(image))
 
 
 async def compute_embeddings_async(image: Image.Image) -> dict:
-    """Compute embeddings for the image and its horizontal flip."""
+    """Embed the query in every orientation (batched): arrays of shape (len(QUERY_VIEWS), dim)."""
     async with _inference_semaphore:
-        flipped = ImageOps.mirror(image)
-        return await asyncio.to_thread(_compute_all_sync, image, flipped)
+        return await asyncio.to_thread(_compute_all_sync, image)
 
 
-def _compute_all_sync(img: Image.Image, flipped: Image.Image) -> dict:
-    return {
-        "clip": embed_clip(img),
-        "clip_flip": embed_clip(flipped),
-        "dino": embed_dino(img),
-        "dino_flip": embed_dino(flipped),
-    }
+def _compute_all_sync(img: Image.Image) -> dict:
+    views = [apply_flip(img, m) for m in QUERY_VIEWS]
+    return {"clip": embed_clip_batch(views), "dino": embed_dino_batch(views)}
 
 
 # -----------------------------------------------------------------------------
@@ -95,16 +114,19 @@ class Candidate:
     # Tier 3 "lead" inputs apply only to the single best DINO match; 0 for everything else.
     lead_score: float = 0.0
     lead_margin: float = 0.0
+    via_crop: bool = False  # the DINO score came from a crop vector, not the whole-image vector
 
 
 class DualIndex:
     def __init__(self):
         self._db = None
-        self._key: tuple[int, int] | None = None  # (works, dino vectors) the matrices were built from
+        self._key: tuple[int, int, int] | None = None  # (works, dino vectors, crop sets) the matrices were built from
         self._lock = asyncio.Lock()
         self.ids: list[str] = []
-        self.clip_emb = np.zeros((0, 0), dtype=np.float32)
-        self.dino_emb = np.zeros((0, 0), dtype=np.float32)
+        self.owners: list[str | None] = []
+        self.clip_emb = np.zeros((0, CLIP_DIM), dtype=np.float32)
+        self.dino_emb = np.zeros((0, DINO_DIM), dtype=np.float32)
+        self.dino_crops = np.zeros((0, N_CROPS, DINO_DIM), dtype=np.float32)
 
     async def sync(self, db) -> None:
         """Rebuild in-memory matrices from MongoDB when the stored counts change.
@@ -113,7 +135,8 @@ class DualIndex:
         smaller than the work count; staleness is judged on the stored counts, not on len(ids).
         """
         key = (await db.works.count_documents({}),
-               await db.gate_features.count_documents({"model": "dinov2-small"}))
+               await db.gate_features.count_documents({"model": "dinov2-small"}),
+               await db.gate_features.count_documents({"model": "dinov2-small", "crop_vectors": {"$exists": True}}))
 
         if self._db is db and self._key == key:
             return
@@ -122,33 +145,33 @@ class DualIndex:
             if self._db is db and self._key == key:
                 return
 
-            ids = []
-            clip_list = []
-            dino_list = []
-
-            # Load works
-            works_cursor = db.works.find({}, {"id": 1, "embedding": 1}).sort("id", 1)
-            works_map = {}
-            async for doc in works_cursor:
+            works_map, owner_map = {}, {}
+            async for doc in db.works.find({}, {"id": 1, "embedding": 1, "user_id": 1}).sort("id", 1):
                 works_map[doc["id"]] = doc["embedding"]
+                owner_map[doc["id"]] = doc.get("user_id")
 
-            # Load DINOv2 features
-            dino_cursor = db.gate_features.find({"model": "dinov2-small"}).sort("work_id", 1)
             dino_map = {}
-            async for doc in dino_cursor:
-                dino_map[doc["work_id"]] = doc["vector"]
+            async for doc in db.gate_features.find({"model": "dinov2-small"}).sort("work_id", 1):
+                dino_map[doc["work_id"]] = (doc["vector"], doc.get("crop_vectors"))
 
+            ids, owners, clip_list, dino_list, crop_list = [], [], [], [], []
+            zero_crops = np.zeros((N_CROPS, DINO_DIM), dtype=np.float32)
             for wid, c_emb in works_map.items():
-                d_emb = dino_map.get(wid)
-                if not d_emb:
-                    continue  # Only index works that have both
+                entry = dino_map.get(wid)
+                if not entry or not entry[0]:
+                    continue  # only index works that have both
                 ids.append(wid)
+                owners.append(owner_map.get(wid))
                 clip_list.append(c_emb)
-                dino_list.append(d_emb)
+                dino_list.append(entry[0])
+                crop_list.append(np.asarray(entry[1], dtype=np.float32) if entry[1] else zero_crops)
 
             self.ids = ids
-            self.clip_emb = np.asarray(clip_list, dtype=np.float32) if clip_list else np.zeros((0, 512), dtype=np.float32)
-            self.dino_emb = np.asarray(dino_list, dtype=np.float32) if dino_list else np.zeros((0, 384), dtype=np.float32)
+            self.owners = owners
+            self.clip_emb = np.asarray(clip_list, dtype=np.float32) if clip_list else np.zeros((0, CLIP_DIM), dtype=np.float32)
+            self.dino_emb = np.asarray(dino_list, dtype=np.float32) if dino_list else np.zeros((0, DINO_DIM), dtype=np.float32)
+            self.dino_crops = (np.asarray(crop_list, dtype=np.float32) if crop_list
+                               else np.zeros((0, N_CROPS, DINO_DIM), dtype=np.float32))
             self._db = db
             self._key = key
             logger.info("Rebuilt DualIndex with %d of %d works.", len(ids), key[0])
@@ -165,11 +188,23 @@ def _top_k(scores: np.ndarray, k: int) -> np.ndarray:
     return idx[np.argsort(-scores[idx])]
 
 
-async def retrieve(image: Image.Image, db) -> Tuple[List[Candidate], float]:
-    """
-    Search both indices with original and flipped embeddings.
-    Returns:
-        Candidates list, lead_score
+def score_index(index: DualIndex, embs: dict) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """(clip scores, dino scores, dino-from-crop flags) per indexed work, best over query orientations."""
+    c_scores = (index.clip_emb @ embs["clip"].T).max(axis=1)
+    d_full = (index.dino_emb @ embs["dino"].T).max(axis=1)
+    if settings.index_crops and len(index.ids):
+        per_crop = index.dino_crops @ embs["dino"].T  # (works, crops, views)
+        per_crop[~(np.abs(index.dino_crops).sum(axis=2) > 0)] = -1.0  # works without crop vectors
+        d_crop = per_crop.max(axis=(1, 2))
+    else:
+        d_crop = np.full(len(index.ids), -1.0, dtype=np.float32)
+    return c_scores, np.maximum(d_full, d_crop), d_crop > d_full
+
+
+async def retrieve(image: Image.Image, db, owner_id: Optional[str] = None) -> Tuple[List[Candidate], float]:
+    """Search both indices (all query orientations, whole-image and crop vectors).
+
+    Returns the candidate list (union of the top-k by CLIP and by DINO) and the lead score.
     """
     embs = await compute_embeddings_async(image)
     await dual_index.sync(db)
@@ -177,42 +212,33 @@ async def retrieve(image: Image.Image, db) -> Tuple[List[Candidate], float]:
     if not dual_index.ids:
         return [], 0.0
 
-    # Max similarity over normal and flipped for CLIP
-    c_scores_normal = dual_index.clip_emb @ embs["clip"]
-    c_scores_flip = dual_index.clip_emb @ embs["clip_flip"]
-    c_scores = np.maximum(c_scores_normal, c_scores_flip)
+    c_scores, d_scores, from_crop = score_index(dual_index, embs)
+    if owner_id is not None:  # only the caller's own works are searched
+        mine = np.array([o == owner_id for o in dual_index.owners])
+        if not mine.any():
+            return [], 0.0
+        c_scores = np.where(mine, c_scores, -2.0)
+        d_scores = np.where(mine, d_scores, -2.0)
 
-    # Max similarity over normal and flipped for DINOv2
-    d_scores_normal = dual_index.dino_emb @ embs["dino"]
-    d_scores_flip = dual_index.dino_emb @ embs["dino_flip"]
-    d_scores = np.maximum(d_scores_normal, d_scores_flip)
-
-    # Get top-K independently
     k = settings.k_candidates
     c_top = _top_k(c_scores, k)
     d_top = _top_k(d_scores, k)
-
-    # Ranks
     c_ranks = {dual_index.ids[idx]: rank for rank, idx in enumerate(c_top, 1)}
     d_ranks = {dual_index.ids[idx]: rank for rank, idx in enumerate(d_top, 1)}
 
-    # Union
-    union_idx = set(c_top).union(set(d_top))
-    
     candidates = []
-    for idx in union_idx:
+    for idx in set(c_top).union(set(d_top)):
+        if owner_id is not None and d_scores[idx] < -1.5 and c_scores[idx] < -1.5:
+            continue
         wid = dual_index.ids[idx]
-        candidates.append(
-            Candidate(
-                work_id=wid,
-                clip_sim=float(c_scores[idx]),
-                dino_sim=float(d_scores[idx]),
-                clip_rank=c_ranks.get(wid, 999),
-                dino_rank=d_ranks.get(wid, 999),
-            )
-        )
-    
-    # Sort candidates by DINO similarity as primary
+        candidates.append(Candidate(
+            work_id=wid,
+            clip_sim=float(c_scores[idx]),
+            dino_sim=float(d_scores[idx]),
+            clip_rank=c_ranks.get(wid, 999),
+            dino_rank=d_ranks.get(wid, 999),
+            via_crop=bool(from_crop[idx]),
+        ))
     candidates.sort(key=lambda c: c.dino_sim, reverse=True)
 
     # Lead score: the best DINO similarity, with its margin over the runner-up (a lone strong

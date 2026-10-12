@@ -62,6 +62,30 @@ python -m eval.evaluate --edited path/to/ai_edits   # add real AI-edited copies 
 ```
 Results (tables, CSV, charts, recommended `FUSION_*` / `MATCH_*` settings) are written to `eval/results/<timestamp>/`.
 
+## Using the app
+- **Landing page (`/`)** describes the work, the claims, the datasets and the headline numbers, with a Get started button.
+- **Sign up / log in** use email one-time codes; every account is isolated.
+- **Dashboard** has three tabs: Discover (a Pinterest-style feed of sample works from `dataset/distractors`, placeholder content used to test the registry at scale), My works, and Match history, plus two actions: **Register your work** and **Check a suspected copy**.
+- **Register** fingerprints the upload six ways (file SHA-256, pHash, CLIP, DINOv2, SIFT, registry hash), chains it and timestamps it, then offers a certificate PDF whose second page lists every layer and a composite fingerprint.
+- **Check** compares the upload against **your own registered works only**, then shows a graded evidence report (aligned overlay, difference heatmap, changed regions).
+- While either runs, a **live pipeline view** shows each stage working on the photo: the pixel mosaic and 64-bit hash, embedding values, the works retrieved, the real SIFT keypoint matches between the two images, and the residual measurements.
+- `SHOWCASE_DIR` in `backend/.env` points the Discover feed at another folder of images.
+
+## Geometric verification gate
+Beyond the fingerprint scores, a gate aligns the suspected copy to each candidate original (SIFT +
+MAGSAC, with a whole-image fallback for flat art), measures pixel agreement on the aligned pair, and
+returns a graded verdict with evidence images: pixel evidence of copying, or a lead that needs a
+human. See [docs/GATE_PIPELINE.md](docs/GATE_PIPELINE.md). `GATE_ENABLED=false` in `backend/.env`
+turns it off; run `python -m app.gate.backfill` once to prepare works registered earlier.
+
+Evaluate it on a labelled dataset (layout and requirements in [docs/DATASET_SPEC.md](docs/DATASET_SPEC.md)):
+```bash
+cd backend
+python -m eval.make_dataset --dataset DATASET --per-original 12   # scripted classical edits
+python -m eval.gate_eval --dataset DATASET --validate
+python -m eval.gate_eval --dataset DATASET --split dev --sweep
+```
+
 ## Verifying a registration independently
 From a work's public page download `record.json` and `record-<id>.json.ots`:
 ```bash

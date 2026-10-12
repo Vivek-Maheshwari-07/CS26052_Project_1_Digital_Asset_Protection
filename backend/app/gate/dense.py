@@ -7,13 +7,14 @@ the G2 homography, so `q_inliers` / `t_inliers` from G2 index directly into `que
 """
 import logging
 from dataclasses import dataclass
+from typing import Optional
 
 import cv2
 import numpy as np
-from PIL import Image, ImageOps
+from PIL import Image
 
 from app.gate.settings import settings
-from app.gate.verify import VerifyResult, working_scale
+from app.gate.verify import VerifyResult, apply_flip, working_scale
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +31,12 @@ class DenseResult:
     ecc_applied: bool
     ecc_correlation: float
     chroma_compared: bool  # False when the query is grayscale and only luminance was compared
-    residual_median: float
+    info_frac: float  # share of the overlap that carries structure (edges/texture) in either image
+    low_information: bool  # too little structure for pixel evidence (e.g. mostly blank canvas)
+    changed_frac: float  # share of the measured pixels that differ strongly after alignment
+    hp_ncc: Optional[float]  # fine-detail correlation of the aligned images (None if too few textured tiles)
+    noise_ncc: Optional[float]  # sensor-noise correlation in flat tiles (None if too few); logged, not graded on
+    residual_median: float  # the residual and flow statistics are over informative pixels only
     residual_p90: float
     ssim: float
     edge_corr_fine: float
@@ -45,10 +51,8 @@ class DenseResult:
     valid_mask: np.ndarray  # bool, pixels where the warped query overlaps the target
 
 
-def _to_work(img: Image.Image, flip: bool = False) -> np.ndarray:
-    if flip:
-        img = ImageOps.mirror(img)
-    arr = np.array(img.convert("RGB"))
+def _to_work(img: Image.Image, flip: str = "") -> np.ndarray:
+    arr = np.array(apply_flip(img, flip).convert("RGB"))
     h, w = arr.shape[:2]
     s = working_scale(w, h)
     if s < 1.0:
@@ -144,6 +148,63 @@ def _compute_edge_corr(gray1: np.ndarray, gray2: np.ndarray, mask: np.ndarray, s
     return float(c) if np.isfinite(c) else 0.0
 
 
+HP_TILE = 32
+HP_MIN_TILES = 5
+
+
+def _hp_ncc(gray1: np.ndarray, gray2: np.ndarray, region: np.ndarray):
+    """Median tile-wise correlation of the fine detail (high-pass) of the two aligned images.
+
+    A copy keeps the original's fine detail, so this stays well above zero even after recompression
+    or mild blur; two separate captures of one scene share structure but not pixel-level detail
+    (their sensor noise and texture are independent), so it falls to ~0. Returns (median, tiles),
+    or (None, tiles) if too few textured tiles to judge.
+    """
+    hp1 = gray1.astype(np.float32) - cv2.GaussianBlur(gray1.astype(np.float32), (0, 0), 2.0)
+    hp2 = gray2.astype(np.float32) - cv2.GaussianBlur(gray2.astype(np.float32), (0, 0), 2.0)
+    h, w = gray1.shape
+    vals = []
+    for y in range(0, h - HP_TILE + 1, HP_TILE):
+        for x in range(0, w - HP_TILE + 1, HP_TILE):
+            if region[y:y + HP_TILE, x:x + HP_TILE].mean() < 0.9:
+                continue
+            a, b = hp1[y:y + HP_TILE, x:x + HP_TILE], hp2[y:y + HP_TILE, x:x + HP_TILE]
+            if a.std() < 3.0 or b.std() < 1e-3:
+                continue
+            c = np.corrcoef(a.ravel(), b.ravel())[0, 1]
+            if np.isfinite(c):
+                vals.append(c)
+    return (float(np.median(vals)) if len(vals) >= HP_MIN_TILES else None), len(vals)
+
+
+def _noise_ncc(gray1: np.ndarray, gray2: np.ndarray, grad1: np.ndarray, grad2: np.ndarray, stat: np.ndarray):
+    """Median tile-wise correlation of the sensor-noise residual in flat (structure-free) tiles.
+
+    Two captures of the same static scene (a tripod burst) match in structure and fine detail but
+    their noise is independent (~0); a copy keeps the original's noise pattern unless it was
+    resized or heavily recompressed. Logged, not (yet) used to grade: a low value is ambiguous
+    between "independent capture" and "resized copy". (median or None, tiles)
+    """
+    n1 = gray1.astype(np.float32) - cv2.GaussianBlur(gray1.astype(np.float32), (0, 0), 1.0)
+    n2 = gray2.astype(np.float32) - cv2.GaussianBlur(gray2.astype(np.float32), (0, 0), 1.0)
+    h, w = gray1.shape
+    vals = []
+    for y in range(0, h - HP_TILE + 1, HP_TILE):
+        for x in range(0, w - HP_TILE + 1, HP_TILE):
+            if stat[y:y + HP_TILE, x:x + HP_TILE].mean() < 0.9:
+                continue
+            g = np.maximum(grad1[y:y + HP_TILE, x:x + HP_TILE], grad2[y:y + HP_TILE, x:x + HP_TILE])
+            if np.percentile(g, 95) >= settings.info_grad_min:
+                continue  # has structure: not a pure-noise tile
+            a, b = n1[y:y + HP_TILE, x:x + HP_TILE], n2[y:y + HP_TILE, x:x + HP_TILE]
+            if a.std() < 0.5 or b.std() < 0.5:
+                continue
+            c = np.corrcoef(a.ravel(), b.ravel())[0, 1]
+            if np.isfinite(c):
+                vals.append(c)
+    return (float(np.median(vals)) if len(vals) >= HP_MIN_TILES else None), len(vals)
+
+
 def _masked_corr(a: np.ndarray, b: np.ndarray, mask: np.ndarray) -> float:
     av, bv = a[mask > 0].astype(np.float32), b[mask > 0].astype(np.float32)
     if len(av) < MIN_VALID_PIXELS or av.std() == 0 or bv.std() == 0:
@@ -187,12 +248,17 @@ def _ecc_refine(target_gray, warped_rgb, mask_u8):
     return refined, refined_mask, True, float(cc_post)
 
 
-def compute_dense_evidence(target_img: Image.Image, query_img: Image.Image, verify_result: VerifyResult) -> DenseResult:
-    """Dense evidence for a geometrically credible candidate."""
+def compute_dense_evidence(target_img: Image.Image, query_img: Image.Image, verify_result: VerifyResult,
+                           target_alpha: Optional[np.ndarray] = None) -> DenseResult:
+    """Dense evidence for a geometrically credible candidate.
+
+    `target_alpha` (True = opaque, in `target_img`'s frame) restricts the comparison to pixels that
+    are opaque in the original: transparent ones may show any background in a copy.
+    """
     cv2.setRNGSeed(42)
 
     t_work = _to_work(target_img)
-    q_work = _to_work(query_img, flip=verify_result.flipped)
+    q_work = _to_work(query_img, flip=verify_result.flip)
     th, tw = t_work.shape[:2]
 
     warped = cv2.warpPerspective(q_work, verify_result.homography, (tw, th))
@@ -202,11 +268,14 @@ def compute_dense_evidence(target_img: Image.Image, query_img: Image.Image, veri
 
     t_gray = cv2.cvtColor(t_work, cv2.COLOR_RGB2GRAY)
     warped, mask, ecc_applied, ecc_corr = _ecc_refine(t_gray, warped, mask)
+    if target_alpha is not None:
+        opaque = cv2.resize(target_alpha.astype(np.uint8) * 255, (tw, th), interpolation=cv2.INTER_NEAREST)
+        mask[cv2.erode(opaque, np.ones((3, 3), np.uint8)) == 0] = 0  # stay inside the shape's edge
     valid = mask > 0
 
     if valid.sum() < MIN_VALID_PIXELS:
         zero = np.zeros((th, tw), np.uint8)
-        return DenseResult(False, ecc_corr, True, 255.0, 255.0, 0.0, 0.0, 0.0, 999.0, 999.0, 1.0,
+        return DenseResult(False, ecc_corr, True, 0.0, True, 1.0, None, None, 255.0, 255.0, 0.0, 0.0, 0.0, 999.0, 999.0, 1.0,
                            zero, t_work, q_work, warped, valid)
 
     # Clipped (saturated) query pixels carry no information about the original's values, so a
@@ -226,16 +295,37 @@ def compute_dense_evidence(target_img: Image.Image, query_img: Image.Image, veri
 
     adjusted = _normalize_photometric(reference, warped, stat_mask)
     residual = np.abs(reference.astype(np.float32) - adjusted.astype(np.float32))
-    res_vals = residual[stat]
+    residual_gray = residual.mean(axis=2)
 
     a_gray = cv2.cvtColor(adjusted, cv2.COLOR_RGB2GRAY)
+
+    # Blank regions (white canvas, flat sky, a studio backdrop) match trivially, which would make any
+    # two images that share one look identical. Measure only where there is structure to compare.
+    grad_t, grad_a = _edge_magnitude(t_gray, 1.0), _edge_magnitude(a_gray, 1.0)
+    structure = np.maximum(grad_t, grad_a) > settings.info_grad_min
+    info = cv2.dilate(structure.astype(np.uint8), np.ones((3, 3), np.uint8)).astype(bool) & stat
+    n_stat = int(stat.sum())
+    low_information = int(info.sum()) < max(settings.min_info_pixels, settings.min_info_frac * n_stat)
+    region = stat if low_information else info
+    info_frac = float(info.sum()) / max(1, n_stat)
+
+    res_vals = residual[region]
+    changed = cv2.morphologyEx(((residual_gray > settings.change_threshold) & region).astype(np.uint8),
+                               cv2.MORPH_OPEN, np.ones((3, 3), np.uint8))
+    changed_frac = float(changed.sum()) / max(1, int(region.sum()))
+
     flow = cv2.DISOpticalFlow_create(cv2.DISOPTICAL_FLOW_PRESET_MEDIUM).calc(t_gray, a_gray, None)
-    mag = np.hypot(flow[..., 0], flow[..., 1])[stat]
+    mag = np.hypot(flow[..., 0], flow[..., 1])[region]
 
     return DenseResult(
         ecc_applied=ecc_applied,
         ecc_correlation=ecc_corr,
         chroma_compared=chroma_compared,
+        info_frac=info_frac,
+        low_information=low_information,
+        changed_frac=changed_frac,
+        hp_ncc=_hp_ncc(t_gray, a_gray, region)[0],
+        noise_ncc=_noise_ncc(t_gray, a_gray, grad_t, grad_a, stat)[0],
         residual_median=float(np.median(res_vals)),
         residual_p90=float(np.percentile(res_vals, 90)),
         ssim=_compute_ssim(t_gray, a_gray, stat_mask),

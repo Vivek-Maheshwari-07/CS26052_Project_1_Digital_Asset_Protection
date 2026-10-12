@@ -4,6 +4,7 @@ from typing import List, Optional
 from datetime import datetime, timezone
 import io
 import logging
+import time
 from PIL import Image
 
 from app.config import settings
@@ -109,7 +110,7 @@ def duplicate_error(work: dict, is_own: bool, confidence: float) -> HTTPExceptio
     })
 
 
-async def gate_registration_check(db, image_bytes: bytes, user_id: str, allow_similar_own: bool) -> List[str]:
+async def gate_registration_check(db, image_bytes: bytes, user_id: str, allow_similar_own: bool, progress=None) -> List[str]:
     """Run the gate on a new upload. Returns notices for the response; raises 409 on a Tier 1 hit.
 
     A gate failure never blocks a registration: the fingerprint duplicate check above still applies.
@@ -117,7 +118,7 @@ async def gate_registration_check(db, image_bytes: bytes, user_id: str, allow_si
     if not settings.GATE_ENABLED:
         return []
     try:
-        verdict = await run_gate(image_bytes, db, with_evidence=False)
+        verdict = await run_gate(image_bytes, db, with_evidence=False, progress=progress)
     except Exception:
         logger.exception("Gate check failed during registration; continuing without it.")
         return []
@@ -146,16 +147,14 @@ async def find_duplicate(db, fp: dict) -> Optional[dict]:
     return None
 
 
-@router.post("/register", response_model=RegisterResponse)
-async def register_work(
-    background: BackgroundTasks,
-    image: UploadFile = File(...),
-    owner_name: str = Form(...),
-    title: str = Form(...),
-    allow_similar_own: bool = Form(False),
-    db = Depends(get_db),
-    current_user = Depends(get_current_user)
-):
+async def register_core(db, current_user, image_bytes: bytes, owner_name: str, title: str, allow_similar_own: bool,
+                         schedule, progress=None) -> dict:
+    """Register a work. `schedule(fn, *args)` runs follow-up work after the response (FastAPI background
+    task, or an asyncio task inside a job); `progress(stage, **data)` reports each step to a live UI."""
+    def emit(stage, **data):
+        if progress:
+            progress(stage, **data)
+
     owner_name, title = owner_name.strip(), title.strip()
     if not owner_name or not title:
         raise HTTPException(400, "Title and owner name are required.")
@@ -163,16 +162,21 @@ async def register_work(
         raise HTTPException(400, "Title or owner name is too long.")
 
     # 1. Read, bomb-guard, EXIF-orient and RGB-normalize the upload
-    image_bytes = await read_limited(image)
+    t0 = time.monotonic()
     normalized, fmt = read_upload(image_bytes)
     width, height = normalized.size
+    emit("read", width=width, height=height, format=fmt, bytes=len(image_bytes), seconds=round(time.monotonic() - t0, 2))
 
     # 2. Fingerprint the normalized image
+    t0 = time.monotonic()
     fp = await fingerprint(normalized)
     user_id = str(current_user["_id"])
+    emit("fingerprint", phash=fp["phash"], low_detail=bool(fp["low_detail"]), clip_dim=len(fp["embedding"]),
+         clip_preview=[round(float(v), 3) for v in fp["embedding"][:64]], seconds=round(time.monotonic() - t0, 2))
 
     # 3. Refuse near-duplicates of works already in the registry
     dup = await find_duplicate(db, fp)
+    emit("duplicate", works_searched=len(index), duplicate=bool(dup))
     if dup:
         work = await db.works.find_one({"id": dup["work_id"]}, {"embedding": 0, "ots_proof": 0})
         is_own = dup["user_id"] == user_id
@@ -180,8 +184,9 @@ async def register_work(
             raise duplicate_error(work, is_own, dup["confidence"])
 
     # 3b. Geometric gate: pixel evidence that this is a copy of a registered work blocks it
-    # (never against another creator's work); weaker leads only produce a notice.
-    notices = await gate_registration_check(db, image_bytes, user_id, allow_similar_own)
+    # (never against another creator work); weaker leads only produce a notice.
+    notices = await gate_registration_check(db, image_bytes, user_id, allow_similar_own,
+                                            (lambda st, **d: emit("gate_" + st, **d)) if progress else None)
 
     # 4. Save the original upload bytes, then append to the registry
     image_path = storage.save_image(image_bytes, fmt)
@@ -198,14 +203,30 @@ async def register_work(
         "image_path": image_path,
     })
     index.add(db, record.id, user_id, fp["embedding"], fp["phash"])
+    emit("chain", entry_hash=record.entry_hash, prev_hash=record.prev_hash, work_id=record.id)
 
     # 5. Timestamp the entry hash in Bitcoin via OpenTimestamps (after responding)
-    background.add_task(anchor_work, db, record.id, record.entry_hash)
-    # ...and compute the gate's per-work features (DINOv2 vector + SIFT cache) so the new work is searchable
+    schedule(anchor_work, db, record.id, record.entry_hash)
+    # ...and compute the gate per-work features (DINOv2 vector + SIFT cache) so the new work is searchable
     if settings.GATE_ENABLED:
-        background.add_task(compute_for_registration, db, record.id, image_bytes)
+        schedule(compute_for_registration, db, record.id, image_bytes)
+    emit("anchor", status="queued", gate_features=bool(settings.GATE_ENABLED))
 
     return {**to_response(record.model_dump()), "gate_notices": notices}
+
+
+@router.post("/register", response_model=RegisterResponse)
+async def register_work(
+    background: BackgroundTasks,
+    image: UploadFile = File(...),
+    owner_name: str = Form(...),
+    title: str = Form(...),
+    allow_similar_own: bool = Form(False),
+    db = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    image_bytes = await read_limited(image)
+    return await register_core(db, current_user, image_bytes, owner_name, title, allow_similar_own, background.add_task)
 
 
 @router.get("", response_model=List[RegisterResponse])

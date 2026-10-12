@@ -26,6 +26,9 @@ def gate_on(monkeypatch):
         recorded.append(work_id)
 
     monkeypatch.setattr("app.api.register.compute_for_registration", fake_features)
+    # Registration's gate check is stubbed too (empty verdict) so no test loads model weights;
+    # individual tests replace it to exercise specific verdicts.
+    monkeypatch.setattr("app.api.register.run_gate", lambda *a, **k: _async(fake_verdict()))
     return recorded
 
 

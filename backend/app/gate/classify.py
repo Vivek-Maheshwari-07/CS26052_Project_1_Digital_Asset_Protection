@@ -47,8 +47,16 @@ def classify_candidate(
     residual_p90: Optional[float],
     flow_median: Optional[float],
     edge_corr: Optional[float],
+    residual_median: Optional[float] = None,
+    changed_frac: Optional[float] = None,
+    low_information: bool = False,
+    hp_ncc: Optional[float] = None,
 ) -> ClassificationResult:
-    """Pure function mapping metrics to a classification grade."""
+    """Pure function mapping metrics to a classification grade.
+
+    The optional arguments are the stricter Tier 1 conditions (typical residual, share of changed
+    pixels) and the low-information flag; when omitted they are not enforced.
+    """
     if not credible:
         if lead_score >= settings.tier3_lead_score_min and lead_margin >= settings.tier3_margin_min:
             return ClassificationResult("TIER3", _active_from("TIER3"), "High lead score but no credible geometry.")
@@ -57,8 +65,29 @@ def classify_candidate(
     if residual_p90 is None or flow_median is None or edge_corr is None:
         return ClassificationResult("NONE", "NONE", "Missing dense metrics for credible candidate.")
 
-    if residual_p90 <= settings.tier1_residual_p90_max and flow_median <= settings.tier1_flow_median_max_px:
-        return ClassificationResult("TIER1", _active_from("TIER1"), "Low residual and optical flow.")
+    if low_information:
+        # Mostly blank canvas: aligned blank pixels prove nothing, so no pixel/structure evidence.
+        return ClassificationResult(
+            "RELATED_DIFFERENT_CAPTURE", _active_from("RELATED_DIFFERENT_CAPTURE"),
+            "Geometry aligns but the images carry too little structure for pixel evidence.",
+        )
+
+    route_a = (residual_p90 <= settings.tier1_residual_p90_max
+               and flow_median <= settings.tier1_flow_median_max_px
+               and (residual_median is None or residual_median <= settings.tier1_residual_median_max)
+               and (changed_frac is None or changed_frac <= settings.tier1_changed_frac_max)
+               and (hp_ncc is None or hp_ncc >= settings.tier1_hp_ncc_min))
+    # Route B tolerates a high 90th percentile (sub-pixel edge misregistration, JPEG ringing) but demands
+    # that nearly everything else is exact. It needs the extra measurements, so it never applies without them.
+    route_b = (residual_median is not None and changed_frac is not None
+               and residual_p90 <= settings.tier1b_residual_p90_max
+               and residual_median <= settings.tier1b_residual_median_max
+               and flow_median <= settings.tier1b_flow_median_max_px
+               and changed_frac <= settings.tier1b_changed_frac_max
+               and (hp_ncc is None or hp_ncc >= settings.tier1b_hp_ncc_min))
+    tier1 = route_a or route_b
+    if tier1:
+        return ClassificationResult("TIER1", _active_from("TIER1"), "Low residual, few changed pixels and low optical flow.")
 
     if flow_median <= settings.tier2_flow_median_max_px and edge_corr >= settings.tier2_edge_corr_min:
         return ClassificationResult("TIER2", _active_from("TIER2"), "High edge correlation and moderate flow.")

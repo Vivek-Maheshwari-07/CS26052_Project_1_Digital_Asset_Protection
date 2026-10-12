@@ -55,15 +55,23 @@ class SimilarityIndex:
         self.ids.append(work_id)
         self.user_ids.append(user_id)
 
-    def search(self, embedding: list[float], phash: str, k: int = 10) -> list[dict]:
+    def search(self, embedding: list[float], phash: str, k: int = 10, user_id: str | None = None) -> list[dict]:
+        """Top-k works by fused confidence. With `user_id`, only that user's own works are searched."""
         if not self.ids:
             return []
         e_sim = self.emb @ np.asarray(embedding, dtype=np.float32)
         hamming = (self.bits != phash_bits(phash)[None, :]).sum(axis=1)
         p_sim = np.maximum(0.0, 1.0 - hamming / self.bits.shape[1])
         conf = combined_confidence(p_sim, e_sim)
+        if user_id is not None:
+            mine = np.array([u == user_id for u in self.user_ids])
+            if not mine.any():
+                return []
+            conf = np.where(mine, conf, -1.0)
 
-        k = min(k, len(conf))
+        k = min(k, int((conf > -0.5).sum()) if user_id is not None else len(conf))
+        if k == 0:
+            return []
         top = np.argpartition(-conf, k - 1)[:k]
         top = top[np.argsort(-conf[top])]
         return [{
