@@ -21,7 +21,9 @@ data/*
 data/benchmark/*
 !data/benchmark/README.md
 !data/benchmark/originals/
+data/benchmark/originals/*
 !data/benchmark/originals/.gitkeep
 !data/benchmark/hard_negatives/
+data/benchmark/hard_negatives/*
 !data/benchmark/hard_negatives/.gitkeep
 backend/data/

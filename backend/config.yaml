@@ -6,7 +6,7 @@ cascade:
   top_k: 5
 registration:
   hamming_conflict_max: 8
-  dino_cosine_conflict_min: 0.95
+  dino_cosine_conflict_min: 0.90
 low_detail:
   grey_std_min: 8.0
 models:
