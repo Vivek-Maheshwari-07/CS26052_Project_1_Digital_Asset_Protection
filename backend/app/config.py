@@ -31,7 +31,7 @@ class Settings(BaseSettings):
     SMTP_PASSWORD: str = ""
     SMTP_USE_SSL: bool = False  # True for port 465, False for STARTTLS on 587
     EMAIL_FROM: str = ""
-    EMAIL_FROM_NAME: str = "Provenance"
+    EMAIL_FROM_NAME: str = "ProvNet"
 
     FRONTEND_ORIGIN: str = "http://localhost:5173"
     PUBLIC_BASE_URL: str = "http://localhost:8000"

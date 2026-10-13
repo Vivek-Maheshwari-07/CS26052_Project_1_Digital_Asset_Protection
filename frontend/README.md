@@ -1,4 +1,4 @@
-# Provenance Frontend
+# ProvNet Frontend
 
 React 19 + TypeScript on Vite. The UI is moving to a dark design system one screen at a time; screens not yet rebuilt still run on their original stylesheet.
 

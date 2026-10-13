@@ -58,7 +58,7 @@ async def lifespan(app: FastAPI):
     anchor_task.cancel()
 
 
-app = FastAPI(title="Digital Asset Provenance", lifespan=lifespan)
+app = FastAPI(title="ProvNet", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,

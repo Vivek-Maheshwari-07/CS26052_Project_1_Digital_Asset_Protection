@@ -36,7 +36,7 @@ export function AuthShell({ title, description, children, eyebrow, footer }: Aut
 
         <div className="space-y-8">
           <div className="space-y-3">
-            <p className="font-mono text-xs tracking-wider text-primary uppercase">Provenance registry</p>
+            <p className="font-mono text-xs tracking-wider text-primary uppercase">ProvNet registry</p>
             <h2 className="max-w-md text-3xl font-semibold tracking-tight text-balance">
               Your work, on the record before anyone copies it.
             </h2>

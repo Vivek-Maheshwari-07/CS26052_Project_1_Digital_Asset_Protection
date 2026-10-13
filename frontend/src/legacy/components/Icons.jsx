@@ -34,15 +34,9 @@ export const IconGrid = (p) => <Icon {...p}><rect x="3.5" y="3.5" width="7" heig
 export const IconHash = (p) => <Icon {...p}><path d="M4 9h16M4 15h16M10 3 8 21M16 3l-2 18" /></Icon>;
 
 export const Logo = ({ size = 28 }) => (
-  <svg width={size} height={size} viewBox="0 0 32 32" aria-hidden="true">
-    <defs>
-      <linearGradient id="logo-g" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0" stopColor="#6366f1" />
-        <stop offset="1" stopColor="#c026d3" />
-      </linearGradient>
-    </defs>
-    <rect width="32" height="32" rx="9" fill="url(#logo-g)" />
-    <path d="M10 22V10h6.5a4.5 4.5 0 0 1 0 9H13" fill="none" stroke="#fff" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
-    <circle cx="22.5" cy="22.5" r="2" fill="#fff" />
+  <svg width={size} height={size} viewBox="0 0 32 32" fill="none" aria-hidden="true">
+    <rect width="32" height="32" rx="7" fill="#06080b" />
+    <path d="M8 12V8h4M20 8h4v4M24 20v4h-4M12 24H8v-4" stroke="#22d3ee" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+    <rect x="13" y="13" width="6" height="6" rx="1.2" fill="#34d399" />
   </svg>
 );

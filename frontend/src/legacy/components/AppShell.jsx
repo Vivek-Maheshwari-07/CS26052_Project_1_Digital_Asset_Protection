@@ -50,7 +50,7 @@ export default function AppShell({ children }) {
         <>
             <header className="topbar">
                 <div className="topbar-inner">
-                    <NavLink to="/dashboard" className="brand"><Logo /> <span>Provenance</span></NavLink>
+                    <NavLink to="/dashboard" className="brand"><Logo /> <span>ProvNet</span></NavLink>
                     <nav className="nav-pills">
                         <NavLink to="/dashboard"><IconGrid size={16} /> <span>Dashboard</span></NavLink>
                         <NavLink to="/works/new"><IconPlus size={16} /> <span>Register</span></NavLink>

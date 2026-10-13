@@ -49,7 +49,7 @@ export function LoginPage() {
       description="Sign in to manage your registered work and check suspected copies."
       footer={
         <>
-          New to Provenance?{' '}
+          New to ProvNet?{' '}
           <Link to="/signup" className="font-medium text-primary hover:underline">
             Create an account
           </Link>

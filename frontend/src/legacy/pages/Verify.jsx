@@ -32,7 +32,7 @@ export default function Verify() {
   return (
     <div className="verify-shell">
       <header className="verify-top">
-        <Link to="/" className="brand"><Logo /> <span>Provenance</span></Link>
+        <Link to="/" className="brand"><Logo /> <span>ProvNet</span></Link>
         {status === 'authed'
           ? <Link className="btn btn-ghost" to="/dashboard">Open app</Link>
           : <Link className="btn btn-ghost" to="/login">Log in</Link>}

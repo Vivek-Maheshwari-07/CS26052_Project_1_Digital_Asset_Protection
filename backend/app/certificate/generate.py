@@ -79,7 +79,7 @@ def build_certificate(record: dict, check: dict, stack: dict | None = None) -> b
     pdf.set_xy(left + 9.5, top + 0.3)
     pdf.set_font("Helvetica", "B", 12)
     pdf.set_text_color(*INK)
-    pdf.cell(60, 6.5, "Provenance")
+    pdf.cell(60, 6.5, "ProvNet")
 
     pdf.set_xy(left, top + 16)
     pdf.set_font("Helvetica", "B", 9)
