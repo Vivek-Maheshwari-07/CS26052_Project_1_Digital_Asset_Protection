@@ -1,0 +1,103 @@
+﻿Registry: 713 works (4 originals excluded, 365 duplicate distractors skipped)
+python.exe : 
+At line:2 char:1
++ & .\venv\Scripts\python.exe -u -m eval.gate_eval --dataset ..\dataset ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+Loading weights:   0%|          | 0/223 [00:00<?, ?it/s]
+Loading weights:  31%|███▏      | 70/223 [00:00<00:00, 694.48it/s]
+Loading weights: 100%|██████████| 223/223 [00:00<00:00, 1474.68it/s]
+  registry 10/713  (5.2s/work)
+  registry 20/713  (4.5s/work)
+  registry 30/713  (3.7s/work)
+  registry 40/713  (3.3s/work)
+  registry 50/713  (3.9s/work)
+C:\Users\Anisha\Desktop\Aayush\24CS051\DigitalAsset\backend\venv\Lib\site-packages\PIL\Image.py:3578: 
+DecompressionBombWarning: Image size (100000000 pixels) exceeds limit of 89478485 pixels, could be decompression bomb 
+DOS attack.
+  warnings.warn(
+  registry 60/713  (4.0s/work)
+  registry 70/713  (3.9s/work)
+  registry 80/713  (3.8s/work)
+  registry 90/713  (3.7s/work)
+  registry 100/713  (3.6s/work)
+  registry 110/713  (3.4s/work)
+  registry 120/713  (3.3s/work)
+  registry 130/713  (3.2s/work)
+  registry 140/713  (3.1s/work)
+  registry 150/713  (3.0s/work)
+  registry 160/713  (2.9s/work)
+  registry 170/713  (2.8s/work)
+  registry 180/713  (2.8s/work)
+  registry 190/713  (2.7s/work)
+  registry 200/713  (2.6s/work)
+  registry 210/713  (2.5s/work)
+  registry 220/713  (2.5s/work)
+  registry 230/713  (2.4s/work)
+  registry 240/713  (2.4s/work)
+  registry 250/713  (2.3s/work)
+  registry 260/713  (2.3s/work)
+  registry 270/713  (2.3s/work)
+  registry 280/713  (2.2s/work)
+  registry 290/713  (2.2s/work)
+  registry 300/713  (2.2s/work)
+  registry 310/713  (2.2s/work)
+  registry 320/713  (2.1s/work)
+  registry 330/713  (2.1s/work)
+  registry 340/713  (2.1s/work)
+  registry 350/713  (2.1s/work)
+  registry 360/713  (2.0s/work)
+  registry 370/713  (2.0s/work)
+  registry 380/713  (2.0s/work)
+  registry 390/713  (2.0s/work)
+  registry 400/713  (2.0s/work)
+  registry 410/713  (2.0s/work)
+  registry 420/713  (1.9s/work)
+  registry 430/713  (1.9s/work)
+  registry 440/713  (1.9s/work)
+  registry 450/713  (1.9s/work)
+  registry 460/713  (1.9s/work)
+  registry 470/713  (1.9s/work)
+  registry 480/713  (1.9s/work)
+  registry 490/713  (1.9s/work)
+  registry 500/713  (1.8s/work)
+  registry 510/713  (1.8s/work)
+  registry 520/713  (1.8s/work)
+  registry 530/713  (1.8s/work)
+  registry 540/713  (1.8s/work)
+  registry 550/713  (1.8s/work)
+  registry 560/713  (1.8s/work)
+  registry 570/713  (1.8s/work)
+  registry 580/713  (1.8s/work)
+  registry 590/713  (1.8s/work)
+  registry 600/713  (1.8s/work)
+  registry 610/713  (1.7s/work)
+  registry 620/713  (1.7s/work)
+  registry 630/713  (1.7s/work)
+  registry 640/713  (1.7s/work)
+  registry 650/713  (1.7s/work)
+  registry 660/713  (1.7s/work)
+  registry 670/713  (1.7s/work)
+  registry 680/713  (1.7s/work)
+  registry 690/713  (1.7s/work)
+  registry 700/713  (1.7s/work)
+  registry 710/713  (1.7s/work)
+  registry 713/713  (1.7s/work)
+Running 1401 suspects against a registry of 713 works
+  10/1401  last=classical/orig_001__classical_edit__rotate_180.png  eta 74.4 min
+  20/1401  last=classical/orig_002__classical_edit__jpeg_q30.jpg  eta 72.5 min
+  30/1401  last=classical/orig_003__classical_edit__hflip.png  eta 70.6 min
+  40/1401  last=classical/orig_004__classical_edit__crop_50.png  eta 66.4 min
+  50/1401  last=classical/orig_005__classical_edit__crop_10.png  eta 62.5 min
+  60/1401  last=classical/orig_005__classical_edit__screenshot_frame.png  eta 61.4 min
+  70/1401  last=classical/orig_006__classical_edit__rotate_180.png  eta 61.1 min
+  80/1401  last=classical/orig_007__classical_edit__jpeg_q30.jpg  eta 60.3 min
+  90/1401  last=classical/orig_008__classical_edit__hflip.png  eta 59.3 min
+  100/1401  last=classical/orig_009__classical_edit__crop_50.png  eta 57.9 min
+  110/1401  last=classical/orig_010__classical_edit__crop_10.png  eta 56.8 min
+  120/1401  last=classical/orig_010__classical_edit__screenshot_frame.png  eta 55.5 min
+  130/1401  last=classical/orig_011__classical_edit__rotate_180.png  eta 55.1 min
+  140/1401  last=classical/orig_012__classical_edit__jpeg_q30.jpg  eta 55.4 min
+  150/1401  last=classical/orig_013__classical_edit__hflip.png  eta 54.9 min

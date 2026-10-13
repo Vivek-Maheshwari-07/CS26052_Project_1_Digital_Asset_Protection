@@ -1,8 +1,31 @@
+# Environment & Secrets
 .env
-.env.local
+**/.env
+*.env
+!.env.example
+!**/.env.example
+
+# Python & Virtual Environments
+venv/
+**/venv/
+__pycache__/
+**/__pycache__/
+*.pyc
+.pytest_cache/
+**/.pytest_cache/
+
+# Node & Frontend
 node_modules/
-dist/
-build/
-coverage/
-.DS_Store
-*.log
+**/node_modules/
+frontend/dist/
+
+# Evaluation Data & Large Datasets (Local artifacts)
+dataset/
+**/dataset/
+backend/eval/data/
+**/_work/
+
+# Uploads & Caches
+uploads/
+**/uploads/
+backend/backend/

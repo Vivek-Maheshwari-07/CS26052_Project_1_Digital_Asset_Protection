@@ -18,7 +18,7 @@ describe('landing page', () => {
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(/prove you made it first/i)
     const main = screen.getByRole('main')
     expect(within(main).getAllByRole('link', { name: /protect an asset/i })[0]).toHaveAttribute('href', '/signup')
-    expect(within(main).getByRole('link', { name: /verify a copy/i })).toHaveAttribute('href', '/verify')
+    expect(within(main).getByRole('link', { name: /check a copy/i })).toHaveAttribute('href', '/check')
   })
 
   it('anchors the how-it-works and evidence sections for in-page navigation', () => {

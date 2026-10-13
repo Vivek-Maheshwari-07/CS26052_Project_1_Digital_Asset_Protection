@@ -31,3 +31,5 @@ window.IntersectionObserver ??= NoopObserver as unknown as typeof IntersectionOb
 window.ResizeObserver ??= NoopObserver as unknown as typeof ResizeObserver
 window.scrollTo = () => {}
 Element.prototype.scrollIntoView ??= () => {}
+// input-otp probes for password-manager overlays with elementFromPoint.
+document.elementFromPoint ??= () => null

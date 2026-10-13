@@ -3,6 +3,7 @@ import { Link, NavLink } from 'react-router-dom'
 import { Menu, X } from 'lucide-react'
 import { AnimatePresence, motion } from 'framer-motion'
 
+import { useAuth } from '@/auth/auth-context'
 import { Brand } from '@/components/brand'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -10,12 +11,14 @@ import { cn } from '@/lib/utils'
 const NAV = [
   { to: '/#how-it-works', label: 'How it works' },
   { to: '/#evidence', label: 'Evidence' },
-  { to: '/verify', label: 'Verify a copy' },
+  { to: '/check', label: 'Check a copy' },
 ]
 
 export function SiteHeader() {
   const [scrolled, setScrolled] = React.useState(false)
   const [open, setOpen] = React.useState(false)
+  const { status } = useAuth()
+  const authed = status === 'authed'
 
   React.useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8)
@@ -47,12 +50,20 @@ export function SiteHeader() {
         </nav>
 
         <div className="hidden items-center gap-2 md:flex">
-          <Button variant="ghost" size="sm" asChild>
-            <Link to="/login">Sign in</Link>
-          </Button>
-          <Button size="sm" asChild>
-            <Link to="/signup">Protect an asset</Link>
-          </Button>
+          {authed ? (
+            <Button size="sm" asChild>
+              <Link to="/dashboard">Open dashboard</Link>
+            </Button>
+          ) : (
+            <>
+              <Button variant="ghost" size="sm" asChild>
+                <Link to="/login">Sign in</Link>
+              </Button>
+              <Button size="sm" asChild>
+                <Link to="/signup">Protect an asset</Link>
+              </Button>
+            </>
+          )}
         </div>
 
         <Button
@@ -90,14 +101,20 @@ export function SiteHeader() {
                   {item.label}
                 </Link>
               ))}
-              <div className="mt-2 grid grid-cols-2 gap-2">
-                <Button variant="outline" asChild>
-                  <Link to="/login" onClick={() => setOpen(false)}>Sign in</Link>
+              {authed ? (
+                <Button className="mt-2" asChild>
+                  <Link to="/dashboard" onClick={() => setOpen(false)}>Open dashboard</Link>
                 </Button>
-                <Button asChild>
-                  <Link to="/signup" onClick={() => setOpen(false)}>Get started</Link>
-                </Button>
-              </div>
+              ) : (
+                <div className="mt-2 grid grid-cols-2 gap-2">
+                  <Button variant="outline" asChild>
+                    <Link to="/login" onClick={() => setOpen(false)}>Sign in</Link>
+                  </Button>
+                  <Button asChild>
+                    <Link to="/signup" onClick={() => setOpen(false)}>Get started</Link>
+                  </Button>
+                </div>
+              )}
             </div>
           </motion.nav>
         )}

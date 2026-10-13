@@ -63,8 +63,8 @@ export function Hero() {
               </Link>
             </Button>
             <Button size="lg" variant="outline" asChild>
-              <Link to="/verify">
-                <ScanSearch /> Verify a copy
+              <Link to="/check">
+                <ScanSearch /> Check a copy
               </Link>
             </Button>
           </motion.div>

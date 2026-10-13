@@ -1,7 +1,15 @@
+@layer theme, base, legacy, components, utilities;
+
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "@fontsource-variable/inter";
 @import "@fontsource-variable/jetbrains-mono";
+
+/* Screens not yet rebuilt keep their original look, scoped to .legacy-ui (see src/legacy). */
+@import "./legacy/index.css" layer(legacy);
+@import "./legacy/features.css" layer(legacy);
+
+@source not "./legacy";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -122,6 +130,12 @@
     html {
       scroll-behavior: auto;
     }
+  }
+}
+
+@layer legacy {
+  .legacy-ui {
+    color-scheme: light;
   }
 }
 
