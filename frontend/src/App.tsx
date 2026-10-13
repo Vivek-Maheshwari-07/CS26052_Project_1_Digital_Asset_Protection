@@ -15,9 +15,11 @@ const ForgotPasswordPage = lazy(() =>
   import('@/pages/auth/forgot-password-page').then((m) => ({ default: m.ForgotPasswordPage })),
 )
 
+const AppShell = lazy(() => import('@/components/app-shell/app-shell').then((m) => ({ default: m.AppShell })))
+const DashboardPage = lazy(() => import('@/pages/dashboard/dashboard-page').then((m) => ({ default: m.DashboardPage })))
+
 // Screens still on the original design.
 const Check = lazy(() => import('@/legacy/pages/Check'))
-const Dashboard = lazy(() => import('@/legacy/pages/Dashboard'))
 const Evidence = lazy(() => import('@/legacy/pages/Evidence'))
 const Register = lazy(() => import('@/legacy/pages/Register'))
 const Verify = lazy(() => import('@/legacy/pages/Verify'))
@@ -38,12 +40,14 @@ export function AppRoutes() {
         </Route>
 
         <Route element={<ProtectedRoute />}>
-          <Route element={<LegacyFrame shell />}>
-            <Route path="dashboard" element={<Dashboard />} />
-            <Route path="works/new" element={<Register />} />
-            <Route path="check" element={<Check />} />
-            <Route path="check/:checkId" element={<Check />} />
-            <Route path="evidence/:checkId/:matchWorkId" element={<Evidence />} />
+          <Route element={<AppShell />}>
+            <Route path="dashboard" element={<DashboardPage />} />
+            <Route element={<LegacyFrame contained />}>
+              <Route path="works/new" element={<Register />} />
+              <Route path="check" element={<Check />} />
+              <Route path="check/:checkId" element={<Check />} />
+              <Route path="evidence/:checkId/:matchWorkId" element={<Evidence />} />
+            </Route>
           </Route>
         </Route>
 

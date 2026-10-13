@@ -27,13 +27,14 @@ The app calls the FastAPI backend at `VITE_API_URL` (default `http://localhost:8
 - **Type:** Inter Variable for interface text and JetBrains Mono Variable for technical data. Hashes, user IDs and work IDs are rendered with `<HashText>`.
 - **Components:** shadcn/ui (new-york) in `src/components/ui`, configured by `components.json`. Add more with `npx shadcn@latest add <name>`.
 - **Motion:** framer-motion inside `<MotionConfig reducedMotion="user">`.
+- **Signed-in layout:** `src/components/app-shell` provides the sidebar on desktop, the top bar on mobile, the user menu and a live registry-integrity card. Every signed-in route renders inside it, including the legacy screens.
 - **API and auth:**
   - `src/lib/api.ts` is the fetch client; it sends the bearer token and normalises FastAPI errors.
   - `src/auth/` holds the session context and the route guards.
 
 ## Legacy screens
 
-`src/legacy/` holds the screens that have not been rebuilt yet.
+`src/legacy/` holds the screens that have not been rebuilt yet: Register, Check, Evidence and the public Verify page.
 
 - They render inside `<LegacyFrame>`, which adds the `.legacy-ui` class.
 - Their stylesheets (`src/legacy/*.css`) are scoped to that class, keep their animation names under a `legacy-` prefix and load in a low-priority cascade layer, so they cannot affect the new pages.
