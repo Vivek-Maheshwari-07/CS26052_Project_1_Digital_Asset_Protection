@@ -1,40 +1,26 @@
-﻿# ProvNet
+# ProvNet — Digital Asset Protection (Frontend)
 
-ProvNet is an academic research platform that compares classical perceptual hashes (pHash, dHash, aHash, WHash) with deep embeddings (CLIP ViT-B/32, DINOv2-base) for image copy detection. Creators can register images and investigators can check suspected copies; a registration shows when an image was submitted, not who owns it.
+This branch contains only the web client. The API service lives in a separate branch/repository and is reached through the `/api` proxy configured in `frontend/vite.config.ts` (default target `http://localhost:8000`).
 
-## Local Setup
+## Stack
 
-### 1. Prerequisites
-- Python 3.11
-- Docker & Docker Compose
-- Git
+- React 19 + TypeScript, built with Vite
+- Tailwind CSS v4 with shadcn/ui components (`frontend/src/components/ui`)
+- framer-motion for animation
+- Inter for interface text, JetBrains Mono for hashes, IDs and other technical data
 
-### 2. Environment Configuration
-Copy `.env.example` to `.env` and adjust database credentials if necessary:
-```powershell
-Copy-Item .env.example .env
+## Getting started
+
+```bash
+cd frontend
+npm install
+npm run dev        # http://localhost:5173
 ```
 
-### 3. Virtual Environment & Dependencies
-Create and activate the Python 3.11 virtual environment, then install dependencies:
-```powershell
-py -3.11 -m venv backend\.venv
-backend\.venv\Scripts\Activate.ps1
-pip install torch --index-url https://download.pytorch.org/whl/cpu
-pip install -e "backend[dev]"
-```
+Other scripts: `npm run build`, `npm run lint`, `npm test`.
 
-### 4. Database Service
-Start the local PostgreSQL 16 + pgvector container:
-```powershell
-docker compose up -d --wait db
-```
+Set `VITE_API_URL` in `frontend/.env.local` to point at a backend that is not on the dev proxy.
 
-### 5. Verify Database Connectivity & pgvector
-Run the database check script to confirm PostgreSQL, pgvector (>= 0.7.0), Hamming distance operators, and vector operations:
-```powershell
-python backend/scripts/check_db.py
-```
+## Legacy
 
-## Legacy Codebase Notice
-The `legacy/` directory contains a frozen, read-only reference of the previous MongoDB prototype application for historical and migration reference. All new ProvNet development runs strictly on FastAPI, SQLAlchemy 2, Alembic, and PostgreSQL 16 with pgvector.
+`legacy/` holds frozen copies of earlier frontends for reference only.
