@@ -1,0 +1,204 @@
+import { useEffect, useState } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import { apiClient, mediaUrl } from '@/lib/api';
+import Dropzone from '../components/Dropzone';
+import ScoreRing from '../components/ScoreRing';
+import { IconScan, IconAlert, IconArrowRight, IconShield, IconCheck, IconArrowLeft } from '../components/Icons';
+import { verdictMeta, gateMeta, pct, formatDate, relativeTime } from '../lib/format';
+import PipelineLive from '../components/PipelineLive';
+import useJob from '../lib/useJob';
+
+function Summary({ check }) {
+  const top = check.results[0];
+  const meta = verdictMeta(check.top_verdict);
+  const claim = check.gate_claim;
+  const gm = claim && gateMeta(claim.classification);
+  const claimed = gm && check.results.find((r) => r.work_id === claim.candidate_work_id);
+  if (gm && claimed) {
+    return (
+      <div className={`verdict-banner tone-${gm.tone}`}>
+        <span className="vb-icon"><IconAlert size={22} /></span>
+        <div>
+          <strong>{gm.label}: “{claimed.title}”{claimed.is_own ? ' (your work)' : ` by ${claimed.owner_name}`}</strong>
+          <p>{claim.statement} Registered {formatDate(claimed.registered_at)}.</p>
+        </div>
+        <Link className="btn btn-primary" to={`/evidence/${check.id}/${claimed.work_id}`}>
+          View evidence <IconArrowRight size={16} />
+        </Link>
+      </div>
+    );
+  }
+  if (!top || check.top_verdict === 'no_match') {
+    return (
+      <div className="verdict-banner tone-ok">
+        <span className="vb-icon"><IconCheck size={22} /></span>
+        <div>
+          <strong>{check.results.length === 0 ? 'No registered work to compare against, or nothing close' : 'No registered work matches this image'}</strong>
+          <p>
+            {top ? `The closest of your works scored ${pct(top.confidence)}, below the match threshold.` : 'Only your own registered works are searched. Register a work first to be able to check copies of it.'}
+            {check.gate?.error && ' Geometric verification was unavailable for this check, so only similarity scores were used.'}
+          </p>
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div className={`verdict-banner tone-${meta.tone}`}>
+      <span className="vb-icon"><IconAlert size={22} /></span>
+      <div>
+        <strong>{meta.label} of “{top.title}”{top.is_own ? ' (your work)' : ` by ${top.owner_name}`}</strong>
+        <p>{pct(top.confidence)} confidence. Registered {formatDate(top.registered_at)}.</p>
+      </div>
+      <Link className="btn btn-primary" to={`/evidence/${check.id}/${top.work_id}`}>
+        View evidence <IconArrowRight size={16} />
+      </Link>
+    </div>
+  );
+}
+
+function MatchCard({ match, checkId, rank, claim }) {
+  const meta = (claim && gateMeta(claim.classification)) || verdictMeta(match.verdict);
+  return (
+    <Link to={`/evidence/${checkId}/${match.work_id}`} className="match-row" style={{ animationDelay: `${rank * 50}ms` }}>
+      <span className="match-rank">{rank + 1}</span>
+      <div className="match-thumb">{match.image_url && <img src={mediaUrl(match.image_url)} alt="" loading="lazy" />}</div>
+      <div className="match-info">
+        <strong>{match.title}</strong>
+        <span className="muted small">
+          {match.is_own ? <span className="chip chip-brand">Your work</span> : `by ${match.owner_name}`}
+          {' · '}registered {relativeTime(match.registered_at)}
+        </span>
+        <div className="mini-bars">
+          <span>pHash <b>{pct(match.phash_score, 0)}</b></span>
+          <span>Embedding <b>{pct(match.embedding_score, 0)}</b></span>
+        </div>
+      </div>
+      <span className={`chip tone-chip tone-${meta.tone}`}>{meta.label}</span>
+      <ScoreRing value={match.confidence} verdict={match.verdict} size={56} />
+      <IconArrowRight size={18} className="match-go" />
+    </Link>
+  );
+}
+
+export default function Check() {
+  const { checkId } = useParams();
+  const navigate = useNavigate();
+  const [imageFile, setImageFile] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [check, setCheck] = useState(null);
+  const [error, setError] = useState(null);
+  const [running, setRunning] = useState(false);
+  const job = useJob();
+
+  // Load a past check from history
+  useEffect(() => {
+    if (!checkId) { setCheck(null); return; }
+    if (check?.id === checkId) return;
+    setLoading(true);
+    apiClient(`/api/checks/${checkId}`)
+      .then(setCheck)
+      .catch((err) => setError(err.message))
+      .finally(() => setLoading(false));
+  }, [checkId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const scan = async () => {
+    if (!imageFile) return;
+    setError(null);
+    setRunning(true);
+    try {
+      const formData = new FormData();
+      formData.append('image', imageFile);
+      // The check runs as a server job; the live view shows each pipeline stage working on the photo.
+      const r = await job.start('/api/works/check/start', formData);
+      if (!r || r.status === 'error') {
+        setRunning(false);
+        const d = r?.error?.detail;
+        setError(typeof d === 'string' ? d : d?.message || 'The check failed. Please try again.');
+      }
+    } catch (err) {
+      setRunning(false);
+      setError(err.message);
+    }
+  };
+
+  const finishScan = () => {
+    const data = job.result;
+    setRunning(false);
+    if (!data) return;
+    setCheck(data);
+    navigate(`/check/${data.id}`, { replace: true });
+  };
+
+  const startOver = () => {
+    setCheck(null);
+    setImageFile(null);
+    navigate('/check');
+  };
+
+  if (check) {
+    const claimedId = check.gate_claim?.candidate_work_id;
+    const relevant = check.results.filter((r) => r.verdict !== 'no_match' || r.work_id === claimedId);
+    const shown = relevant.length ? relevant : check.results.slice(0, 3);
+    return (
+      <div className="page-enter">
+        <button className="back-link link-btn" onClick={startOver}><IconArrowLeft size={15} /> New check</button>
+        <div className="check-result">
+          <aside className="suspect panel">
+            <p className="eyebrow">Suspected copy</p>
+            <img src={mediaUrl(check.query_image_url)} alt="Checked image" />
+            <p className="muted small">{check.filename || 'Uploaded image'} · checked {relativeTime(check.created_at)}</p>
+          </aside>
+          <section>
+            <Summary check={check} />
+            <h3 className="section-title">
+              {relevant.length ? `${relevant.length} potential match${relevant.length > 1 ? 'es' : ''}` : 'Closest registry entries'}
+            </h3>
+            <div className="match-list">
+              {shown.map((m, i) => (
+                <MatchCard key={m.work_id} match={m} checkId={check.id} rank={i}
+                  claim={m.work_id === claimedId ? check.gate_claim : null} />
+              ))}
+              {shown.length === 0 && <p className="muted">The registry is empty.</p>}
+            </div>
+          </section>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="page-enter">
+      <header className="page-head">
+        <p className="eyebrow">Copy detection</p>
+        <h1 className="page-title">Check a suspected copy</h1>
+        <p className="page-subtitle">
+          Found your work somewhere else? Upload the image you found and we will compare it against your own registered works,
+          even if it was cropped, filtered or AI-edited. Your portfolio is never searched by anyone else.
+        </p>
+      </header>
+
+      {running && imageFile && (
+        <PipelineLive kind="check" file={imageFile} events={job.events} status={job.status} elapsed={job.elapsed} onComplete={finishScan} />
+      )}
+
+      <div className="split" style={running ? { display: 'none' } : undefined}>
+        <div className="split-main">
+          <Dropzone file={imageFile} onFile={setImageFile} disabled={loading}>
+            {loading && <div className="scan-overlay"><span className="scan-line" /><span className="scan-label">Scanning registry…</span></div>}
+          </Dropzone>
+        </div>
+        <div className="split-side panel">
+          {error && <div className="alert alert-error"><IconAlert /> {error}</div>}
+          <button className="btn btn-primary btn-block" onClick={scan} disabled={!imageFile || loading}>
+            {loading ? <span className="spinner" /> : <><IconScan size={17} /> Scan the registry</>}
+          </button>
+          <ul className="explainer">
+            <li><IconShield size={16} /> <span><strong>Perceptual hash</strong> catches recompressed, resized and lightly filtered copies.</span></li>
+            <li><IconScan size={16} /> <span><strong>AI embedding</strong> recognises the same content after crops, flips, colour changes and re-renders.</span></li>
+            <li><IconCheck size={16} /> <span>Every check is saved to <Link to="/dashboard?tab=checks">your match history</Link>.</span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  );
+}
