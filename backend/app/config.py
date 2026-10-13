@@ -1,114 +1,71 @@
-from functools import lru_cache
-from pathlib import Path
-from typing import Literal
-
-import yaml
-from pydantic import BaseModel, ConfigDict, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-class CascadeCfg(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    hash_method: Literal["phash"]
-    hamming_confident_max: int = Field(ge=0, le=64)
-    dino_cosine_match_min: float = Field(ge=-1.0, le=1.0)
-    top_k: int = Field(ge=1, le=20)
-
-
-class RegistrationCfg(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    hamming_conflict_max: int = Field(ge=0, le=64)
-    dino_cosine_conflict_min: float = Field(ge=-1.0, le=1.0)
-
-
-class LowDetailCfg(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    grey_std_min: float = Field(ge=0.0)
-
-
-class ModelsCfg(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    clip: str
-    dino: str
-    clip_revision: str = "main"
-    dino_revision: str = "main"
-    input_size: int = Field(ge=1)
-    preprocessing: Literal["pad_to_square", "center_crop"]
-    device: Literal["auto", "cpu", "cuda"]
-
-
-class EvidenceThresholdsCfg(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    phash: int = Field(ge=0, le=64)
-    dhash: int = Field(ge=0, le=64)
-    ahash: int = Field(ge=0, le=64)
-    whash: int = Field(ge=0, le=64)
-    dino: float = Field(ge=-1.0, le=1.0)
-    clip: float = Field(ge=-1.0, le=1.0)
-
-
-class LimitsCfg(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    max_upload_mb: int = Field(gt=0)
-    max_pixels: int = Field(gt=0)
-    min_short_side_px: int = Field(gt=0)
-    inference_concurrency: int = Field(gt=0)
-    inference_wait_s: int = Field(gt=0)
-
-
-class RateLimitsCfg(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    verify_per_minute: int = Field(gt=0)
-    register_per_minute: int = Field(gt=0)
-
-
-class AppConfig(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    config_version: str
-    cascade: CascadeCfg
-    registration: RegistrationCfg
-    low_detail: LowDetailCfg
-    models: ModelsCfg
-    evidence_thresholds: EvidenceThresholdsCfg
-    limits: LimitsCfg
-    rate_limits: RateLimitsCfg
-
-
-def load_config(path: str | Path) -> AppConfig:
-    p = Path(path)
-    if not p.is_absolute():
-        # resolve relative to backend/ (parent of app/)
-        backend_dir = Path(__file__).resolve().parent.parent
-        p = backend_dir / p
-    with open(p, "r", encoding="utf-8") as f:
-        data = yaml.safe_load(f)
-    return AppConfig.model_validate(data)
-
-
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(
-        env_file=(
-            Path(__file__).resolve().parents[2] / ".env",
-            Path(__file__).resolve().parents[1] / ".env",
-            ".env",
-        ),
-        extra="ignore",
-    )
-    database_url: str = "postgresql+asyncpg://provnet:provnet@localhost:5432/provnet"
-    vector_schema: str = "public"
-    provnet_config: str = "config.yaml"
-    storage_dir: str = "storage"
-    hf_home: str = ".hf_cache"
-    frontend_origin: str = "http://localhost:5173"
-    provnet_skip_models: bool = False
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+
+    MONGO_URI: str = "mongodb://localhost:27017"
+    MONGO_DB: str = "digital_asset"
+
+    # Auth / JWT
+    JWT_SECRET: str = "change-me-in-backend-.env"
+    JWT_ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 days
+
+    # One-time passwords
+    OTP_LENGTH: int = 6
+    OTP_EXPIRE_MINUTES: int = 10
+    OTP_MAX_ATTEMPTS: int = 5
+    OTP_RESEND_COOLDOWN_SECONDS: int = 60
+    OTP_MAX_SENDS: int = 5
+
+    # Login lockout
+    LOGIN_MAX_FAILURES: int = 5
+    LOGIN_LOCKOUT_MINUTES: int = 15
+
+    # SMTP (Gmail App Password, Brevo, Outlook, ...). If SMTP_HOST is empty,
+    # emails are printed to the backend console instead of being sent.
+    SMTP_HOST: str = ""
+    SMTP_PORT: int = 587
+    SMTP_USER: str = ""
+    SMTP_PASSWORD: str = ""
+    SMTP_USE_SSL: bool = False  # True for port 465, False for STARTTLS on 587
+    EMAIL_FROM: str = ""
+    EMAIL_FROM_NAME: str = "Provenance"
+
+    FRONTEND_ORIGIN: str = "http://localhost:5173"
+    PUBLIC_BASE_URL: str = "http://localhost:8000"
+
+    # Image storage (local folder; swap app/storage.py for S3/Cloudinary later)
+    UPLOAD_DIR: str = ""  # default: backend/uploads
+
+    # Score fusion: confidence = sigmoid(W_EMB * embedding + W_PHASH * phash + BIAS).
+    # Fitted by eval/evaluate.py (run 20261004-061543: 40 photos x 21 edits, 5-fold CV);
+    # rerun it on your own test set and paste its output here or in .env.
+    FUSION_W_EMBEDDING: float = 27.887
+    FUSION_W_PHASH: float = 13.085
+    FUSION_BIAS: float = -25.773
+    # Verdict thresholds on that confidence: 0.1% and 1% false-positive rate on the eval set
+    MATCH_LIKELY: float = 0.996
+    MATCH_POSSIBLE: float = 0.27
+    # A new registration is refused as a duplicate if it is this close to an existing work
+    DUPLICATE_EMBEDDING: float = 0.95
+    DUPLICATE_PHASH: float = 0.9
+
+    # Folder of sample images shown in the dashboard Discover feed (default: <repo>/dataset/distractors)
+    SHOWCASE_DIR: str = ""
+
+    # Geometric verification gate (app/gate): SIFT+MAGSAC alignment, dense evidence, tiered verdicts.
+    # Needs the DINOv2/CLIP weights; set False to run with the fingerprint scores only.
+    GATE_ENABLED: bool = True
+
+    # OpenTimestamps anchoring of registry hashes (Bitcoin-backed, free)
+    OTS_ENABLED: bool = True
+    OTS_CALENDARS: str = "https://a.pool.opentimestamps.org,https://b.pool.opentimestamps.org"
+
+    @property
+    def email_enabled(self) -> bool:
+        return bool(self.SMTP_HOST)
 
 
-@lru_cache
-def get_settings() -> Settings:
-    return Settings()
-
-
-@lru_cache
-def get_config() -> AppConfig:
-    settings = get_settings()
-    return load_config(settings.provnet_config)
+settings = Settings()

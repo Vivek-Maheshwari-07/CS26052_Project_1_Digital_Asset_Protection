@@ -1,111 +1,91 @@
+import os
+import sys
+from contextlib import asynccontextmanager
 import asyncio
 import logging
-import os
-import time
-from contextlib import asynccontextmanager
-from pathlib import Path
-
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
-from app.api.assets import router as assets_router
-from app.api.benchmark import router as benchmark_router
-from app.api.health import router as health_router
+from app.config import settings
+from app.db import db
+from app import storage
+
 from app.api.register import router as register_router
-from app.api.verify import router as verify_router
-from app.config import Settings, get_config, get_settings
-from app.core.sql import Q7_PGVECTOR_VERSION
-from app.core.storage import LocalStorage
-from app.db import make_engine, make_sessionmaker
-from app.errors import register_error_handlers
-from app.limiter import install_limiter
+from app.api.check import router as check_router
+from app.api.public import router as public_router
+from app.api.jobs import router as jobs_router
+from app.api.discover import router as discover_router, showcase_dir
+from app.api.auth import router as auth_router, ensure_auth_indexes
+from app.certificate.generate import router as certificate_router
+from app.gate.features import ensure_gate_indexes
+from app.registry.index import index
+from app.registry.anchor import anchor_missing
 
-logger = logging.getLogger("provnet")
-
-
-def create_app(settings: Settings | None = None) -> FastAPI:
-    if settings is None:
-        settings = get_settings()
-
-    @asynccontextmanager
-    async def lifespan(app: FastAPI):
-        app.state.settings = settings
-        app.state.config = get_config()
-        app.state.started_at = time.monotonic()
-
-        engine = make_engine(settings)
-        sessionmaker = make_sessionmaker(engine)
-        app.state.engine = engine
-        app.state.sessionmaker = sessionmaker
-
-        # Test pgvector version if reachable
-        try:
-            async with sessionmaker() as session:
-                res = await session.execute(Q7_PGVECTOR_VERSION)
-                version_str = res.scalar()
-                if version_str:
-                    parts = [int(p) for p in version_str.split(".")[:3]]
-                    if parts < [0, 7, 0]:
-                        raise RuntimeError(f"pgvector extension version {version_str} is older than 0.7.0")
-        except RuntimeError:
-            raise
-        except Exception as e:  # noqa: BLE001
-            logger.warning("Database unreachable during startup: %s", e)
-
-        hf_path = Path(settings.hf_home)
-        if not hf_path.is_absolute():
-            backend_dir = Path(__file__).resolve().parent.parent
-            hf_path = backend_dir / hf_path
-        hf_path.mkdir(parents=True, exist_ok=True)
-        os.environ["HF_HOME"] = str(hf_path)
-
-        if settings.provnet_skip_models:
-            app.state.embedder = None
-            app.state.models_loaded = {"clip": False, "dino": False}
-            app.state.device = "cpu"
-        else:
-            try:
-                from app.core.embedder import Embedder, resolve_device
-
-                device_setting = app.state.config.models.device
-                device = resolve_device(device_setting)
-                app.state.device = device
-
-                app.state.embedder = await asyncio.to_thread(Embedder, app.state.config.models, device)
-                await asyncio.to_thread(app.state.embedder.warm_up)
-                app.state.models_loaded = {"clip": True, "dino": True}
-            except Exception as e:  # noqa: BLE001
-                logger.warning("Failed to load models during startup: %s", e)
-                app.state.embedder = None
-                app.state.models_loaded = {"clip": False, "dino": False}
-                app.state.device = "cpu"
-
-        app.state.inference_gate = asyncio.Semaphore(app.state.config.limits.inference_concurrency)
-        app.state.storage = LocalStorage(settings.storage_dir)
-
-        yield
-
-        await engine.dispose()
-
-    app = FastAPI(title="ProvNet API", lifespan=lifespan)
-
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=[settings.frontend_origin],
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
-
-    register_error_handlers(app)
-    install_limiter(app)
-    app.include_router(health_router, prefix="/api")
-    app.include_router(register_router, prefix="/api")
-    app.include_router(verify_router, prefix="/api")
-    app.include_router(assets_router, prefix="/api")
-    app.include_router(benchmark_router, prefix="/api")
-
-    return app
+logger = logging.getLogger("uvicorn.error")
 
 
-app = create_app()
+def _warm_models():
+    """Load CLIP and DINOv2 once at startup so the first live pipeline run is not a 30 s cold start."""
+    from app.fingerprint.embedding import get_model
+    from app.gate.retrieve import get_clip_model, get_dino_model
+    try:
+        get_model()
+        get_clip_model()
+        get_dino_model()
+        logger.info("Embedding models warmed up.")
+    except Exception as exc:  # warm-up is best effort
+        logger.warning("Model warm-up skipped: %s", exc)
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await ensure_auth_indexes(db)
+    await db.works.create_index("user_id")
+    await db.works.create_index("id", unique=True)
+    await db.checks.create_index([("user_id", 1), ("created_at", -1)])
+    await ensure_gate_indexes(db)
+    await index.sync(db)
+    logger.info("Similarity index loaded with %d works.", len(index))
+    anchor_task = asyncio.create_task(anchor_missing(db))
+    if "pytest" not in sys.modules and os.environ.get("WARMUP_MODELS", "1") != "0":
+        asyncio.get_running_loop().run_in_executor(None, _warm_models)
+    if not settings.email_enabled:
+        logger.warning("SMTP is not configured: OTP codes will be printed to this console.")
+    if settings.JWT_SECRET.startswith("change-me"):
+        logger.warning("JWT_SECRET is the default value. Set it in backend/.env.")
+    yield
+    anchor_task.cancel()
+
+
+app = FastAPI(title="Digital Asset Provenance", lifespan=lifespan)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[settings.FRONTEND_ORIGIN],
+    # Vite moves to 5174, 5175, ... when 5173 is busy; accept any local dev port.
+    allow_origin_regex=r"https?://(localhost|127\.0\.0\.1)(:\d+)?",
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Mount static files for uploads
+app.mount("/uploads", StaticFiles(directory=storage.upload_dir()), name="uploads")
+
+# Sample works shown in the Discover feed (only mounted when the folder exists)
+if os.path.isdir(showcase_dir()):
+    app.mount("/showcase", StaticFiles(directory=showcase_dir()), name="showcase")
+
+# Include Routers
+app.include_router(auth_router, prefix="/api/auth")
+app.include_router(register_router, prefix="/api/works")
+app.include_router(check_router, prefix="/api")
+app.include_router(certificate_router, prefix="/api/works")
+app.include_router(public_router, prefix="/api")
+app.include_router(jobs_router, prefix="/api")
+app.include_router(discover_router, prefix="/api")
+
+@app.get("/health")
+async def health_check():
+    return {"status": "ok"}

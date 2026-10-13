@@ -1,63 +1,16 @@
-# ProvNet Frontend
+# React + Vite
 
-Frontend for ProvNet: Perceptual Fingerprinting & Verification Suite.
+This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
 
-Built with React 19, TypeScript, Vite, Tailwind CSS v4, React Router, and Vitest.
+Currently, two official plugins are available:
 
----
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
 
-## Getting Started: Running Backend + Frontend Together
+## React Compiler
 
-### 1. Start the Backend API (FastAPI)
+The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
 
-Ensure your Python virtual environment in `backend/` is activated:
+## Expanding the Oxlint configuration
 
-```powershell
-# From repo root
-cd backend
-.venv\Scripts\activate
-uvicorn app.main:app --reload --port 8000
-```
-
-The backend will start at `http://localhost:8000`.
-
-### 2. Start the Frontend Development Server (Vite)
-
-In a separate terminal window:
-
-```powershell
-# From repo root
-cd frontend
-npm install
-npm run dev
-```
-
-The frontend will start at `http://localhost:5173`.
-
-Vite is configured with a development proxy forwarding `/api/*` requests directly to `http://localhost:8000`.
-
----
-
-## Available Views (Step 3a)
-
-- **/register**: Upload asset images (JPEG/PNG/WebP, max 10 MB) with optional owner metadata, inspect generated 64-bit perceptual hashes (`pHash`, `dHash`, `aHash`, `wHash`), download timestamped Registration Records, and inspect 409 conflict diagnostics.
-- **/verify**: Multi-stage cascade verification pipeline (`SHA-256` exact → SQL perceptual hash distance → `DINOv2`/`CLIP` deep embeddings) with live stage progression, verdict banners, and ranked candidates.
-- **/evidence**: Localized evidence view *(Coming in step 3b)*.
-- **/results**: Benchmark results dashboard *(Coming in step 3b)*.
-
----
-
-## Testing & Validation
-
-Run unit & integration test suites (Vitest + Testing Library + MSW):
-
-```powershell
-npm test
-```
-
-Build production bundle and validate TypeScript types:
-
-```powershell
-npm run build
-npm run lint
-```
+If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
