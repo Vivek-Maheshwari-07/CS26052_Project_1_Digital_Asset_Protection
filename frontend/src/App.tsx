@@ -8,14 +8,18 @@ import LegacyFrame from '@/legacy/LegacyFrame'
 import { LandingPage } from '@/pages/landing/landing-page'
 import { NotFoundPage } from '@/pages/not-found'
 
-// Screens still on the original design load on demand, so the landing page stays light.
+// Everything except the landing page loads on demand, so the first visit stays light.
+const LoginPage = lazy(() => import('@/pages/auth/login-page').then((m) => ({ default: m.LoginPage })))
+const SignupPage = lazy(() => import('@/pages/auth/signup-page').then((m) => ({ default: m.SignupPage })))
+const ForgotPasswordPage = lazy(() =>
+  import('@/pages/auth/forgot-password-page').then((m) => ({ default: m.ForgotPasswordPage })),
+)
+
+// Screens still on the original design.
 const Check = lazy(() => import('@/legacy/pages/Check'))
 const Dashboard = lazy(() => import('@/legacy/pages/Dashboard'))
 const Evidence = lazy(() => import('@/legacy/pages/Evidence'))
-const ForgotPassword = lazy(() => import('@/legacy/pages/ForgotPassword'))
-const Login = lazy(() => import('@/legacy/pages/Login'))
 const Register = lazy(() => import('@/legacy/pages/Register'))
-const Signup = lazy(() => import('@/legacy/pages/Signup'))
 const Verify = lazy(() => import('@/legacy/pages/Verify'))
 
 export function AppRoutes() {
@@ -28,11 +32,9 @@ export function AppRoutes() {
         </Route>
 
         <Route element={<GuestRoute />}>
-          <Route element={<LegacyFrame />}>
-            <Route path="login" element={<Login />} />
-            <Route path="signup" element={<Signup />} />
-            <Route path="forgot-password" element={<ForgotPassword />} />
-          </Route>
+          <Route path="login" element={<LoginPage />} />
+          <Route path="signup" element={<SignupPage />} />
+          <Route path="forgot-password" element={<ForgotPasswordPage />} />
         </Route>
 
         <Route element={<ProtectedRoute />}>
