@@ -12,6 +12,7 @@ import Signup from './pages/Signup';
 import ForgotPassword from './pages/ForgotPassword';
 import Verify from './pages/Verify';
 import Landing from './pages/Landing';
+import DigitalTwin from './pages/DigitalTwin';
 
 const FullPageLoader = () => (
     <div className="full-loader"><Logo size={40} /><span className="spinner" /></div>
@@ -96,6 +97,8 @@ function App() {
         <BrowserRouter>
             <Routes>
                 <Route path="/" element={<Landing />} />
+                <Route path="/how-it-works" element={<DigitalTwin />} />
+                <Route path="/digital-twin" element={<Navigate to="/how-it-works" replace />} />
                 <Route element={<GuestRoute />}>
                     <Route path="/login" element={<Login />} />
                     <Route path="/signup" element={<Signup />} />

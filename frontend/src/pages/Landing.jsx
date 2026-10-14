@@ -41,6 +41,7 @@ export default function Landing() {
           <Link to="/" className="lp-brand"><Logo size={30} /> Provenance</Link>
           <div className="lp-links">
             <a href="#how" className="hide-sm">How it works</a>
+            <Link to="/how-it-works" className="hide-sm" style={{ color: '#818cf8', fontWeight: 600 }}>3D Simulator ✦</Link>
             <a href="#claims" className="hide-sm">What we claim</a>
             <a href="#results" className="hide-sm">Results</a>
             <a href="#data" className="hide-sm">Datasets</a>
@@ -61,6 +62,9 @@ export default function Landing() {
           </p>
           <div className="lp-cta">
             <Link to={cta} className="lp-btn primary lg">Get started <IconArrowRight size={18} /></Link>
+            <Link to="/how-it-works" className="lp-btn ghost lg" style={{ borderColor: 'rgba(99, 102, 241, 0.4)', color: '#a5b4fc', background: 'rgba(99, 102, 241, 0.08)' }}>
+              🎮 3D Digital Twin
+            </Link>
             <a href="#results" className="lp-btn ghost lg">See the results</a>
           </div>
         </div>
@@ -85,6 +89,16 @@ export default function Landing() {
           {STEPS.map(([t, d], i) => (
             <div key={t} className="lp-card"><div className="num">{i + 1}</div><h3>{t}</h3><p>{d}</p></div>
           ))}
+        </div>
+        <div style={{ marginTop: '1.75rem', background: 'linear-gradient(135deg, rgba(20, 26, 48, 0.95) 0%, rgba(12, 16, 32, 0.95) 100%)', border: '1px solid rgba(99, 102, 241, 0.35)', borderRadius: 12, padding: '1.5rem 2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.25rem', boxShadow: '0 10px 30px rgba(0, 0, 0, 0.4)' }}>
+          <div>
+            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#38bdf8', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Interactive Educational Mode</span>
+            <h3 style={{ margin: '0.35rem 0', fontSize: '1.2rem', color: '#f8fafc' }}>Explore our 3D Digital Twin Pipeline Simulator</h3>
+            <p style={{ margin: 0, fontSize: '0.88rem', color: '#94a3b8', maxWidth: 620, lineHeight: 1.5 }}>Step through Registration, 50% Crops, and AI Inpainting in real time with the canonical sample cat, featuring interactive algorithm deep-dives for pHash, SIFT, MAGSAC++, and DIS Flow.</p>
+          </div>
+          <Link to="/how-it-works" className="lp-btn primary lg" style={{ whiteSpace: 'nowrap' }}>
+            Launch 3D Simulator <IconArrowRight size={16} />
+          </Link>
         </div>
       </section>
 
