@@ -17,6 +17,7 @@ from app.api.public import router as public_router
 from app.api.jobs import router as jobs_router
 from app.api.discover import router as discover_router, showcase_dir
 from app.api.auth import router as auth_router, ensure_auth_indexes
+from app.api.mark import router as mark_router
 from app.certificate.generate import router as certificate_router
 from app.gate.features import ensure_gate_indexes
 from app.registry.index import index
@@ -85,6 +86,7 @@ app.include_router(certificate_router, prefix="/api/works")
 app.include_router(public_router, prefix="/api")
 app.include_router(jobs_router, prefix="/api")
 app.include_router(discover_router, prefix="/api")
+app.include_router(mark_router, prefix="/api/mark")
 
 @app.get("/health")
 async def health_check():

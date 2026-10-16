@@ -27,6 +27,18 @@ export default function DigitalTwin() {
     return () => clearInterval(timer);
   }, [isPlaying, playbackSpeed, steps.length]);
 
+  // Listen for Mark Copilot tech explainer modal
+  useEffect(() => {
+    const handleExplain = (e) => {
+      if (e.detail?.tech) {
+        setActiveTechModal(e.detail.tech);
+        setIsPlaying(false);
+      }
+    };
+    window.addEventListener('mark:explain-tech', handleExplain);
+    return () => window.removeEventListener('mark:explain-tech', handleExplain);
+  }, []);
+
   // Reset step index when switching scenarios
   const handleSelectScenario = (id) => {
     setActiveScenarioId(id);

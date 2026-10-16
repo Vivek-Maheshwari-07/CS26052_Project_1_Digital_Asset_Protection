@@ -13,6 +13,13 @@ export default function TwinViewport3D({ scenario, currentStep, onInspectTech })
   const [tilt, setTilt] = useState({ x: 10, y: -12 });
   const containerRef = useRef(null);
 
+  // Listen for Mark Copilot explode action
+  useEffect(() => {
+    const handleExplode = () => setIsPixelExploded(true);
+    window.addEventListener('mark:explode-pixels', handleExplode);
+    return () => window.removeEventListener('mark:explode-pixels', handleExplode);
+  }, []);
+
   // Very gentle, silky-smooth mouse tilt (heavily damped to fix high sensitivity)
   const handleMouseMove = (e) => {
     if (!is3D || isCinematicOrbit || !containerRef.current) return;

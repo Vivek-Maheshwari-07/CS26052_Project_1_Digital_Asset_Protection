@@ -13,6 +13,7 @@ import ForgotPassword from './pages/ForgotPassword';
 import Verify from './pages/Verify';
 import Landing from './pages/Landing';
 import DigitalTwin from './pages/DigitalTwin';
+import MarkOrb from './components/Mark/MarkOrb';
 
 const FullPageLoader = () => (
     <div className="full-loader"><Logo size={40} /><span className="spinner" /></div>
@@ -115,6 +116,7 @@ function App() {
                 <Route path="/register" element={<Navigate to="/works/new" replace />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
+            <MarkOrb />
         </BrowserRouter>
       </AuthProvider>
     </ToastProvider>
