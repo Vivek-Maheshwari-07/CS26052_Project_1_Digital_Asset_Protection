@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useVoiceTrigger } from './useVoiceTrigger';
 import { executeMarkAction } from './markActions';
+import { API_BASE } from '../../api/client';
 import './mark.css';
 
 export default function MarkOrb() {
@@ -44,11 +45,28 @@ export default function MarkOrb() {
       // Add user message to conversation
       setMessages((prev) => [...prev, { role: 'user', content: trimmed }]);
       setInputText('');
-      setIsThinking(true);
       setIsOpen(true); // Automatically open drawer if voice activated
 
+      // Quick conversational reply if user simply invoked the wake word
+      if (/^(hey\s+mark|hi\s+mark|mark|marc)$/i.test(trimmed)) {
+        const welcomeReply =
+          "I'm listening! You can ask me to register your work, explain the math, or explode pixels in 3D.";
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: 'assistant',
+            content: welcomeReply,
+            action: 'NONE',
+          },
+        ]);
+        speak(welcomeReply);
+        return;
+      }
+
+      setIsThinking(true);
+
       try {
-        const resp = await fetch('/api/mark/chat', {
+        const resp = await fetch(`${API_BASE}/api/mark/chat`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -118,7 +136,9 @@ export default function MarkOrb() {
     toggleMic,
   } = useVoiceTrigger({
     onVoiceCommand: handleSendMessage,
+    onWake: () => setIsOpen(true),
     isMuted,
+    isOpen,
   });
 
   const handleMuteToggle = () => {

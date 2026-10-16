@@ -1,11 +1,53 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 
 /**
- * useVoiceTrigger: Browser-native Web Speech API hook
- * Provides zero-VRAM, 0ms latency STT and continuous wake-word listening for "Hey Mark".
- * Also provides natural SpeechSynthesis TTS for Mark's voice replies.
+ * Clean leading/trailing punctuation and whitespace left after wake-word extraction.
  */
-export function useVoiceTrigger({ onVoiceCommand, isMuted = false }) {
+function cleanCommand(text) {
+  if (!text) return '';
+  return text
+    .replace(/^[\s,.;:!?\-—'"]+/, '')
+    .replace(/[\s,.;:!?\-—'"]+$/, '')
+    .trim();
+}
+
+/**
+ * Play a futuristic subtle chime on wake-word detection (Siri/Alexa style)
+ */
+function playWakeChime() {
+  try {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return;
+    const ctx = new AudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = 'sine';
+    // Gentle upbeat two-tone chime: D5 (587Hz) to A5 (880Hz)
+    osc.frequency.setValueAtTime(587.33, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.1);
+
+    gain.gain.setValueAtTime(0.08, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.18);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start();
+    osc.stop(ctx.currentTime + 0.18);
+  } catch {
+    // AudioContext blocked until user interaction
+  }
+}
+
+const WAKE_WORD_REGEX = /\b(hey\s+mark|hi\s+mark|ok\s+mark|hey\s+marc|hi\s+marc|hello\s+mark|mark|marc)\b/i;
+
+/**
+ * useVoiceTrigger: Browser-native Web Speech API hook
+ * Provides instant wake-word listening for "Hey Mark", responsive interim feedback,
+ * clean punctuation stripping, and natural speech synthesis.
+ */
+export function useVoiceTrigger({ onVoiceCommand, onWake, isMuted = false, isOpen = false }) {
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [transcript, setTranscript] = useState('');
@@ -14,6 +56,21 @@ export function useVoiceTrigger({ onVoiceCommand, isMuted = false }) {
 
   const recognitionRef = useRef(null);
   const isContinuousRef = useRef(true);
+  const inWakeModeRef = useRef(false);
+  const onVoiceCommandRef = useRef(onVoiceCommand);
+  const onWakeRef = useRef(onWake);
+
+  useEffect(() => {
+    onVoiceCommandRef.current = onVoiceCommand;
+    onWakeRef.current = onWake;
+  }, [onVoiceCommand, onWake]);
+
+  // If drawer is opened by the user, treat as actively listening for commands
+  useEffect(() => {
+    if (isOpen) {
+      inWakeModeRef.current = true;
+    }
+  }, [isOpen]);
 
   // Initialize Speech Recognition
   useEffect(() => {
@@ -37,12 +94,12 @@ export function useVoiceTrigger({ onVoiceCommand, isMuted = false }) {
       };
 
       recognition.onend = () => {
-        // Auto restart for continuous background wake-word listening if enabled
+        // Auto-restart for continuous background wake-word listening
         if (isContinuousRef.current) {
           try {
             recognition.start();
           } catch {
-            // Already started or busy
+            // Already active or waiting
           }
         } else {
           setIsListening(false);
@@ -50,47 +107,72 @@ export function useVoiceTrigger({ onVoiceCommand, isMuted = false }) {
       };
 
       recognition.onerror = (event) => {
-        if (event.error !== 'no-speech') {
+        if (event.error !== 'no-speech' && event.error !== 'aborted') {
           console.warn('[Mark Voice] Recognition error:', event.error);
         }
       };
 
       recognition.onresult = (event) => {
         let currentTranscript = '';
+        let finalPhrase = '';
+
         for (let i = event.resultIndex; i < event.results.length; i++) {
           const item = event.results[i];
           currentTranscript += item[0].transcript;
 
           if (item.isFinal) {
-            const rawText = item[0].transcript.trim();
-            const lower = rawText.toLowerCase();
+            finalPhrase = item[0].transcript.trim();
+          }
+        }
 
-            // Wake word detector: "Hey Mark" or "Mark"
-            if (lower.includes('hey mark') || lower.startsWith('mark')) {
-              setWakeWordDetected(true);
-              const command = rawText
-                .replace(/hey mark/i, '')
-                .replace(/^mark/i, '')
-                .trim();
+        setTranscript(currentTranscript);
 
-              if (command.length > 1 && onVoiceCommand) {
-                onVoiceCommand(command);
+        // Process final speech output
+        if (finalPhrase) {
+          const lower = finalPhrase.toLowerCase();
+          const hasWakeWord = WAKE_WORD_REGEX.test(lower);
+
+          if (hasWakeWord) {
+            playWakeChime();
+            setWakeWordDetected(true);
+            inWakeModeRef.current = true;
+
+            // Extract the command after the wake-word
+            const rawRemainder = finalPhrase.replace(WAKE_WORD_REGEX, '');
+            const command = cleanCommand(rawRemainder);
+
+            if (onWakeRef.current) {
+              onWakeRef.current();
+            }
+
+            if (command.length >= 2) {
+              if (onVoiceCommandRef.current) {
+                onVoiceCommandRef.current(command);
               }
+            } else {
+              // User said JUST "Hey Mark"
+              if (onVoiceCommandRef.current) {
+                onVoiceCommandRef.current('hey mark');
+              }
+            }
 
-              setTimeout(() => setWakeWordDetected(false), 2500);
+            setTimeout(() => setWakeWordDetected(false), 2000);
+          } else if (inWakeModeRef.current) {
+            // Active conversation mode: user is speaking directly while drawer is active
+            const command = cleanCommand(finalPhrase);
+            if (command.length >= 2 && onVoiceCommandRef.current) {
+              onVoiceCommandRef.current(command);
             }
           }
         }
-        setTranscript(currentTranscript);
       };
 
       recognitionRef.current = recognition;
 
-      // Start listening by default
       try {
         recognition.start();
       } catch (err) {
-        console.warn('[Mark Voice] Initial mic start skipped (needs user click):', err);
+        console.warn('[Mark Voice] Initial mic start needs user interaction:', err);
       }
     } catch (err) {
       console.warn('[Mark Voice] Initialization error:', err);
@@ -105,7 +187,7 @@ export function useVoiceTrigger({ onVoiceCommand, isMuted = false }) {
         } catch {}
       }
     };
-  }, [onVoiceCommand]);
+  }, []);
 
   // Speech Synthesis (TTS)
   const speak = useCallback(
@@ -113,7 +195,7 @@ export function useVoiceTrigger({ onVoiceCommand, isMuted = false }) {
       if (!window.speechSynthesis || isMuted || !text) return;
 
       try {
-        window.speechSynthesis.cancel(); // Cancel any existing speech
+        window.speechSynthesis.cancel();
 
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.rate = 1.05;
@@ -127,7 +209,8 @@ export function useVoiceTrigger({ onVoiceCommand, isMuted = false }) {
             (v.name.includes('Natural') ||
               v.name.includes('Google') ||
               v.name.includes('David') ||
-              v.name.includes('Samantha'))
+              v.name.includes('Samantha') ||
+              v.name.includes('Guy'))
         );
         if (preferred) utterance.voice = preferred;
 
@@ -159,8 +242,10 @@ export function useVoiceTrigger({ onVoiceCommand, isMuted = false }) {
         recognitionRef.current.stop();
       } catch {}
       setIsListening(false);
+      inWakeModeRef.current = false;
     } else {
       isContinuousRef.current = true;
+      inWakeModeRef.current = true;
       try {
         recognitionRef.current.start();
       } catch {}
