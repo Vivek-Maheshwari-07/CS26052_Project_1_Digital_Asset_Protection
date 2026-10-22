@@ -53,9 +53,36 @@ async def test_mark_chat_ollama_mock():
     with patch("app.api.mark.query_ollama", new_callable=AsyncMock, return_value=mock_llm_res):
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
-            res = await client.post("/api/mark/chat", json={"message": "show me the twin"})
+            res = await client.post("/api/mark/chat", json={"message": "surprise me with something cool"})
             assert res.status_code == 200
             data = res.json()
             assert data["action"] == "OPEN_SIMULATOR"
             assert data["target"] == "/how-it-works"
             assert "3D twin" in data["reply"]
+
+
+@pytest.mark.asyncio
+async def test_mark_clear_commands_skip_the_model():
+    """Clear commands are answered by rules, so the local model is never called (the main latency saving)."""
+    from app.api import mark
+    mark._cache.clear()
+    with patch("app.api.mark.query_ollama", new_callable=AsyncMock) as llm:
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            res = await client.post("/api/mark/chat", json={"message": "explode pixels"})
+            assert res.json()["action"] == "EXPLODE_PIXELS"
+        llm.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_mark_open_question_uses_model_and_is_cached():
+    from app.api import mark
+    mark._cache.clear()
+    answer = MarkChatResponse(reply="Because hashes are tiny.", action="NONE")
+    with patch("app.api.mark.query_ollama", new_callable=AsyncMock, return_value=answer) as llm:
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            for _ in range(2):
+                res = await client.post("/api/mark/chat", json={"message": "Why is this fast?"})
+                assert res.json()["reply"] == "Because hashes are tiny."
+        assert llm.await_count == 1

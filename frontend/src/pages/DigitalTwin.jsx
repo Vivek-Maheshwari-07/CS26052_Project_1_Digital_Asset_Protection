@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { SCENARIOS } from '../data/digitalTwinData';
 import TwinViewport3D from '../components/DigitalTwin/TwinViewport3D';
 import TechModal from '../components/DigitalTwin/TechModal';
+import CinematicFilm from '../components/DigitalTwin/CinematicFilm';
 import { Logo, IconArrowRight } from '../components/Icons';
 import '../components/DigitalTwin/digitalTwin.css';
 
@@ -78,6 +79,22 @@ export default function DigitalTwin() {
       </header>
 
       {/* Main Container */}
+      <section className="film-section">
+        <div className="film-head">
+          <div>
+            <h2>Watch the film: from one photo to proof</h2>
+            <p>Ninety seconds, using real pixels, real keypoints and real hashes from this project. Click the picture or press space to pause.</p>
+          </div>
+          <span className="film-badge">NOW SHOWING</span>
+        </div>
+        <CinematicFilm />
+      </section>
+
+      <div className="film-explore">
+        <h2>Now explore it yourself</h2>
+        <p>Pick a scenario, orbit the 3D twin, and open any algorithm for the plain-English explanation.</p>
+      </div>
+
       <main className="dt-main">
         {/* Scenario Selection Cards */}
         <section className="dt-scenarios-strip">

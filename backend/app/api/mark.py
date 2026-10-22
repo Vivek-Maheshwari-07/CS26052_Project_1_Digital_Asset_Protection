@@ -7,7 +7,8 @@ for client-side UI navigation, interactive spotlights, 3D twin modes, and modals
 import json
 import logging
 import re
-from typing import Optional, Dict, Any, List
+from collections import OrderedDict
+from typing import Optional, Dict, Any
 import httpx
 from fastapi import APIRouter
 from pydantic import BaseModel
@@ -18,46 +19,12 @@ logger = logging.getLogger("uvicorn.error")
 
 router = APIRouter()
 
-SYSTEM_PROMPT = """You are Mark, an intelligent AI Action Copilot embedded in the Digital Asset Provenance & Forensic Protection platform.
-Your objective is to help creators, photographers, and forensic researchers understand the system, navigate the app, and run platform actions.
-
-SYSTEM ARCHITECTURE & CAPABILITIES:
-- Digital Asset Protection platform for artists, photographers, and creators.
-- Multi-tier forensic computer vision pipeline:
-  * Tier 1 (Fast Screening Gate): 64-bit DCT perceptual hash (pHash) hamming distance + OpenCLIP ViT-B/32 dense semantic embeddings.
-  * Tier 2 (Geometric Verification): SIFT keypoint detection + MAGSAC++ robust homography estimation (4000 iterations, 3.0px reprojection threshold) to pinpoint crops, rotations, flips, perspective warps, and AI inpainting/inpainting masks.
-- Provenance Proofs:
-  * Cryptographic SHA-256 asset certificates (PDF format with embedded verification QR code).
-  * Bitcoin-anchored calendar proofs via OpenTimestamps (immutable timestamp proof without gas fees).
-  * C2PA Content Credentials metadata manifest injection.
-- Application Navigation:
-  * "/" : Landing page with product overview and architecture.
-  * "/how-it-works" : Interactive 3D Digital Twin visualizer of the pipeline with camera orbit, pixel explosion, and forensic comparison.
-  * "/check" : Forensic scanner where users upload an image to check for infringement or unauthorized edits.
-  * "/works/new" : Register a new original digital asset with copyright provenance.
-  * "/works" : User's registered works dashboard with certificates.
-  * "/discover" : Public gallery of registered artworks.
-  * "/login" : Sign in / registration.
-
-ACTION WHITELIST (You MUST pick one):
-- "NAVIGATE": change page. Target MUST be one of: ["/", "/how-it-works", "/check", "/works/new", "/works", "/discover", "/login"]
-- "START_TUTORIAL": guided spotlight tour. Target MUST be one of: ["register_flow", "check_flow", "twin_tour"]
-- "OPEN_SIMULATOR": open 3D pipeline simulator on /how-it-works.
-- "EXPLODE_PIXELS": trigger the 3D pixel explosion visualizer on /how-it-works.
-- "EXPLAIN_TECH": open deep-dive modal for a specific tech. Tech MUST be one of: ["phash", "openclip", "dinov2", "sift", "c2pa", "anchor"]
-- "FOCUS_REGISTER": navigate to /works/new and highlight the upload dropzone.
-- "NONE": pure conversational reply when no UI action is required.
-
-STRICT JSON OUTPUT REQUIREMENT:
-You MUST respond with a single valid JSON object and nothing else. No markdown wrapping (do not use ```json), no preamble, no trailing commentary.
-Schema:
-{
-  "reply": "Spoken answer, friendly and concise (1-3 sentences maximum).",
-  "action": "NAVIGATE" | "START_TUTORIAL" | "OPEN_SIMULATOR" | "EXPLODE_PIXELS" | "EXPLAIN_TECH" | "FOCUS_REGISTER" | "NONE",
-  "target": "/route or identifier or null",
-  "tech": "phash/openclip/dinov2/sift/c2pa/anchor or null"
-}
-"""
+# Kept deliberately short: the prompt is re-read on every call, so every token here is latency.
+SYSTEM_PROMPT = """You are Mark, the copilot of a digital-asset provenance app (register originals, check suspected copies, 3D pipeline twin).
+Pipeline: pHash + OpenCLIP/DINOv2 retrieval, SIFT+MAGSAC geometric verification, pixel comparison, SHA-256 hash chain, Bitcoin OpenTimestamps, PDF certificate.
+Reply with ONE JSON object only: {"reply": "<1-2 short sentences>", "action": "<ACTION>", "target": "<route or null>", "tech": "<tech or null>"}
+ACTION is one of: NAVIGATE (target one of /, /how-it-works, /check, /works/new, /works, /discover), START_TUTORIAL (target register_flow|check_flow|twin_tour), OPEN_SIMULATOR, EXPLODE_PIXELS, EXPLAIN_TECH (tech one of phash|openclip|dinov2|sift|c2pa|anchor), FOCUS_REGISTER, NONE.
+Use NONE for plain questions."""
 
 
 class MarkChatRequest(BaseModel):
@@ -184,75 +151,78 @@ def _fallback_intent_matcher(message: str, current_path: str = "/") -> MarkChatR
     )
 
 
+VALID_ACTIONS = {"NAVIGATE", "START_TUTORIAL", "OPEN_SIMULATOR", "EXPLODE_PIXELS", "EXPLAIN_TECH", "FOCUS_REGISTER", "NONE"}
+KEEP_ALIVE = "60m"          # keep the model resident; the default 5 min unloads it and costs a cold start
+LLM_OPTIONS = {"temperature": 0, "num_predict": 90, "num_ctx": 1024}
+
+_client: Optional[httpx.AsyncClient] = None
+_cache: "OrderedDict[tuple, MarkChatResponse]" = OrderedDict()
+
+
+def _http() -> httpx.AsyncClient:
+    """One pooled client: opening a new connection per question added measurable delay."""
+    global _client
+    if _client is None:
+        _client = httpx.AsyncClient(base_url=settings.OLLAMA_HOST.rstrip("/"), timeout=httpx.Timeout(5.0, connect=0.5))
+    return _client
+
+
+def _rule_intent(message: str, current_path: str) -> Optional[MarkChatResponse]:
+    """Instant answer for the clear commands the app supports; None means 'open-ended, ask the model'."""
+    res = _fallback_intent_matcher(message, current_path)
+    return None if res.action == "NONE" else res
+
+
 async def query_ollama(message: str, current_path: str = "/") -> Optional[MarkChatResponse]:
-    """Send structured prompt to local Ollama instance with JSON grammar enforcement."""
-    prompt = f"User is on page: {current_path}.\nUser message: {message}"
+    """Ask the local model for an open-ended question, with JSON-constrained output."""
     try:
-        async with httpx.AsyncClient(timeout=6.0) as client:
-            resp = await client.post(
-                f"{settings.OLLAMA_HOST.rstrip('/')}/api/chat",
-                json={
-                    "model": settings.OLLAMA_MODEL,
-                    "messages": [
-                        {"role": "system", "content": SYSTEM_PROMPT},
-                        {"role": "user", "content": prompt},
-                    ],
-                    "format": "json",
-                    "stream": False,
-                    "options": {
-                        "temperature": 0.2,
-                        "num_predict": 180,
-                    },
-                },
-            )
-
-            if resp.status_code == 200:
-                data = resp.json()
-                content = data.get("message", {}).get("content", "").strip()
-
-                # Clean any stray markdown fences if model outputs them despite prompt
-                content = re.sub(r"^```(?:json)?\s*", "", content)
-                content = re.sub(r"\s*```$", "", content)
-
-                parsed = json.loads(content)
-                reply = str(parsed.get("reply", "")).strip()
-                action = str(parsed.get("action", "NONE")).upper()
-                target = parsed.get("target")
-                tech = parsed.get("tech")
-
-                valid_actions = {
-                    "NAVIGATE",
-                    "START_TUTORIAL",
-                    "OPEN_SIMULATOR",
-                    "EXPLODE_PIXELS",
-                    "EXPLAIN_TECH",
-                    "FOCUS_REGISTER",
-                    "NONE",
-                }
-                if action not in valid_actions:
-                    action = "NONE"
-
-                return MarkChatResponse(
-                    reply=reply or "I've processed your request.",
-                    action=action,
-                    target=target,
-                    tech=tech,
-                )
-
+        resp = await _http().post("/api/chat", json={
+            "model": settings.OLLAMA_MODEL,
+            "messages": [{"role": "system", "content": SYSTEM_PROMPT},
+                         {"role": "user", "content": f"[page {current_path}] {message}"}],
+            "format": "json", "stream": False, "keep_alive": KEEP_ALIVE, "options": LLM_OPTIONS,
+        })
+        if resp.status_code != 200:
+            return None
+        content = resp.json().get("message", {}).get("content", "").strip()
+        content = re.sub(r"^```(?:json)?\s*", "", content)
+        content = re.sub(r"\s*```$", "", content)
+        parsed = json.loads(content)
+        action = str(parsed.get("action", "NONE")).upper()
+        if action not in VALID_ACTIONS:
+            action = "NONE"
+        return MarkChatResponse(reply=str(parsed.get("reply", "")).strip() or "I've processed your request.",
+                                action=action, target=parsed.get("target"), tech=parsed.get("tech"))
     except Exception as exc:
-        logger.warning(
-            "Ollama call failed or timed out (%s). Using deterministic fallback matcher.",
-            exc,
-        )
+        logger.warning("Ollama call failed or timed out (%s). Using deterministic fallback matcher.", exc)
     return None
+
+
+async def warm_up() -> None:
+    """Load the model into memory and prime the prompt cache so the first real question is fast."""
+    try:
+        await _http().post("/api/chat", json={
+            "model": settings.OLLAMA_MODEL,
+            "messages": [{"role": "system", "content": SYSTEM_PROMPT}, {"role": "user", "content": "[page /] hello"}],
+            "format": "json", "stream": False, "keep_alive": KEEP_ALIVE, "options": {**LLM_OPTIONS, "num_predict": 8},
+        }, timeout=60.0)
+        logger.info("Mark model %s warmed up.", settings.OLLAMA_MODEL)
+    except Exception as exc:
+        logger.info("Mark warm-up skipped (%s).", exc)
 
 
 @router.post("/chat", response_model=MarkChatResponse)
 async def mark_chat(req: MarkChatRequest):
-    """Process user message using local Ollama model (qwen2.5:1.5b), falling back gracefully if offline."""
-    llm_res = await query_ollama(req.message, req.current_path or "/")
-    if llm_res:
-        return llm_res
-
-    # Fallback to local rule matcher
-    return _fallback_intent_matcher(req.message, req.current_path or "/")
+    """Clear commands answer instantly from rules; open questions go to the local model, with rules as the safety net."""
+    path = req.current_path or "/"
+    key = (re.sub(r"\s+", " ", req.message.lower().strip()), path)
+    if key in _cache:
+        _cache.move_to_end(key)
+        return _cache[key]
+    res = _rule_intent(req.message, path)
+    if res is None:
+        res = await query_ollama(req.message, path) or _fallback_intent_matcher(req.message, path)
+    _cache[key] = res
+    if len(_cache) > 128:
+        _cache.popitem(last=False)
+    return res

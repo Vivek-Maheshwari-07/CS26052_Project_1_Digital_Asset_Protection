@@ -51,6 +51,8 @@ async def lifespan(app: FastAPI):
     anchor_task = asyncio.create_task(anchor_missing(db))
     if "pytest" not in sys.modules and os.environ.get("WARMUP_MODELS", "1") != "0":
         asyncio.get_running_loop().run_in_executor(None, _warm_models)
+        from app.api.mark import warm_up as _mark_warm
+        asyncio.create_task(_mark_warm())
     if not settings.email_enabled:
         logger.warning("SMTP is not configured: OTP codes will be printed to this console.")
     if settings.JWT_SECRET.startswith("change-me"):
