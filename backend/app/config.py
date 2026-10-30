@@ -31,7 +31,7 @@ class Settings(BaseSettings):
     SMTP_PASSWORD: str = ""
     SMTP_USE_SSL: bool = False  # True for port 465, False for STARTTLS on 587
     EMAIL_FROM: str = ""
-    EMAIL_FROM_NAME: str = "ProvNet"
+    EMAIL_FROM_NAME: str = "Provenance"
 
     FRONTEND_ORIGIN: str = "http://localhost:5173"
     PUBLIC_BASE_URL: str = "http://localhost:8000"
@@ -62,6 +62,10 @@ class Settings(BaseSettings):
     # OpenTimestamps anchoring of registry hashes (Bitcoin-backed, free)
     OTS_ENABLED: bool = True
     OTS_CALENDARS: str = "https://a.pool.opentimestamps.org,https://b.pool.opentimestamps.org"
+
+    # Mark local ALM Copilot (Ollama)
+    OLLAMA_HOST: str = "http://localhost:11434"
+    OLLAMA_MODEL: str = "qwen2.5:1.5b"
 
     @property
     def email_enabled(self) -> bool:

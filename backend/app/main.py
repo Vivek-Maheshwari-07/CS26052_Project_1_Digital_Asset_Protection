@@ -17,6 +17,7 @@ from app.api.public import router as public_router
 from app.api.jobs import router as jobs_router
 from app.api.discover import router as discover_router, showcase_dir
 from app.api.auth import router as auth_router, ensure_auth_indexes
+from app.api.mark import router as mark_router
 from app.certificate.generate import router as certificate_router
 from app.gate.features import ensure_gate_indexes
 from app.registry.index import index
@@ -50,6 +51,8 @@ async def lifespan(app: FastAPI):
     anchor_task = asyncio.create_task(anchor_missing(db))
     if "pytest" not in sys.modules and os.environ.get("WARMUP_MODELS", "1") != "0":
         asyncio.get_running_loop().run_in_executor(None, _warm_models)
+        from app.api.mark import warm_up as _mark_warm
+        asyncio.create_task(_mark_warm())
     if not settings.email_enabled:
         logger.warning("SMTP is not configured: OTP codes will be printed to this console.")
     if settings.JWT_SECRET.startswith("change-me"):
@@ -58,7 +61,7 @@ async def lifespan(app: FastAPI):
     anchor_task.cancel()
 
 
-app = FastAPI(title="ProvNet", lifespan=lifespan)
+app = FastAPI(title="Digital Asset Provenance", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -85,6 +88,7 @@ app.include_router(certificate_router, prefix="/api/works")
 app.include_router(public_router, prefix="/api")
 app.include_router(jobs_router, prefix="/api")
 app.include_router(discover_router, prefix="/api")
+app.include_router(mark_router, prefix="/api/mark")
 
 @app.get("/health")
 async def health_check():

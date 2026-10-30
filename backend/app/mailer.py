@@ -10,14 +10,14 @@ logger = logging.getLogger("uvicorn.error")
 
 PURPOSE_COPY = {
     "signup": {
-        "subject": "Your ProvNet verification code",
+        "subject": "Your Provenance verification code",
         "heading": "Verify your email",
-        "body": "Use the code below to finish creating your ProvNet account.",
+        "body": "Use the code below to finish creating your Provenance account.",
     },
     "reset": {
-        "subject": "Your ProvNet password reset code",
+        "subject": "Your Provenance password reset code",
         "heading": "Reset your password",
-        "body": "Use the code below to set a new password for your ProvNet account.",
+        "body": "Use the code below to set a new password for your Provenance account.",
     },
 }
 
@@ -37,7 +37,7 @@ def _render_html(name: str, code: str, purpose: str) -> str:
     <tr><td align="center">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:480px;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(30,27,75,.08);">
         <tr><td style="background:linear-gradient(135deg,#4f46e5,#9333ea);padding:28px 32px;">
-          <div style="color:#fff;font-size:20px;font-weight:700;letter-spacing:-.01em;">&#9673; ProvNet</div>
+          <div style="color:#fff;font-size:20px;font-weight:700;letter-spacing:-.01em;">&#9673; Provenance</div>
         </td></tr>
         <tr><td style="padding:32px;">
           <h1 style="margin:0 0 8px;font-size:22px;color:#111827;">{copy["heading"]}</h1>
