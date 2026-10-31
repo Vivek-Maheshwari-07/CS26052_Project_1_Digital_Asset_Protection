@@ -2,7 +2,7 @@ import { BrowserRouter, Routes, Route, NavLink, Navigate, useNavigate, useLocati
 import { startTransition, useContext, useEffect, useRef, useState } from 'react';
 import { AuthProvider, AuthContext } from './AuthContext';
 import { ToastProvider } from './components/Toast';
-import { Logo, IconGrid, IconPlus, IconScan, IconLogout } from './components/Icons';
+import { Logo, IconGrid, IconPlus, IconScan, IconLogout, IconShield } from './components/Icons';
 import Register from './pages/Register';
 import Check from './pages/Check';
 import Dashboard from './pages/Dashboard';
@@ -14,6 +14,8 @@ import Verify from './pages/Verify';
 import Landing from './pages/Landing';
 import DigitalTwin from './pages/DigitalTwin';
 import Booth from './pages/Booth';
+import Cases from './pages/Cases';
+import Case from './pages/Case';
 import MarkOrb from './components/Mark/MarkOrb';
 
 const FullPageLoader = () => (
@@ -97,6 +99,7 @@ function AppShell({ children }) {
                             </>
                         )}
                         <NavLink to="/check"><IconScan size={16} /> <span>Check copies</span></NavLink>
+                        {!guest && <NavLink to="/cases"><IconShield size={16} /> <span>Cases</span></NavLink>}
                     </nav>
                     <UserMenu />
                 </div>
@@ -135,6 +138,8 @@ function App() {
                     <Route path="/check" element={<Check />} />
                     <Route path="/check/:checkId" element={<Check />} />
                     <Route path="/evidence/:checkId/:matchWorkId" element={<Evidence />} />
+                    <Route path="/cases" element={<Cases />} />
+                    <Route path="/cases/:caseId" element={<Case />} />
                 </Route>
                 <Route path="/verify/:workId" element={<Verify />} />
                 <Route path="/register" element={<Navigate to="/works/new" replace />} />

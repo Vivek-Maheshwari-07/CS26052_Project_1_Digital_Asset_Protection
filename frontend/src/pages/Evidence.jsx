@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { useContext, useEffect, useMemo, useState } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import { AuthContext } from '../AuthContext';
 import { apiClient, mediaUrl, certificateUrl, verifyPath, API_BASE } from '../api/client';
 import ScoreRing from '../components/ScoreRing';
 import { useToast } from '../components/Toast';
@@ -166,8 +167,11 @@ function ScoreBar({ label, value, color, children }) {
 export default function Evidence() {
   const { checkId, matchWorkId } = useParams();
   const toast = useToast();
+  const navigate = useNavigate();
+  const guest = Boolean(useContext(AuthContext).user?.is_guest);
   const [check, setCheck] = useState(null);
   const [error, setError] = useState(null);
+  const [opening, setOpening] = useState(false);
 
   useEffect(() => {
     apiClient(`/api/checks/${checkId}`).then(setCheck).catch((err) => setError(err.message));
@@ -209,6 +213,18 @@ export default function Evidence() {
     ...changeLines,
   ].join('\n');
 
+  // Opening twice returns the same case, so this doubles as "go to the case".
+  const openCase = async () => {
+    setOpening(true);
+    try {
+      const c = await apiClient('/api/cases', { method: 'POST', json: { check_id: checkId, work_id: matchWorkId } });
+      navigate(`/cases/${c.id}`);
+    } catch (err) {
+      toast(err.message, 'error');
+      setOpening(false);
+    }
+  };
+
   const copySummary = async () => {
     try {
       await navigator.clipboard.writeText(summary);
@@ -234,7 +250,12 @@ export default function Evidence() {
           </p>
         </div>
         <div className="evidence-actions">
-          <button className="btn btn-primary" onClick={copySummary}><IconCopy size={16} /> Copy evidence summary</button>
+          {!guest && (
+            <button className="btn btn-primary" onClick={openCase} disabled={opening}>
+              {opening ? <span className="spinner" /> : <><IconShield size={16} /> Act on this copy</>}
+            </button>
+          )}
+          <button className={`btn ${guest ? 'btn-primary' : 'btn-ghost'}`} onClick={copySummary}><IconCopy size={16} /> Copy evidence summary</button>
           <a className="btn btn-ghost" href={certificateUrl(match.work_id)} target="_blank" rel="noreferrer"><IconDownload size={16} /> Certificate</a>
         </div>
       </header>

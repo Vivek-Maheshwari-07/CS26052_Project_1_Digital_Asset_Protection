@@ -18,6 +18,7 @@ from app.api.jobs import router as jobs_router
 from app.api.discover import router as discover_router, showcase_dir
 from app.api.auth import router as auth_router, ensure_auth_indexes
 from app.api.booth import router as booth_router, gallery_owner
+from app.api.cases import router as cases_router, ensure_case_indexes
 from app.api.mark import router as mark_router
 from app.certificate.generate import router as certificate_router
 from app.gate.features import ensure_gate_indexes
@@ -47,6 +48,7 @@ async def lifespan(app: FastAPI):
     await db.works.create_index("id", unique=True)
     await db.checks.create_index([("user_id", 1), ("created_at", -1)])
     await ensure_gate_indexes(db)
+    await ensure_case_indexes(db)
     await index.sync(db)
     logger.info("Similarity index loaded with %d works.", len(index))
     anchor_task = asyncio.create_task(anchor_missing(db))
@@ -96,6 +98,7 @@ app.include_router(public_router, prefix="/api")
 app.include_router(jobs_router, prefix="/api")
 app.include_router(discover_router, prefix="/api")
 app.include_router(booth_router, prefix="/api")
+app.include_router(cases_router, prefix="/api")
 app.include_router(mark_router, prefix="/api/mark")
 
 @app.get("/health")
