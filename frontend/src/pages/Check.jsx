@@ -21,6 +21,9 @@ function Summary({ check, guest }) {
         <span className="vb-icon"><IconAlert size={22} /></span>
         <div>
           <strong>{gm.label}: “{claimed.title}”{claimed.is_own ? ' (your work)' : ` by ${claimed.owner_name}`}</strong>
+          {check.gate?.changes?.work_id === claimed.work_id && (
+            <p className="changes-headline">What changed: {check.gate.changes.headline}</p>
+          )}
           <p>{claim.statement} Registered {formatDate(claimed.registered_at)}.</p>
         </div>
         <Link className="btn btn-primary" to={`/evidence/${check.id}/${claimed.work_id}`}>

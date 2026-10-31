@@ -43,7 +43,7 @@ class Timings(BaseModel):
 
 class Verdict(BaseModel):
     model_config = ConfigDict(frozen=True)
-    schema_version: str = "1.1.0"
+    schema_version: str = "1.2.0"
     check_id: str
     claims: List[Claim]
     candidates: List[CandidateResult]
@@ -52,6 +52,7 @@ class Verdict(BaseModel):
     origin: Dict[str, Any]
     evidence_paths: Dict[str, str]
     evidence_work_id: Optional[str] = None  # the candidate the evidence images belong to
+    changes: Optional[Dict[str, Any]] = None  # plain-language "what changed" for that candidate (describe.py)
     timings: Timings
     pipeline_version: str
     config_hash: str

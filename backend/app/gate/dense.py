@@ -49,6 +49,7 @@ class DenseResult:
     query_work: np.ndarray  # RGB, query working frame (mirrored when G2 matched the mirror)
     warped_work: np.ndarray  # RGB, query aligned to the target and photometrically normalised
     valid_mask: np.ndarray  # bool, pixels where the warped query overlaps the target
+    warped_raw: Optional[np.ndarray] = None  # RGB, query aligned but with its own colours (for describing edits)
 
 
 def _to_work(img: Image.Image, flip: str = "") -> np.ndarray:
@@ -339,4 +340,5 @@ def compute_dense_evidence(target_img: Image.Image, query_img: Image.Image, veri
         query_work=q_work,
         warped_work=adjusted,
         valid_mask=valid,
+        warped_raw=warped,
     )

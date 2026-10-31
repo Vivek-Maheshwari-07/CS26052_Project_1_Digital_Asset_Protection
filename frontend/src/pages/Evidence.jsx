@@ -3,7 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { apiClient, mediaUrl, certificateUrl, verifyPath, API_BASE } from '../api/client';
 import ScoreRing from '../components/ScoreRing';
 import { useToast } from '../components/Toast';
-import { IconArrowLeft, IconAlert, IconDownload, IconShield, IconCopy, IconFingerprint, IconSparkle } from '../components/Icons';
+import { IconArrowLeft, IconAlert, IconDownload, IconShield, IconCopy, IconFingerprint, IconSparkle, IconScan } from '../components/Icons';
 import { verdictMeta, gateMeta, pct, formatDate } from '../lib/format';
 
 const hexToBits = (hex) =>
@@ -119,6 +119,40 @@ function GatePanel({ gate, claim, candidate, showImages }) {
   );
 }
 
+const REGION_LABELS = { added: 'Added', removed: 'Removed', altered: 'Changed' };
+
+/** "What changed": the alignment's measurements in words, with the changed spots marked on the original. */
+function ChangesPanel({ changes, original }) {
+  const kindsShown = [...new Set(changes.regions.map((r) => r.kind))];
+  return (
+    <section className="panel changes-panel">
+      <h3 className="panel-title"><IconScan size={16} /> What changed</h3>
+      <p className="changes-headline">{changes.headline}</p>
+      {changes.items.length > 0 && (
+        <ul className="changes-list">
+          {changes.items.map((item) => <li key={item.kind}>{item.detail}</li>)}
+        </ul>
+      )}
+      {changes.regions.length > 0 && (
+        <figure className="changes-figure">
+          <div className="changes-frame">
+            <img src={original} alt="Registered original with the changed areas marked" />
+            {changes.regions.map((r, i) => (
+              <span key={i} className={`changes-box ${r.kind}`} title={`${REGION_LABELS[r.kind]} (${r.where})`}
+                style={{ left: `${r.box[0] * 100}%`, top: `${r.box[1] * 100}%`, width: `${r.box[2] * 100}%`, height: `${r.box[3] * 100}%` }} />
+            ))}
+          </div>
+          <figcaption className="muted small">
+            Marked on your original:{' '}
+            {kindsShown.map((k) => <span key={k} className={`changes-key ${k}`}>{REGION_LABELS[k]}</span>)}
+          </figcaption>
+        </figure>
+      )}
+      <p className="muted small">{changes.footer}</p>
+    </section>
+  );
+}
+
 function ScoreBar({ label, value, color, children }) {
   return (
     <div className="score-bar">
@@ -151,6 +185,10 @@ export default function Evidence() {
   const gm = claim && gateMeta(claim.classification);
   const meta = gm || verdictMeta(match.verdict);
   const verifyLink = `${window.location.origin}${verifyPath(match.work_id)}`;
+  const changes = gate?.changes?.work_id === matchWorkId ? gate.changes : null;
+  const changeLines = !changes ? [] : [
+    '', `What changed: ${changes.headline}`, ...changes.items.map((i) => `- ${i.detail}`), changes.footer,
+  ];
 
   // Wording follows the evidence grade: only evidence-grade findings are described as evidence.
   const gateLines = !gm ? [] : gm.grade === 'evidence'
@@ -168,6 +206,7 @@ export default function Evidence() {
     `Similarity score: ${pct(match.confidence)} (perceptual hash ${pct(match.phash_score)}, AI embedding ${pct(match.embedding_score)})`,
     `Reading of the scores: ${explain(match.phash_score, match.embedding_score)}`,
     ...gateLines,
+    ...changeLines,
   ].join('\n');
 
   const copySummary = async () => {
@@ -204,6 +243,7 @@ export default function Evidence() {
         <CompareView copy={mediaUrl(check.query_image_url)} original={mediaUrl(match.image_url)} />
 
         <aside className="evidence-side">
+          {changes && <ChangesPanel changes={changes} original={mediaUrl(match.image_url)} />}
           {gate && (
             <GatePanel gate={gate} claim={claim} candidate={candidate}
               showImages={gate.evidence_work_id === matchWorkId} />

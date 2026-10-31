@@ -945,3 +945,18 @@ img { display: block; max-width: 100%; }
 .file-check-ok, .file-check-bad { display: flex; gap: .4rem; align-items: center; font-weight: 600; }
 .file-check-ok { color: #138a55; }
 .file-check-bad { color: #c2364b; }
+
+/* Evidence: "What changed" (plain-language description + changed spots on the original) */
+.changes-headline { font-weight: 600; font-size: 1.02rem; margin: .2rem 0 .6rem; }
+.verdict-banner .changes-headline { font-size: .95rem; margin: .25rem 0; }
+.changes-list { margin: 0 0 .9rem; padding-left: 1.1rem; display: grid; gap: .35rem; font-size: .9rem; }
+.changes-figure { margin: 0 0 .75rem; }
+.changes-frame { position: relative; border-radius: 12px; overflow: hidden; background: #0f0d1d; }
+.changes-frame img { display: block; width: 100%; height: auto; }
+.changes-box { position: absolute; border: 3px solid; border-radius: 6px; box-shadow: 0 0 0 1px rgba(0,0,0,.45); pointer-events: auto; }
+.changes-box.added, .changes-key.added { border-color: #e5484d; color: #e5484d; }
+.changes-box.removed, .changes-key.removed { border-color: #3b82f6; color: #3b82f6; }
+.changes-box.altered, .changes-key.altered { border-color: #f59e0b; color: #f59e0b; }
+.changes-figure figcaption { margin-top: .4rem; display: flex; gap: .6rem; flex-wrap: wrap; align-items: center; }
+.changes-key { font-weight: 700; display: inline-flex; align-items: center; gap: .3rem; }
+.changes-key::before { content: ''; width: .8rem; height: .8rem; border: 2px solid currentColor; border-radius: 3px; }

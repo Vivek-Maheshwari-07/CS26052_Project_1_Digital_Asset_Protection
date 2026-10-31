@@ -12,6 +12,7 @@ import numpy as np
 
 from app import storage
 from app.gate.dense import DenseResult
+from app.gate.describe import changed_mask
 from app.gate.settings import settings
 from app.gate.verify import VerifyResult
 
@@ -69,10 +70,9 @@ def generate_evidence(check_id: str, dense: DenseResult, verify: VerifyResult) -
     _write_jpeg(out_dir / "heatmap.jpg", cv2.addWeighted(target, 0.3, heat, 0.7, 0))
     paths["heatmap"] = f"{rel_dir}/heatmap.jpg"
 
-    # 3. Changed-region mask: where the aligned query still differs strongly from the original
-    changed = ((dense.residual_image > settings.change_threshold) & valid).astype(np.uint8) * 255
-    changed = cv2.morphologyEx(changed, cv2.MORPH_OPEN, np.ones((5, 5), np.uint8))
-    changed = cv2.dilate(changed, np.ones((9, 9), np.uint8))
+    # 3. Changed-region mask: where the aligned query still differs strongly from the original, after a
+    # colour correction fitted to the unchanged pixels only (the same mask the written description uses)
+    changed = changed_mask(dense)
     tint = target.copy()
     tint[changed > 0] = (0.5 * tint[changed > 0] + 0.5 * np.array([255, 40, 40])).astype(np.uint8)
     _write_jpeg(out_dir / "changes.jpg", tint)

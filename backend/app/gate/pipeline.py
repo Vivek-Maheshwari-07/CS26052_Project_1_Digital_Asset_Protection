@@ -10,6 +10,7 @@ import numpy as np
 
 from app.gate.classify import classify_candidate
 from app.gate.dense import compute_dense_evidence
+from app.gate.describe import describe_changes
 from app.gate.evidence import generate_evidence
 from app.gate.features import load_target_with_alpha
 from app.gate.normalize import InvalidImageError, normalize_image
@@ -156,7 +157,7 @@ async def _process_candidate(cand, db, norm_img, qfeats, emit=None) -> dict:
                                         error_reason=None)
         if v_res.credible and d_res is not None:
             out["best"] = ((_RANK.get(c_res.grade, 0), v_res.inlier_count * v_res.inlier_coverage_q),
-                           cand.work_id, v_res, d_res)
+                           cand.work_id, v_res, d_res, target_img.size, c_res.active_grade)
     except Exception as e:
         logger.exception("Unhandled error processing candidate %s", cand.work_id)
         out["warnings"].append(f"candidate {cand.work_id} failed: {type(e).__name__}: {e}")
@@ -245,6 +246,15 @@ async def run_gate(suspect_bytes: bytes, db: Any, check_id: Optional[str] = None
         timings["g5_evidence"] = time.monotonic() - t5
         emit("g5", evidence_paths=evidence_paths, work_id=best[1])
 
+    # What changed, in words, for the same candidate the evidence images show
+    changes = None
+    if best is not None and with_evidence:
+        try:
+            changes = await asyncio.to_thread(describe_changes, best[2], best[3], norm_img.size, best[4], best[5], best[1])
+        except Exception as e:
+            logger.exception("Failed to describe changes.")
+            warnings.append(f"change description failed: {type(e).__name__}: {e}")
+
     # Origin signals (deterministic metadata; independent of the registry)
     try:
         o = check_origin(suspect_bytes)
@@ -273,6 +283,7 @@ async def run_gate(suspect_bytes: bytes, db: Any, check_id: Optional[str] = None
         origin=origin_dict,
         evidence_paths=evidence_paths,
         evidence_work_id=best[1] if best is not None and evidence_paths else None,
+        changes=changes,
         timings=Timings(**timings),
         pipeline_version=PIPELINE_VERSION,
         config_hash=config_hash,
