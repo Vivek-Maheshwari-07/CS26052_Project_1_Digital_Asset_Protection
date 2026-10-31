@@ -12,8 +12,9 @@ from app.gate.pipeline import run_gate
 from app.fingerprint.combine import fingerprint, combined_verdict, PIPELINE_VERSION
 from app.registry.index import index
 from app.api.auth import get_current_user, utcnow
+from app.api.booth import search_scope
 from app.api.register import read_limited, read_upload, iso_utc
-from app import storage
+from app import ingestion, storage
 
 router = APIRouter()
 
@@ -67,10 +68,13 @@ def _check_response(doc: dict, full: bool = True) -> dict:
 
 
 async def check_core(db, current_user, image_bytes: bytes, filename: str, progress=None) -> dict:
-    """Check a suspected copy against the caller own registered works only (never anyone else)."""
+    """Check a suspected copy against the caller own registered works only (never anyone else).
+    A booth guest has no works, so theirs are checked against the booth gallery (app/api/booth.py)."""
     def emit(stage, **data):
         if progress:
             progress(stage, **data)
+
+    scope_id = await search_scope(db, current_user)
 
     # 1. Read, normalize and fingerprint the suspected image
     t0 = time.monotonic()
@@ -85,8 +89,8 @@ async def check_core(db, current_user, image_bytes: bytes, filename: str, progre
 
     # 2. Vectorised search across the user own works
     await index.sync(db)
-    hits = index.search(fp["embedding"], fp["phash"], k=10, user_id=user_id)
-    emit("search", scope=sum(1 for u in index.user_ids if u == user_id), hits=len(hits))
+    hits = index.search(fp["embedding"], fp["phash"], k=10, user_id=scope_id)
+    emit("search", scope=sum(1 for u in index.user_ids if u == scope_id), hits=len(hits))
 
     works = {}
     if hits:
@@ -105,7 +109,7 @@ async def check_core(db, current_user, image_bytes: bytes, filename: str, progre
             "work_id": w["id"],
             "title": w["title"],
             "owner_name": w["owner_name"],
-            "is_own": True,
+            "is_own": scope_id == user_id,
             "registered_at": iso_utc(w["created_at"]),
             "image_url": storage.image_url(w.get("image_path")),
             "work_phash": w["phash"],
@@ -117,15 +121,16 @@ async def check_core(db, current_user, image_bytes: bytes, filename: str, progre
 
     # 3. Geometric gate: alignment-based verdict with evidence images (never breaks the check)
     check_id = str(uuid.uuid4())
-    gate = await run_gate_safely(image_bytes, db, check_id, progress, user_id)
+    gate = await run_gate_safely(image_bytes, db, check_id, progress, scope_id)
 
-    # 4. Keep the suspect image and the result as match history
+    # 4. Keep the suspect image (metadata stripped, same pixels) and the result as match history
+    stored_bytes, stored_fmt = ingestion.strip_metadata(image_bytes, fmt)
     doc = {
         "id": check_id,
         "user_id": user_id,
         "created_at": utcnow(),
         "filename": (filename or "")[:120],
-        "image_path": storage.save_image(image_bytes, fmt, name=check_id, folder="checks"),
+        "image_path": storage.save_image(stored_bytes, stored_fmt, name=check_id, folder="checks"),
         "phash": fp["phash"],
         "low_detail": fp["low_detail"],
         "pipeline_version": PIPELINE_VERSION,

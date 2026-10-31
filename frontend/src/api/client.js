@@ -1,10 +1,13 @@
-export const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+// In dev, call the backend through Vite's proxy (same origin), so it also works from a phone on the
+// LAN, where "localhost" would be the phone itself. Production builds talk to the backend directly.
+export const API_BASE = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? '' : 'http://localhost:8000');
 
 /** Absolute URL for an `/uploads/...` path returned by the API. */
 export const mediaUrl = (path) => (path ? `${API_BASE}${path}` : null);
 export const certificateUrl = (workId) => `${API_BASE}/api/works/${workId}/certificate`;
 export const recordJsonUrl = (workId) => `${API_BASE}/api/public/works/${workId}/record.json`;
 export const proofUrl = (workId) => `${API_BASE}/api/public/works/${workId}/proof.ots`;
+export const verifyKitUrl = (workId) => `${API_BASE}/api/public/works/${workId}/verify-kit.zip`;
 export const verifyPath = (workId) => `/verify/${workId}`;
 
 export class ApiError extends Error {

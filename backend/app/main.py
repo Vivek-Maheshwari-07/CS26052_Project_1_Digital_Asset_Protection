@@ -17,11 +17,12 @@ from app.api.public import router as public_router
 from app.api.jobs import router as jobs_router
 from app.api.discover import router as discover_router, showcase_dir
 from app.api.auth import router as auth_router, ensure_auth_indexes
+from app.api.booth import router as booth_router, gallery_owner
 from app.api.mark import router as mark_router
 from app.certificate.generate import router as certificate_router
 from app.gate.features import ensure_gate_indexes
 from app.registry.index import index
-from app.registry.anchor import anchor_missing
+from app.registry.anchor import anchor_missing, upgrade_loop
 
 logger = logging.getLogger("uvicorn.error")
 
@@ -49,6 +50,7 @@ async def lifespan(app: FastAPI):
     await index.sync(db)
     logger.info("Similarity index loaded with %d works.", len(index))
     anchor_task = asyncio.create_task(anchor_missing(db))
+    upgrade_task = asyncio.create_task(upgrade_loop(db)) if "pytest" not in sys.modules else None
     if "pytest" not in sys.modules and os.environ.get("WARMUP_MODELS", "1") != "0":
         asyncio.get_running_loop().run_in_executor(None, _warm_models)
         from app.api.mark import warm_up as _mark_warm
@@ -57,8 +59,13 @@ async def lifespan(app: FastAPI):
         logger.warning("SMTP is not configured: OTP codes will be printed to this console.")
     if settings.JWT_SECRET.startswith("change-me"):
         logger.warning("JWT_SECRET is the default value. Set it in backend/.env.")
+    if settings.BOOTH_MODE and await gallery_owner(db) is None:
+        logger.warning("BOOTH_MODE is on but BOOTH_GALLERY_USERNAME (%r) is not an existing account: "
+                       "visitors can't start sessions until it is.", settings.BOOTH_GALLERY_USERNAME)
     yield
     anchor_task.cancel()
+    if upgrade_task:
+        upgrade_task.cancel()
 
 
 app = FastAPI(title="Digital Asset Provenance", lifespan=lifespan)
@@ -88,6 +95,7 @@ app.include_router(certificate_router, prefix="/api/works")
 app.include_router(public_router, prefix="/api")
 app.include_router(jobs_router, prefix="/api")
 app.include_router(discover_router, prefix="/api")
+app.include_router(booth_router, prefix="/api")
 app.include_router(mark_router, prefix="/api/mark")
 
 @app.get("/health")

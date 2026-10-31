@@ -1,8 +1,9 @@
 """The fingerprint stack of a registered work: one digest per technique, plus a composite over all of them.
 
 Every layer is derived from the stored original (or from the vectors stored for it) when the certificate
-is issued. Only the registry entry hash is part of the tamper-evident chain; the other layers show which
-independent methods describe the work, so a copy that defeats one of them is still described by the others.
+is issued. The registry entry hash, and for newer records the uploaded file's SHA-256, are part of the
+tamper-evident chain; the other layers show which independent methods describe the work, so a copy that
+defeats one of them is still described by the others.
 """
 import hashlib
 from typing import Optional
@@ -41,8 +42,12 @@ async def build_stack(db, record: dict) -> dict:
         crops = np.asarray(gate["crop_vectors"], np.float32).tobytes() if gate.get("crop_vectors") else b""
         dino = _sha(np.asarray(gate["vector"], np.float32).tobytes() + crops)
 
+    # Newer records chain the hash of the file as uploaded; older ones only have the stored file to hash.
+    file_layer = ({"name": "File content", "technique": "SHA-256 of the file as uploaded (part of the registry entry)",
+                   "digest": record["file_sha256"]} if record.get("file_sha256") else
+                  {"name": "File content", "technique": "SHA-256 of the stored original file", "digest": _sha(raw) if raw else None})
     layers = [
-        {"name": "File content", "technique": "SHA-256 of the stored original file", "digest": _sha(raw) if raw else None},
+        file_layer,
         {"name": "Perceptual hash", "technique": "pHash, 64-bit DCT of the image structure", "digest": record.get("phash")},
         {"name": "Semantic embedding", "technique": "OpenCLIP ViT-B/32, 512 dimensions (SHA-256 of the vector)",
          "digest": _vector_digest(record["embedding"]) if record.get("embedding") else None},

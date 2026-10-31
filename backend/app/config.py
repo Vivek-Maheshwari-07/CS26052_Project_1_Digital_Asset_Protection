@@ -62,6 +62,15 @@ class Settings(BaseSettings):
     # OpenTimestamps anchoring of registry hashes (Bitcoin-backed, free)
     OTS_ENABLED: bool = True
     OTS_CALENDARS: str = "https://a.pool.opentimestamps.org,https://b.pool.opentimestamps.org"
+    # How often pending proofs are upgraded to Bitcoin block attestations (Bitcoin takes a few hours)
+    OTS_UPGRADE_MINUTES: int = 60
+    # Public Esplora API used to cross-check a proof's block (merkle root and block time)
+    OTS_BLOCK_EXPLORER: str = "https://blockstream.info/api"
+
+    # Booth mode (exhibitions): walk-up visitors get a guest session with no sign-up, and their checks
+    # search the works registered by BOOTH_GALLERY_USERNAME. See app/api/booth.py.
+    BOOTH_MODE: bool = False
+    BOOTH_GALLERY_USERNAME: str = ""
 
     # Mark local ALM Copilot (Ollama)
     OLLAMA_HOST: str = "http://localhost:11434"

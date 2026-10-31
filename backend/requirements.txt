@@ -5,6 +5,7 @@ pydantic-settings
 python-multipart
 imagehash
 pillow
+pillow-heif  # iPhone HEIC uploads
 open-clip-torch
 torch
 numpy
@@ -13,6 +14,7 @@ pytest
 pytest-timeout
 PyYAML
 PyJWT
+opentimestamps  # read and upgrade OpenTimestamps proofs
 bcrypt
 mongomock-motor
 pytest-asyncio

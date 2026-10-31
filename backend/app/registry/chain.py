@@ -37,6 +37,9 @@ def canonical_json(record_dict: dict) -> str:
         canonical["pipeline_version"] = record_dict["pipeline_version"]
     if record_dict.get("low_detail") is not None:
         canonical["low_detail"] = bool(record_dict["low_detail"])
+    # SHA-256 of the exact file the creator uploaded: proves *this file* existed, not just a look-alike.
+    if record_dict.get("file_sha256"):
+        canonical["file_sha256"] = record_dict["file_sha256"]
 
     return json.dumps(canonical, sort_keys=True)
 
@@ -64,6 +67,7 @@ async def append_to_chain(db, record_data: dict) -> WorkRecord:
             "image_path": record_data.get("image_path"),
             "low_detail": record_data.get("low_detail"),
             "pipeline_version": record_data.get("pipeline_version"),
+            "file_sha256": record_data.get("file_sha256"),
             "created_at": datetime.now(timezone.utc).replace(microsecond=0),
             "prev_hash": prev_hash
         }

@@ -2,6 +2,7 @@ from fastapi import APIRouter, BackgroundTasks, Depends, UploadFile, File, Form,
 from pydantic import BaseModel
 from typing import List, Optional
 from datetime import datetime, timezone
+import hashlib
 import io
 import logging
 import time
@@ -37,6 +38,7 @@ class RegisterResponse(BaseModel):
     image_url: Optional[str] = None
     anchor_status: Optional[str] = None
     low_detail: Optional[bool] = None
+    file_sha256: Optional[str] = None
     gate_notices: List[str] = []
 
 
@@ -62,15 +64,26 @@ def to_response(doc: dict) -> dict:
         "image_url": storage.image_url(doc.get("image_path")),
         "anchor_status": doc.get("anchor_status"),
         "low_detail": doc.get("low_detail"),
+        "file_sha256": doc.get("file_sha256"),
     }
+
+
+async def read_original(upload: UploadFile) -> tuple:
+    """(browser-safe bytes, SHA-256 of the file exactly as uploaded). The hash is what goes into the
+    registry record: it is the file the creator keeps, even when we convert it (HEIC) or strip it."""
+    data = await upload.read(MAX_UPLOAD_BYTES + 1)
+    if len(data) > MAX_UPLOAD_BYTES:
+        raise HTTPException(413, "Images must be 20 MB or smaller.")
+    original_sha256 = hashlib.sha256(data).hexdigest()
+    try:
+        return ingestion.browser_safe(data), original_sha256  # iPhone HEIC -> JPEG before anything else sees it
+    except ingestion.InvalidImageError as e:
+        raise HTTPException(400, str(e))
 
 
 async def read_limited(upload: UploadFile) -> bytes:
     """Read an upload, refusing anything over the limit without buffering the rest of it."""
-    data = await upload.read(MAX_UPLOAD_BYTES + 1)
-    if len(data) > MAX_UPLOAD_BYTES:
-        raise HTTPException(413, "Images must be 20 MB or smaller.")
-    return data
+    return (await read_original(upload))[0]
 
 
 def read_upload(image_bytes: bytes) -> tuple:
@@ -148,13 +161,16 @@ async def find_duplicate(db, fp: dict) -> Optional[dict]:
 
 
 async def register_core(db, current_user, image_bytes: bytes, owner_name: str, title: str, allow_similar_own: bool,
-                         schedule, progress=None) -> dict:
+                         schedule, progress=None, file_sha256: Optional[str] = None) -> dict:
     """Register a work. `schedule(fn, *args)` runs follow-up work after the response (FastAPI background
-    task, or an asyncio task inside a job); `progress(stage, **data)` reports each step to a live UI."""
+    task, or an asyncio task inside a job); `progress(stage, **data)` reports each step to a live UI.
+    `file_sha256` is the hash of the file as uploaded (see read_original); it defaults to `image_bytes`."""
     def emit(stage, **data):
         if progress:
             progress(stage, **data)
 
+    if current_user.get("is_guest"):
+        raise HTTPException(403, "Booth visitors can check images but not register them.")
     owner_name, title = owner_name.strip(), title.strip()
     if not owner_name or not title:
         raise HTTPException(400, "Title and owner name are required.")
@@ -188,9 +204,12 @@ async def register_core(db, current_user, image_bytes: bytes, owner_name: str, t
     notices = await gate_registration_check(db, image_bytes, user_id, allow_similar_own,
                                             (lambda st, **d: emit("gate_" + st, **d)) if progress else None)
 
-    # 4. Save the original upload bytes, then append to the registry
-    image_path = storage.save_image(image_bytes, fmt)
+    # 4. Save a metadata-free copy (same pixels, no GPS/EXIF), then append to the registry. The record
+    #    carries the SHA-256 of the file as uploaded, so the creator's own copy proves the registration.
+    stored_bytes, stored_fmt = ingestion.strip_metadata(image_bytes, fmt)
+    image_path = storage.save_image(stored_bytes, stored_fmt)
     record = await append_to_chain(db, {
+        "file_sha256": file_sha256 or hashlib.sha256(image_bytes).hexdigest(),
         "owner_name": owner_name,
         "title": title,
         "phash": fp["phash"],
@@ -209,7 +228,7 @@ async def register_core(db, current_user, image_bytes: bytes, owner_name: str, t
     schedule(anchor_work, db, record.id, record.entry_hash)
     # ...and compute the gate per-work features (DINOv2 vector + SIFT cache) so the new work is searchable
     if settings.GATE_ENABLED:
-        schedule(compute_for_registration, db, record.id, image_bytes)
+        schedule(compute_for_registration, db, record.id, stored_bytes)
     emit("anchor", status="queued", gate_features=bool(settings.GATE_ENABLED))
 
     return {**to_response(record.model_dump()), "gate_notices": notices}
@@ -225,8 +244,9 @@ async def register_work(
     db = Depends(get_db),
     current_user = Depends(get_current_user)
 ):
-    image_bytes = await read_limited(image)
-    return await register_core(db, current_user, image_bytes, owner_name, title, allow_similar_own, background.add_task)
+    image_bytes, file_sha256 = await read_original(image)
+    return await register_core(db, current_user, image_bytes, owner_name, title, allow_similar_own, background.add_task,
+                               file_sha256=file_sha256)
 
 
 @router.get("", response_model=List[RegisterResponse])

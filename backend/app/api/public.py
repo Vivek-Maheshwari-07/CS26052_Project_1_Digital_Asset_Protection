@@ -1,5 +1,9 @@
 """Unauthenticated endpoints: anyone holding a certificate can verify it."""
+import io
+import json
 import time
+import zipfile
+from pathlib import Path
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import Response
@@ -14,6 +18,7 @@ router = APIRouter()
 
 _status_cache: dict = {"at": 0.0, "db": None, "value": None}
 STATUS_TTL_SECONDS = 15
+KIT_DIR = Path(__file__).resolve().parent.parent / "registry" / "kit"
 
 
 async def _get_work(db, work_id: str) -> dict:
@@ -59,13 +64,49 @@ async def public_work(work_id: str, db = Depends(get_db)):
         "registry_position": check["position"],
         "record_intact": check["intact"],
         "chain_linked": check["linked"],
+        "file_sha256": doc.get("file_sha256"),
         "anchor": {
             "status": doc.get("anchor_status") or ("pending" if doc.get("ots_proof") else "none"),
             "calendar": doc.get("ots_calendar"),
             "submitted_at": iso_utc(doc["anchored_at"]) if doc.get("anchored_at") else None,
             "has_proof": bool(doc.get("ots_proof")),
+            "block_height": doc.get("ots_block_height"),
+            "block_time": iso_utc(doc["ots_block_time"]) if doc.get("ots_block_time") else None,
+            "block_checked": bool(doc.get("ots_block_checked")),
         },
     }
+
+
+@router.get("/public/works/{work_id}/verify-kit.zip")
+async def verify_kit(work_id: str, db = Depends(get_db)):
+    """Everything needed to check this registration offline, plus a standard-library verify script."""
+    doc = await _get_work(db, work_id)
+    check = await verify_record(db, doc)
+    nxt = await db.works.find_one({"_id": {"$gt": doc["_id"]}}, {"prev_hash": 1}, sort=[("_id", 1)])
+    chain = {
+        "entry_hash": doc["entry_hash"],
+        "prev_hash": doc["prev_hash"],
+        "next_entry_prev_hash": nxt["prev_hash"] if nxt else None,
+        "position": check["position"],
+        "record_intact": check["intact"],
+        "chain_linked": check["linked"],
+        "anchor_status": doc.get("anchor_status"),
+        "bitcoin_block_height": doc.get("ots_block_height"),
+        "exported_at": iso_utc(utcnow()),
+    }
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as z:
+        z.writestr("record.json", canonical_json(doc))
+        z.writestr("chain.json", json.dumps(chain, indent=2))
+        if doc.get("ots_proof"):
+            z.writestr("record.json.ots", bytes(doc["ots_proof"]))
+        for name in ("verify.py", "README.txt"):
+            z.write(KIT_DIR / name, name)
+    return Response(
+        buf.getvalue(),
+        media_type="application/zip",
+        headers={"Content-Disposition": f'attachment; filename="provenance-{work_id}-verify-kit.zip"'},
+    )
 
 
 @router.get("/public/works/{work_id}/record.json")

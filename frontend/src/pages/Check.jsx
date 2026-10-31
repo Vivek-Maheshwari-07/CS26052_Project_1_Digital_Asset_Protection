@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
+import { AuthContext } from '../AuthContext';
 import { apiClient, mediaUrl } from '../api/client';
 import Dropzone from '../components/Dropzone';
 import ScoreRing from '../components/ScoreRing';
@@ -8,7 +9,7 @@ import { verdictMeta, gateMeta, pct, formatDate, relativeTime } from '../lib/for
 import PipelineLive from '../components/PipelineLive';
 import useJob from '../lib/useJob';
 
-function Summary({ check }) {
+function Summary({ check, guest }) {
   const top = check.results[0];
   const meta = verdictMeta(check.top_verdict);
   const claim = check.gate_claim;
@@ -29,13 +30,17 @@ function Summary({ check }) {
     );
   }
   if (!top || check.top_verdict === 'no_match') {
+    const closest = guest ? 'The closest gallery work' : 'The closest of your works';
+    const empty = guest ? 'Nothing in the booth gallery is close to this image.'
+      : 'Only your own registered works are searched. Register a work first to be able to check copies of it.';
     return (
       <div className="verdict-banner tone-ok">
         <span className="vb-icon"><IconCheck size={22} /></span>
         <div>
-          <strong>{check.results.length === 0 ? 'No registered work to compare against, or nothing close' : 'No registered work matches this image'}</strong>
+          <strong>{guest ? 'No gallery work matches this image. Did you fool us? Show the team!'
+            : check.results.length === 0 ? 'No registered work to compare against, or nothing close' : 'No registered work matches this image'}</strong>
           <p>
-            {top ? `The closest of your works scored ${pct(top.confidence)}, below the match threshold.` : 'Only your own registered works are searched. Register a work first to be able to check copies of it.'}
+            {top ? `${closest} scored ${pct(top.confidence)}, below the match threshold.` : empty}
             {check.gate?.error && ' Geometric verification was unavailable for this check, so only similarity scores were used.'}
           </p>
         </div>
@@ -89,6 +94,7 @@ export default function Check() {
   const [error, setError] = useState(null);
   const [running, setRunning] = useState(false);
   const job = useJob();
+  const guest = Boolean(useContext(AuthContext).user?.is_guest);
 
   // Load a past check from history
   useEffect(() => {
@@ -149,7 +155,7 @@ export default function Check() {
             <p className="muted small">{check.filename || 'Uploaded image'} · checked {relativeTime(check.created_at)}</p>
           </aside>
           <section>
-            <Summary check={check} />
+            <Summary check={check} guest={guest} />
             <h3 className="section-title">
               {relevant.length ? `${relevant.length} potential match${relevant.length > 1 ? 'es' : ''}` : 'Closest registry entries'}
             </h3>
@@ -169,11 +175,12 @@ export default function Check() {
   return (
     <div className="page-enter">
       <header className="page-head">
-        <p className="eyebrow">Copy detection</p>
-        <h1 className="page-title">Check a suspected copy</h1>
+        <p className="eyebrow">{guest ? 'Live challenge' : 'Copy detection'}</p>
+        <h1 className="page-title">{guest ? 'Upload your stolen copy' : 'Check a suspected copy'}</h1>
         <p className="page-subtitle">
-          Found your work somewhere else? Upload the image you found and we will compare it against your own registered works,
-          even if it was cropped, filtered or AI-edited. Your portfolio is never searched by anyone else.
+          {guest
+            ? 'Photographed, cropped, filtered, screenshotted or re-posted: upload your copy of a gallery work and we will find the original and show exactly what you changed.'
+            : 'Found your work somewhere else? Upload the image you found and we will compare it against your own registered works, even if it was cropped, filtered or AI-edited. Your portfolio is never searched by anyone else.'}
         </p>
       </header>
 
@@ -195,7 +202,9 @@ export default function Check() {
           <ul className="explainer">
             <li><IconShield size={16} /> <span><strong>Perceptual hash</strong> catches recompressed, resized and lightly filtered copies.</span></li>
             <li><IconScan size={16} /> <span><strong>AI embedding</strong> recognises the same content after crops, flips, colour changes and re-renders.</span></li>
-            <li><IconCheck size={16} /> <span>Every check is saved to <Link to="/dashboard?tab=checks">your match history</Link>.</span></li>
+            {guest
+              ? <li><IconCheck size={16} /> <span>Booth uploads are deleted at the end of each day.</span></li>
+              : <li><IconCheck size={16} /> <span>Every check is saved to <Link to="/dashboard?tab=checks">your match history</Link>.</span></li>}
           </ul>
         </div>
       </div>

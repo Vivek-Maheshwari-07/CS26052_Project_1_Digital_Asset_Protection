@@ -15,6 +15,7 @@ class WorkRecord(BaseModel):
     image_path: Optional[str] = None
     low_detail: Optional[bool] = None
     pipeline_version: Optional[str] = None
+    file_sha256: Optional[str] = None
     created_at: datetime
     prev_hash: str
     entry_hash: str

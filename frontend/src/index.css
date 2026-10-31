@@ -921,3 +921,27 @@ img { display: block; max-width: 100%; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
+
+/* ---------- Booth mode (exhibition challenge page) ---------- */
+.booth { max-width: 760px; }
+.booth-brand { display: inline-flex; margin-bottom: 1.25rem; }
+.booth-head .page-title { font-size: clamp(2rem, 7vw, 3rem); }
+.booth-steps { list-style: none; padding: 0; margin: 0 0 1rem; display: grid; gap: .6rem; }
+.booth-steps li { display: flex; gap: .9rem; align-items: flex-start; padding: .9rem 1rem; }
+.booth-steps p { margin: .15rem 0 0; }
+.booth-step-n { flex: none; width: 2rem; height: 2rem; border-radius: 50%; display: grid; place-items: center; font-weight: 700; color: #fff; background: var(--brand); }
+.booth-cta { font-size: 1.1rem; padding: 1rem 1.25rem; }
+.booth-note { text-align: center; margin: .75rem 0; }
+.booth-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: .75rem; }
+.booth-gallery figure { margin: 0; padding: .5rem; display: flex; flex-direction: column; gap: .4rem; }
+.booth-gallery img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: var(--radius-sm); display: block; }
+.booth-gallery figcaption { display: flex; flex-direction: column; padding: 0 .25rem .25rem; }
+.booth-off { text-align: center; padding: 2rem 1.25rem; }
+
+/* Verify page: check your own original file (hashed in the browser) */
+.file-check { margin: 1rem 0; display: flex; flex-direction: column; gap: .35rem; align-items: flex-start; }
+.file-check label { cursor: pointer; }
+.file-check p { margin: 0; }
+.file-check-ok, .file-check-bad { display: flex; gap: .4rem; align-items: center; font-weight: 600; }
+.file-check-ok { color: #138a55; }
+.file-check-bad { color: #c2364b; }

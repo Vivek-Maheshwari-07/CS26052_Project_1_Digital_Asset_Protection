@@ -87,10 +87,19 @@ python -m eval.gate_eval --dataset DATASET --split dev --sweep
 ```
 
 ## Verifying a registration independently
-From a work's public page download `record.json` and `record-<id>.json.ots`:
+Each registry record includes the SHA-256 of the exact file that was uploaded, and is timestamped in
+Bitcoin via OpenTimestamps. The backend upgrades pending proofs every hour (`OTS_UPGRADE_MINUTES`) and
+cross-checks the Bitcoin block on a public explorer; run it once by hand with `python -m app.registry.anchor`.
+
+From a work's public page (`/verify/<id>`) download the **verification kit** and unzip it:
 ```bash
-sha256sum record-<id>.json            # equals the registry hash on the certificate
-pip install opentimestamps-client
-ots upgrade record-<id>.json.ots      # after a few hours, once Bitcoin has confirmed it
-ots verify record-<id>.json.ots
+python verify.py                       # record unaltered, proof covers it, Bitcoin block checked
+python verify.py my-original.jpg       # ...and this is the exact file that was registered
 ```
+`verify.py` uses only the Python standard library. The official client works too:
+```bash
+pip install opentimestamps-client
+ots verify record.json.ots -f record.json
+```
+Stored images have their EXIF/GPS/XMP metadata removed (JPEG and PNG pixels are unchanged); the
+record keeps the hash of the original upload, so the creator's own copy still proves the registration.

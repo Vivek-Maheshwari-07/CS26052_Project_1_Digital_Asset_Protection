@@ -156,6 +156,7 @@ def public_user(user: dict) -> dict:
         "email": user.get("email"),
         "full_name": user.get("full_name") or user["username"],
         "created_at": created.replace(tzinfo=timezone.utc).isoformat() if created else None,
+        "is_guest": bool(user.get("is_guest")),
     }
 
 
@@ -182,6 +183,8 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db=Depends(get_d
     user = await db.users.find_one({"_id": user_id})
     if user is None:
         raise credentials_exception
+    if user.get("is_guest") and not settings.BOOTH_MODE:
+        raise credentials_exception  # booth guest sessions end when booth mode is switched off
     return user
 
 

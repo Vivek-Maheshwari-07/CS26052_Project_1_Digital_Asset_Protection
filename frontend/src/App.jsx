@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, NavLink, Navigate, useNavigate, useLocation, Outlet } from 'react-router-dom';
-import { useContext, useEffect, useRef, useState } from 'react';
+import { startTransition, useContext, useEffect, useRef, useState } from 'react';
 import { AuthProvider, AuthContext } from './AuthContext';
 import { ToastProvider } from './components/Toast';
 import { Logo, IconGrid, IconPlus, IconScan, IconLogout } from './components/Icons';
@@ -13,24 +13,29 @@ import ForgotPassword from './pages/ForgotPassword';
 import Verify from './pages/Verify';
 import Landing from './pages/Landing';
 import DigitalTwin from './pages/DigitalTwin';
+import Booth from './pages/Booth';
 import MarkOrb from './components/Mark/MarkOrb';
 
 const FullPageLoader = () => (
     <div className="full-loader"><Logo size={40} /><span className="spinner" /></div>
 );
 
+// Booth visitors (guest sessions) can only check images and look at the evidence.
+const BOOTH_GUEST_PATHS = /^\/(check|evidence)(\/|$)/;
+
 const ProtectedRoute = () => {
-    const { status } = useContext(AuthContext);
+    const { status, user } = useContext(AuthContext);
     const location = useLocation();
     if (status === 'loading') return <FullPageLoader />;
     if (status !== 'authed') return <Navigate to="/login" replace state={{ from: location.pathname }} />;
+    if (user?.is_guest && !BOOTH_GUEST_PATHS.test(location.pathname)) return <Navigate to="/check" replace />;
     return <AppShell><Outlet /></AppShell>;
 };
 
 const GuestRoute = () => {
-    const { status } = useContext(AuthContext);
+    const { status, user } = useContext(AuthContext);
     if (status === 'loading') return <FullPageLoader />;
-    if (status === 'authed') return <Navigate to="/dashboard" replace />;
+    if (status === 'authed') return <Navigate to={user?.is_guest ? '/check' : '/dashboard'} replace />;
     return <Outlet />;
 };
 
@@ -63,8 +68,10 @@ function UserMenu() {
                             <small>{user?.email || `@${user?.username}`}</small>
                         </div>
                     </div>
-                    <button className="menu-item danger" onClick={() => { logout(); navigate('/login'); }}>
-                        <IconLogout size={16} /> Log out
+                    {/* One transition: React Router navigates in a transition, so a plain logout() would render
+                        first and the protected page's guard would send a booth visitor to /login, not /booth. */}
+                    <button className="menu-item danger" onClick={() => startTransition(() => { navigate(user?.is_guest ? '/booth' : '/login'); logout(); })}>
+                        <IconLogout size={16} /> {user?.is_guest ? 'End session' : 'Log out'}
                     </button>
                 </div>
             )}
@@ -73,14 +80,22 @@ function UserMenu() {
 }
 
 function AppShell({ children }) {
+    const { user } = useContext(AuthContext);
+    const guest = user?.is_guest;
     return (
         <>
             <header className="topbar">
                 <div className="topbar-inner">
-                    <NavLink to="/dashboard" className="brand"><Logo /> <span>Provenance</span></NavLink>
+                    <NavLink to={guest ? '/booth' : '/dashboard'} className="brand"><Logo /> <span>Provenance</span></NavLink>
                     <nav className="nav-pills">
-                        <NavLink to="/dashboard"><IconGrid size={16} /> <span>Dashboard</span></NavLink>
-                        <NavLink to="/works/new"><IconPlus size={16} /> <span>Register</span></NavLink>
+                        {guest ? (
+                            <NavLink to="/booth"><IconGrid size={16} /> <span>Gallery</span></NavLink>
+                        ) : (
+                            <>
+                                <NavLink to="/dashboard"><IconGrid size={16} /> <span>Dashboard</span></NavLink>
+                                <NavLink to="/works/new"><IconPlus size={16} /> <span>Register</span></NavLink>
+                            </>
+                        )}
                         <NavLink to="/check"><IconScan size={16} /> <span>Check copies</span></NavLink>
                     </nav>
                     <UserMenu />
@@ -91,6 +106,14 @@ function AppShell({ children }) {
     );
 }
 
+// Mark listens for its wake word, which makes a phone ask for the microphone: keep it off the booth.
+function MarkForMembers() {
+    const { user } = useContext(AuthContext);
+    const { pathname } = useLocation();
+    if (user?.is_guest || pathname === '/booth') return null;
+    return <MarkOrb />;
+}
+
 function App() {
   return (
     <ToastProvider>
@@ -99,6 +122,7 @@ function App() {
             <Routes>
                 <Route path="/" element={<Landing />} />
                 <Route path="/how-it-works" element={<DigitalTwin />} />
+                <Route path="/booth" element={<Booth />} />
                 <Route path="/digital-twin" element={<Navigate to="/how-it-works" replace />} />
                 <Route element={<GuestRoute />}>
                     <Route path="/login" element={<Login />} />
@@ -116,7 +140,7 @@ function App() {
                 <Route path="/register" element={<Navigate to="/works/new" replace />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
-            <MarkOrb />
+            <MarkForMembers />
         </BrowserRouter>
       </AuthProvider>
     </ToastProvider>

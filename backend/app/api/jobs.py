@@ -15,7 +15,7 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 
 from app.api.auth import get_current_user
 from app.api.check import check_core
-from app.api.register import read_limited, register_core
+from app.api.register import read_limited, read_original, register_core
 from app.db import get_db
 
 router = APIRouter()
@@ -77,10 +77,10 @@ async def register_start(
     db=Depends(get_db),
     current_user=Depends(get_current_user),
 ):
-    image_bytes = await read_limited(image)
+    image_bytes, file_sha256 = await read_original(image)
     job = _new_job(str(current_user["_id"]), "register")
     asyncio.create_task(_run(job, lambda emit: register_core(
-        db, current_user, image_bytes, owner_name, title, allow_similar_own, _schedule, emit)))
+        db, current_user, image_bytes, owner_name, title, allow_similar_own, _schedule, emit, file_sha256=file_sha256)))
     return {"job_id": job["id"]}
 
 
