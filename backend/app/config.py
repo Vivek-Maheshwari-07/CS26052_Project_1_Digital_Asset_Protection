@@ -67,6 +67,11 @@ class Settings(BaseSettings):
     # Public Esplora API used to cross-check a proof's block (merkle root and block time)
     OTS_BLOCK_EXPLORER: str = "https://blockstream.info/api"
 
+    # Prior-art check on the proof ladder: reverse image search on the web, run only when a creator asks
+    # (it sends the image to the provider). "google_vision" with a Cloud Vision API key, or "" for off.
+    PRIOR_ART_PROVIDER: str = ""
+    PRIOR_ART_API_KEY: str = ""
+
     # Booth mode (exhibitions): walk-up visitors get a guest session with no sign-up, and their checks
     # search the works registered by BOOTH_GALLERY_USERNAME. See app/api/booth.py.
     BOOTH_MODE: bool = False

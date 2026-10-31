@@ -990,5 +990,36 @@ img { display: block; max-width: 100%; }
 .timeline li { padding-left: .9rem; border-left: 3px solid var(--line-strong); }
 .timeline li.tl-status { border-left-color: var(--brand); }
 .timeline li p { margin: .1rem 0 0; font-size: .9rem; }
-.note-form { display: flex; gap: .5rem; }
+.note-form { display: flex; gap: .5rem; width: 100%; }
+.note-form input { flex: 1; min-width: 0; }
 .link-btn.danger { color: #b4142c; justify-self: start; }
+
+/* Proof of authorship (1A): the ladder, source files, web matches, profile links */
+.proof-level { display: flex; gap: .9rem; align-items: center; margin-bottom: 1rem; }
+.proof-level p { margin: .15rem 0 0; }
+.proof-level-badge { flex: none; width: 3.2rem; height: 3.2rem; border-radius: 50%; display: grid; place-items: center; font-size: 1.35rem; font-weight: 800; color: #fff; background: var(--muted); }
+.proof-level-badge small { font-size: .65rem; font-weight: 600; opacity: .8; margin-top: -.5rem; }
+.proof-level-badge.level-2 { background: #3b82f6; }
+.proof-level-badge.level-3 { background: var(--brand); }
+.proof-level-badge.level-4 { background: var(--ok); }
+.proof-steps { list-style: none; margin: 1rem 0 0; padding: 0; display: grid; gap: 1rem; }
+.proof-step { display: flex; gap: .8rem; }
+.proof-step-icon { flex: none; width: 1.9rem; height: 1.9rem; border-radius: 50%; display: grid; place-items: center; color: #fff; background: var(--line-strong); }
+.proof-step.done .proof-step-icon { background: var(--ok); }
+.proof-step.warning .proof-step-icon { background: var(--warn); }
+.proof-step-body { flex: 1; min-width: 0; }
+.proof-step-body > p { margin: .2rem 0; }
+.proof-action { margin-top: .6rem; display: grid; gap: .55rem; justify-items: start; }
+.proof-files { list-style: none; margin: 0; padding: 0; display: grid; gap: .5rem; width: 100%; }
+.proof-files li { display: flex; justify-content: space-between; gap: .8rem; align-items: flex-start; padding: .65rem .8rem; border-radius: var(--radius-sm); background: var(--surface-2); border-left: 3px solid var(--line-strong); }
+.proof-files li.strong { border-left-color: var(--ok); }
+.proof-files li.warn { border-left-color: var(--warn); }
+.proof-files li > div { display: grid; gap: .15rem; min-width: 0; overflow-wrap: anywhere; }
+.proof-files code { font-size: .78rem; }
+.proof-code { justify-self: start; display: inline-flex; gap: .4rem; align-items: center; padding: .3rem .6rem; border-radius: 8px; border: 1px dashed var(--brand); background: var(--surface); color: var(--ink); cursor: pointer; font: inherit; }
+.proof-error { color: #b4142c; }
+.proof-link-actions { display: flex; gap: .5rem; align-items: center; flex: none; }
+.mine-toggle { display: flex; gap: .35rem; align-items: center; font-size: .85rem; white-space: nowrap; }
+.proof-head { display: flex; gap: 1rem; align-items: center; }
+.proof-head img { width: 84px; height: 84px; object-fit: cover; border-radius: 14px; }
+.verify-proof { margin-top: 1.4rem; }

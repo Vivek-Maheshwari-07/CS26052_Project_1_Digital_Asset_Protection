@@ -16,6 +16,7 @@ import DigitalTwin from './pages/DigitalTwin';
 import Booth from './pages/Booth';
 import Cases from './pages/Cases';
 import Case from './pages/Case';
+import Proof from './pages/Proof';
 import MarkOrb from './components/Mark/MarkOrb';
 
 const FullPageLoader = () => (
@@ -140,6 +141,7 @@ function App() {
                     <Route path="/evidence/:checkId/:matchWorkId" element={<Evidence />} />
                     <Route path="/cases" element={<Cases />} />
                     <Route path="/cases/:caseId" element={<Case />} />
+                    <Route path="/works/:workId/proof" element={<Proof />} />
                 </Route>
                 <Route path="/verify/:workId" element={<Verify />} />
                 <Route path="/register" element={<Navigate to="/works/new" replace />} />

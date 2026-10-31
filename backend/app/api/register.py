@@ -2,6 +2,7 @@ from fastapi import APIRouter, BackgroundTasks, Depends, UploadFile, File, Form,
 from pydantic import BaseModel
 from typing import List, Optional
 from datetime import datetime, timezone
+import asyncio
 import hashlib
 import io
 import logging
@@ -17,6 +18,7 @@ from app.fingerprint.combine import fingerprint, PIPELINE_VERSION
 from app.api.auth import get_current_user
 from app.gate.features import compute_for_registration
 from app.gate.pipeline import run_gate
+from app.proof.signals import upload_signals
 from app import storage, ingestion
 
 logger = logging.getLogger("uvicorn.error")
@@ -206,6 +208,8 @@ async def register_core(db, current_user, image_bytes: bytes, owner_name: str, t
 
     # 4. Save a metadata-free copy (same pixels, no GPS/EXIF), then append to the registry. The record
     #    carries the SHA-256 of the file as uploaded, so the creator's own copy proves the registration.
+    #    Authorship signals in the metadata (C2PA, camera) are read first: the stored copy loses them.
+    signals = await asyncio.to_thread(upload_signals, image_bytes)
     stored_bytes, stored_fmt = ingestion.strip_metadata(image_bytes, fmt)
     image_path = storage.save_image(stored_bytes, stored_fmt)
     record = await append_to_chain(db, {
@@ -221,6 +225,7 @@ async def register_core(db, current_user, image_bytes: bytes, owner_name: str, t
         "height": height,
         "image_path": image_path,
     })
+    await db.works.update_one({"id": record.id}, {"$set": {"origin": signals}})  # not part of the chained record
     index.add(db, record.id, user_id, fp["embedding"], fp["phash"])
     emit("chain", entry_hash=record.entry_hash, prev_hash=record.prev_hash, work_id=record.id)
 

@@ -8,7 +8,9 @@ from pathlib import Path
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import Response
 
+from app.api.proof import owner_links, proof_files
 from app.db import get_db
+from app.proof.ladder import build_ladder, public_file
 from app.registry.chain import canonical_json, verify_chain, verify_record
 from app.api.auth import utcnow
 from app.api.register import iso_utc
@@ -46,6 +48,13 @@ async def registry_status(db = Depends(get_db)):
     return value
 
 
+async def _public_proof(db, doc: dict) -> dict:
+    """The proof ladder as anyone may see it: no file names, no camera data, only verified profile links."""
+    files = await proof_files(db, doc["id"])
+    links = [link for link in await owner_links(db, doc.get("user_id")) if link.get("verified")] if doc.get("user_id") else []
+    return {**build_ladder(doc, files, links, public=True), "source_files": [public_file(f) for f in files if f.get("strong")]}
+
+
 @router.get("/public/works/{work_id}")
 async def public_work(work_id: str, db = Depends(get_db)):
     doc = await _get_work(db, work_id)
@@ -65,6 +74,7 @@ async def public_work(work_id: str, db = Depends(get_db)):
         "record_intact": check["intact"],
         "chain_linked": check["linked"],
         "file_sha256": doc.get("file_sha256"),
+        "proof": await _public_proof(db, doc),
         "anchor": {
             "status": doc.get("anchor_status") or ("pending" if doc.get("ots_proof") else "none"),
             "calendar": doc.get("ots_calendar"),

@@ -58,15 +58,17 @@ async def submit_digest(digest: bytes) -> tuple[str, bytes] | None:
     return None
 
 
-async def anchor_work(db, work_id: str, entry_hash: str) -> bool:
+async def anchor_work(db, work_id: str, entry_hash: str, collection: str = "works") -> bool:
+    """Timestamp a digest for a document with an `id`: a work's entry hash, or (collection="work_proofs")
+    the SHA-256 of a creator's source file."""
     if not settings.OTS_ENABLED:
         return False
     result = await submit_digest(bytes.fromhex(entry_hash))
     if not result:
-        await db.works.update_one({"id": work_id}, {"$set": {"anchor_status": "failed"}})
+        await db[collection].update_one({"id": work_id}, {"$set": {"anchor_status": "failed"}})
         return False
     calendar, ts = result
-    await db.works.update_one({"id": work_id}, {"$set": {
+    await db[collection].update_one({"id": work_id}, {"$set": {
         "anchor_status": "pending",
         "ots_calendar": calendar,
         "ots_proof": Binary(build_ots_file(bytes.fromhex(entry_hash), ts)),
@@ -148,8 +150,9 @@ async def fetch_block(height: int) -> Optional[dict]:
         return None
 
 
-async def confirm_from_proof(db, work_id: str, ots_bytes: bytes) -> bool:
-    """Mark a work confirmed if its proof carries a Bitcoin attestation; cross-check it with an explorer."""
+async def confirm_from_proof(db, work_id: str, ots_bytes: bytes, collection: str = "works") -> bool:
+    """Mark a work (or source file) confirmed if its proof carries a Bitcoin attestation; cross-check it
+    with an explorer."""
     attestations = bitcoin_attestations(ots_bytes)
     if not attestations:
         return False
@@ -160,10 +163,10 @@ async def confirm_from_proof(db, work_id: str, ots_bytes: bytes) -> bool:
     if block is not None:
         if block["merkle_root"] != merkle_root:
             logger.error("Work %s: proof claims block %s but its merkle root does not match", work_id, height)
-            await db.works.update_one({"id": work_id}, {"$set": {"anchor_status": "invalid", "ots_block_height": height}})
+            await db[collection].update_one({"id": work_id}, {"$set": {"anchor_status": "invalid", "ots_block_height": height}})
             return False
         update.update(ots_block_checked=True, ots_block_hash=block["hash"], ots_block_time=block["time"])
-    await db.works.update_one({"id": work_id}, {"$set": update})
+    await db[collection].update_one({"id": work_id}, {"$set": update})
     return True
 
 
@@ -174,18 +177,19 @@ async def upgrade_pending(db) -> dict:
         return counts
     query = {"ots_proof": {"$exists": True},
              "$or": [{"anchor_status": "pending"}, {"anchor_status": "confirmed", "ots_block_checked": False}]}
-    async for doc in db.works.find(query, {"id": 1, "ots_proof": 1}):
-        counts["checked"] += 1
-        try:
-            upgraded, changed = await asyncio.to_thread(upgrade_proof, bytes(doc["ots_proof"]))
-        except Exception as e:  # a corrupt proof must not stop the others
-            logger.warning("Could not read the proof of work %s: %s", doc["id"], e)
-            continue
-        if changed:
-            counts["upgraded"] += 1
-            await db.works.update_one({"id": doc["id"]}, {"$set": {"ots_proof": Binary(upgraded)}})
-        if await confirm_from_proof(db, doc["id"], upgraded):
-            counts["confirmed"] += 1
+    for collection in ("works", "work_proofs"):
+        async for doc in db[collection].find(query, {"id": 1, "ots_proof": 1}):
+            counts["checked"] += 1
+            try:
+                upgraded, changed = await asyncio.to_thread(upgrade_proof, bytes(doc["ots_proof"]))
+            except Exception as e:  # a corrupt proof must not stop the others
+                logger.warning("Could not read the proof of %s %s: %s", collection, doc["id"], e)
+                continue
+            if changed:
+                counts["upgraded"] += 1
+                await db[collection].update_one({"id": doc["id"]}, {"$set": {"ots_proof": Binary(upgraded)}})
+            if await confirm_from_proof(db, doc["id"], upgraded, collection):
+                counts["confirmed"] += 1
     return counts
 
 

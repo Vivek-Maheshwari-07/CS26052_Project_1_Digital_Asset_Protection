@@ -85,6 +85,7 @@ export default function WorkModal({ work, onClose, onPrev, onNext, position }) {
             <a className="btn btn-primary" href={certificateUrl(work.id)} target="_blank" rel="noreferrer">
               <IconDownload size={16} /> Certificate
             </a>
+            <Link className="btn btn-ghost" to={`/works/${work.id}/proof`}><IconFingerprint size={16} /> Proof of authorship</Link>
             <Link className="btn btn-ghost" to={verifyPath(work.id)}><IconShield size={16} /> Public record</Link>
             <Link className="btn btn-ghost" to="/check"><IconScan size={16} /> Check copies</Link>
           </div>

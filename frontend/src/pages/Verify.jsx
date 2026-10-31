@@ -4,6 +4,7 @@ import { apiClient, mediaUrl, certificateUrl, recordJsonUrl, proofUrl, verifyKit
 import { AuthContext } from '../AuthContext';
 import { Logo, IconCheck, IconAlert, IconClock, IconDownload, IconShield, IconHash } from '../components/Icons';
 import { formatDate } from '../lib/format';
+import ProofLadder from '../components/ProofLadder';
 
 function CheckItem({ ok, pending, title, children }) {
   return (
@@ -140,6 +141,23 @@ export default function Verify() {
                 </div>
 
                 {work.file_sha256 && <FileCheck expected={work.file_sha256} />}
+
+                {work.proof && (
+                  <section className="verify-proof">
+                    <h3 className="section-title">Who made it</h3>
+                    <ProofLadder ladder={work.proof} />
+                    {work.proof.source_files.length > 0 && (
+                      <ul className="proof-files">
+                        {work.proof.source_files.map((f) => (
+                          <li key={f.sha256} className="strong"><div>
+                            <strong>{f.detail}</strong>
+                            <span className="muted small">Added {formatDate(f.added_at)} · SHA-256 <code>{f.sha256}</code></span>
+                          </div></li>
+                        ))}
+                      </ul>
+                    )}
+                  </section>
+                )}
 
                 <div className="action-row">
                   <a className="btn btn-primary" href={verifyKitUrl(work.id)}><IconDownload size={16} /> Verification kit</a>
